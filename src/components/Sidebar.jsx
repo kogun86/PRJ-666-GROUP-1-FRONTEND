@@ -33,7 +33,10 @@ const Sidebar = () => {
       <div className="flex flex-col h-full">
         {/* User profile section */}
         <div className="sidebar-profile">
-          <Link href="/profile" className="sidebar-profile-link">
+          <Link
+            href="/profile"
+            className={cn('sidebar-profile-link', pathname === '/profile' && 'active')}
+          >
             <div className="sidebar-profile-container">
               <div className="sidebar-avatar-container">
                 <div className="sidebar-avatar-inner">

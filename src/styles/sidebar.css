@@ -18,22 +18,39 @@
 }
 
 .sidebar-profile {
-  padding: 0.5rem;
+  padding: 0 1rem;
   margin-bottom: 1.5rem;
+  margin-top: 0.75rem;
 }
 
 .sidebar-profile-link {
   display: block;
+  width: 100%;
 }
 
 .sidebar-profile-container {
   width: 100%;
   height: 70px;
-  background-color: #cad2c5;
+  background-color: #52796f;
   display: flex;
   align-items: center;
   padding: 0 1rem;
-  border-radius: 0.25rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+/* Add active state for profile container */
+.sidebar-profile-link[href='/profile'] .sidebar-profile-container {
+  background-color: #52796f;
+}
+
+/* When on profile page */
+body:has([href='/profile'].active) .sidebar-profile-container {
+  background-color: #cad2c5;
+}
+
+body:has([href='/profile'].active) .sidebar-username {
+  color: #52796f;
 }
 
 .sidebar-avatar-container {
@@ -53,7 +70,7 @@
 }
 
 .sidebar-username {
-  color: #2f3e46;
+  color: #cad2c5;
   font-size: 1.5rem;
   font-weight: normal;
 }
@@ -81,7 +98,7 @@
 }
 
 .nav-link.active {
-  opacity: 0.8;
+  background-color: #cad2c5;
 }
 
 .nav-link-icon {
@@ -94,6 +111,11 @@
 .nav-link-text {
   color: #cad2c5;
   font-size: 1rem;
+}
+
+.nav-link.active .nav-link-icon,
+.nav-link.active .nav-link-text {
+  color: #52796f;
 }
 
 .sidebar-footer {
