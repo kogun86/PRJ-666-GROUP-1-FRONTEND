@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Layout from '../components/Layout';
+import ProtectedRoute from '../components/ProtectedRoute';
+import { useAuth } from '../context/AuthContext';
 
 // UI Components - simplified versions of shadcn/ui components
 const Avatar = ({ className, children }) => {
@@ -69,13 +71,8 @@ const Modal = ({ isOpen, onClose, children }) => {
   );
 };
 
-const Skeleton = ({ className }) => {
-  return <div className={className}></div>;
-};
-
-export default function Profile() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
+function ProfileContent() {
+  const { user, logout } = useAuth();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -84,33 +81,11 @@ export default function Profile() {
     confirmPassword: '',
   });
   const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    dateOfBirth: '',
+    name: user?.name || '',
+    email: user?.email || '',
+    dateOfBirth: user?.dateOfBirth || '',
   });
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        lastLogin: 'February 10 2025',
-        dateOfBirth: '1990-01-01',
-      };
-
-      setUser(userData);
-      setProfileData({
-        name: userData.name,
-        email: userData.email,
-        dateOfBirth: userData.dateOfBirth || '',
-      });
-      setIsLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleOpenPasswordModal = () => {
     setPasswordModalOpen(true);
@@ -130,9 +105,9 @@ export default function Profile() {
   const handleOpenEditProfileModal = () => {
     setEditProfileModalOpen(true);
     setProfileData({
-      name: user.name,
-      email: user.email,
-      dateOfBirth: user.dateOfBirth || '',
+      name: user?.name || '',
+      email: user?.email || '',
+      dateOfBirth: user?.dateOfBirth || '',
     });
     setError('');
   };
@@ -209,292 +184,305 @@ export default function Profile() {
     // Here you would typically call an API to update the profile
     // For this example, we'll just update the local state
     setTimeout(() => {
-      setUser({
-        ...user,
-        name: profileData.name,
-        email: profileData.email,
-        dateOfBirth: profileData.dateOfBirth,
-      });
+      // Update local user data
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...user,
+          name: profileData.name,
+          email: profileData.email,
+          dateOfBirth: profileData.dateOfBirth,
+        })
+      );
+
+      // In a real application, you would update the context state
+      // but for this demo we'll just reload the page
+      window.location.reload();
+
       handleCloseEditProfileModal();
-      // Could show a success notification here
     }, 500);
   };
 
-  if (isLoading) {
-    return <ProfileSkeleton />;
-  }
+  // Get initials for the avatar
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
-    <Layout>
-      <div className="profile-container">
-        {/* User Profile Card */}
-        <div className="profile-card">
+    <div className="profile-container">
+      {/* User Profile Card */}
+      <div className="profile-card">
+        <div className="profile-header">
           <h1 className="profile-title">User Profile</h1>
+        </div>
 
-          <div className="profile-content">
-            {/* User Icon */}
-            <div className="profile-avatar-wrapper">
-              <div className="profile-avatar-circle">
-                <Avatar className="profile-avatar">
-                  <AvatarFallback className="profile-avatar-text">JD</AvatarFallback>
-                </Avatar>
-              </div>
+        <div className="profile-content">
+          {/* User Icon */}
+          <div className="profile-avatar-wrapper">
+            <div className="profile-avatar-circle">
+              <Avatar className="profile-avatar">
+                <AvatarFallback className="profile-avatar-text">
+                  {getInitials(user.name)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          {/* User Information */}
+          <div className="profile-info">
+            <div className="profile-info-row">
+              <span className="profile-info-text">Name: {user.name}</span>
             </div>
 
-            {/* User Information */}
-            <div className="profile-info">
+            <div className="profile-info-row">
+              <span className="profile-info-text">Email: {user.email}</span>
+              <CheckCircle2 />
+            </div>
+
+            {user.dateOfBirth && (
               <div className="profile-info-row">
-                <span className="profile-info-text">Name: {user.name}</span>
+                <span className="profile-info-text">
+                  Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
+                </span>
               </div>
+            )}
 
-              <div className="profile-info-row">
-                <span className="profile-info-text">Email: {user.email}</span>
-                <CheckCircle2 />
-              </div>
+            <div className="profile-info-row">
+              <span className="profile-info-text">
+                Last Login Date: {new Date(user.lastLogin).toLocaleDateString()}
+              </span>
+            </div>
 
-              {user.dateOfBirth && (
-                <div className="profile-info-row">
-                  <span className="profile-info-text">
-                    Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
-
-              <div className="profile-info-row">
-                <span className="profile-info-text">Last Login Date: {user.lastLogin}</span>
-              </div>
-
-              <div className="profile-action-row">
-                <Button
-                  className="profile-button profile-edit-button px-4 py-2 rounded-lg mr-3"
-                  onClick={handleOpenEditProfileModal}
-                >
-                  Edit Profile
-                </Button>
-                <Button
-                  className="profile-button px-4 py-2 rounded-lg"
-                  onClick={handleOpenPasswordModal}
-                >
-                  Change Password
-                </Button>
-              </div>
+            <div className="profile-action-row">
+              <Button
+                className="profile-button profile-edit-button px-4 py-2 rounded-lg mr-3"
+                onClick={handleOpenEditProfileModal}
+              >
+                Edit Profile
+              </Button>
+              <Button
+                className="profile-button px-4 py-2 rounded-lg"
+                onClick={handleOpenPasswordModal}
+              >
+                Change Password
+              </Button>
             </div>
           </div>
         </div>
-
-        {/* Stats Section */}
-        <div className="profile-stats">
-          {/* Study Sessions */}
-          <Card className="profile-card">
-            <CardContent className="profile-card-content">
-              <div className="profile-card-header">Study Sessions</div>
-              <div className="profile-session-content">
-                <div className="profile-session-time">Feb 11 @ 3PM</div>
-                <div className="profile-session-title">Test Study</div>
-                <div className="profile-session-details">90 mins PRJ566</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tasks Completed */}
-          <Card className="profile-card">
-            <CardContent className="profile-card-content">
-              <div className="profile-card-header">Tasks Completed</div>
-              <div className="profile-tasks-content">
-                <div className="profile-circle-chart">
-                  <svg className="profile-chart-svg" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#2F3E46" strokeWidth="10" />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="45"
-                      fill="none"
-                      stroke="#52796F"
-                      strokeWidth="10"
-                      strokeDasharray="141.5 141.5"
-                      strokeDashoffset="70.75"
-                      transform="rotate(-90 50 50)"
-                    />
-                  </svg>
-                  <div className="profile-chart-percentage">50%</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Goal Progress */}
-          <Card className="profile-card">
-            <CardContent className="profile-card-content">
-              <div className="profile-card-header">Goal Progress</div>
-              <div className="profile-goals-content">
-                <img
-                  src="/placeholder-image.png"
-                  alt="Goal Progress"
-                  className="profile-goals-image"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    document.getElementById('fallback-text')?.classList.remove('hidden');
-                  }}
-                />
-                <div id="fallback-text" className="profile-goals-fallback hidden">
-                  <p className="profile-goals-fallback-text">The image you are</p>
-                  <p className="profile-goals-fallback-text">requesting does not exist</p>
-                  <p className="profile-goals-fallback-text">or is no longer available</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Password Change Modal */}
-        <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal}>
-          <div className="password-modal">
-            <h2 className="password-modal-title">Change Password</h2>
-
-            {error && <div className="password-error">{error}</div>}
-
-            <form onSubmit={handlePasswordChange}>
-              <div className="password-form-group">
-                <label htmlFor="currentPassword" className="password-label">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  id="currentPassword"
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordInputChange}
-                  className="password-input"
-                />
-              </div>
-
-              <div className="password-form-group">
-                <label htmlFor="newPassword" className="password-label">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordInputChange}
-                  className="password-input"
-                />
-              </div>
-
-              <div className="password-form-group">
-                <label htmlFor="confirmPassword" className="password-label">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordInputChange}
-                  className="password-input"
-                />
-              </div>
-
-              <div className="password-actions">
-                <button
-                  type="button"
-                  onClick={handleClosePasswordModal}
-                  className="password-cancel-button"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="password-submit-button">
-                  Change Password
-                </button>
-              </div>
-            </form>
-          </div>
-        </Modal>
-
-        {/* Edit Profile Modal */}
-        <Modal isOpen={editProfileModalOpen} onClose={handleCloseEditProfileModal}>
-          <div className="password-modal">
-            {' '}
-            {/* Reusing the same modal styles */}
-            <h2 className="password-modal-title">Edit Profile</h2>
-            {error && <div className="password-error">{error}</div>}
-            <form onSubmit={handleProfileUpdate}>
-              <div className="password-form-group">
-                <label htmlFor="name" className="password-label">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={profileData.name}
-                  onChange={handleProfileInputChange}
-                  className="password-input"
-                />
-              </div>
-
-              <div className="password-form-group">
-                <label htmlFor="email" className="password-label">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={profileData.email}
-                  onChange={handleProfileInputChange}
-                  className="password-input"
-                />
-              </div>
-
-              <div className="password-form-group">
-                <label htmlFor="dateOfBirth" className="password-label">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  value={profileData.dateOfBirth}
-                  onChange={handleProfileInputChange}
-                  className="password-input"
-                />
-              </div>
-
-              <div className="password-actions">
-                <button
-                  type="button"
-                  onClick={handleCloseEditProfileModal}
-                  className="password-cancel-button"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="password-submit-button">
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </Modal>
       </div>
-    </Layout>
+
+      {/* Stats Section */}
+      <div className="profile-stats">
+        {/* Study Sessions */}
+        <Card className="profile-card">
+          <CardContent className="profile-card-content">
+            <div className="profile-card-header">Study Sessions</div>
+            <div className="profile-session-content">
+              <div className="profile-session-time">Feb 11 @ 3PM</div>
+              <div className="profile-session-title">Test Study</div>
+              <div className="profile-session-details">90 mins PRJ566</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tasks Completed */}
+        <Card className="profile-card">
+          <CardContent className="profile-card-content">
+            <div className="profile-card-header">Tasks Completed</div>
+            <div className="profile-tasks-content">
+              <div className="profile-circle-chart">
+                <svg className="profile-chart-svg" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="#2F3E46" strokeWidth="10" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#52796F"
+                    strokeWidth="10"
+                    strokeDasharray="141.5 141.5"
+                    strokeDashoffset="70.75"
+                    transform="rotate(-90 50 50)"
+                  />
+                </svg>
+                <div className="profile-chart-percentage">50%</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Goal Progress */}
+        <Card className="profile-card">
+          <CardContent className="profile-card-content">
+            <div className="profile-card-header">Goal Progress</div>
+            <div className="profile-goals-content">
+              <img
+                src="/placeholder-image.png"
+                alt="Goal Progress"
+                className="profile-goals-image"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  document.getElementById('fallback-text')?.classList.remove('hidden');
+                }}
+              />
+              <div id="fallback-text" className="profile-goals-fallback hidden">
+                <p className="profile-goals-fallback-text">The image you are</p>
+                <p className="profile-goals-fallback-text">requesting does not exist</p>
+                <p className="profile-goals-fallback-text">or is no longer available</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Password Change Modal */}
+      <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal}>
+        <div className="password-modal">
+          <h2 className="password-modal-title">Change Password</h2>
+
+          {error && <div className="password-error">{error}</div>}
+
+          <form onSubmit={handlePasswordChange}>
+            <div className="password-form-group">
+              <label htmlFor="currentPassword" className="password-label">
+                Current Password
+              </label>
+              <input
+                type="password"
+                id="currentPassword"
+                name="currentPassword"
+                value={passwordData.currentPassword}
+                onChange={handlePasswordInputChange}
+                className="password-input"
+              />
+            </div>
+
+            <div className="password-form-group">
+              <label htmlFor="newPassword" className="password-label">
+                New Password
+              </label>
+              <input
+                type="password"
+                id="newPassword"
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordInputChange}
+                className="password-input"
+              />
+            </div>
+
+            <div className="password-form-group">
+              <label htmlFor="confirmPassword" className="password-label">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordInputChange}
+                className="password-input"
+              />
+            </div>
+
+            <div className="password-actions">
+              <button
+                type="button"
+                onClick={handleClosePasswordModal}
+                className="password-cancel-button"
+              >
+                Cancel
+              </button>
+              <button type="submit" className="password-submit-button">
+                Change Password
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* Edit Profile Modal */}
+      <Modal isOpen={editProfileModalOpen} onClose={handleCloseEditProfileModal}>
+        <div className="password-modal">
+          {/* Reusing the same modal styles */}
+          <h2 className="password-modal-title">Edit Profile</h2>
+
+          {error && <div className="password-error">{error}</div>}
+
+          <form onSubmit={handleProfileUpdate}>
+            <div className="password-form-group">
+              <label htmlFor="name" className="password-label">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={profileData.name}
+                onChange={handleProfileInputChange}
+                className="password-input"
+              />
+            </div>
+
+            <div className="password-form-group">
+              <label htmlFor="email" className="password-label">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={profileData.email}
+                onChange={handleProfileInputChange}
+                className="password-input"
+              />
+            </div>
+
+            <div className="password-form-group">
+              <label htmlFor="dateOfBirth" className="password-label">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                name="dateOfBirth"
+                value={profileData.dateOfBirth}
+                onChange={handleProfileInputChange}
+                className="password-input"
+              />
+            </div>
+
+            <div className="password-actions">
+              <button
+                type="button"
+                onClick={handleCloseEditProfileModal}
+                className="password-cancel-button"
+              >
+                Cancel
+              </button>
+              <button type="submit" className="password-submit-button">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+    </div>
   );
 }
 
-function ProfileSkeleton() {
+export default function Profile() {
   return (
-    <Layout>
-      <div className="profile-container">
-        {/* Main Content Skeleton */}
-        <Skeleton className="profile-skeleton profile-skeleton-main" />
-
-        <div className="profile-stats">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="profile-skeleton profile-skeleton-card" />
-          ))}
-        </div>
-      </div>
-    </Layout>
+    <ProtectedRoute>
+      <Layout>
+        <ProfileContent />
+      </Layout>
+    </ProtectedRoute>
   );
 }

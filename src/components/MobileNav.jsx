@@ -15,10 +15,12 @@ import {
 import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
+import { useAuth } from '../context/AuthContext';
 
 export default function MobileNav() {
   const pathname = usePathname();
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const { logout } = useAuth();
 
   const navLinks = [
     { name: 'Profile', path: '/profile', icon: User },
@@ -30,7 +32,7 @@ export default function MobileNav() {
   const moreLinks = [
     { name: 'Goals', path: '/goals', icon: Target },
     { name: 'Calendar', path: '/calendar', icon: Calendar },
-    { name: 'Logout', path: '/login', icon: LogOut, className: 'more-menu-logout' },
+    { name: 'Logout', action: logout, icon: LogOut, className: 'more-menu-logout' },
   ];
 
   const toggleMoreMenu = () => {
@@ -63,6 +65,16 @@ export default function MobileNav() {
         <div className="mobile-nav-more-menu">
           {moreLinks.map((link) => {
             const Icon = link.icon;
+            if (link.action) {
+              return (
+                <button key={link.name} onClick={link.action} className="w-full text-left">
+                  <div className={cn('more-menu-item', link.className)}>
+                    <Icon className="more-menu-icon" />
+                    <span>{link.name}</span>
+                  </div>
+                </button>
+              );
+            }
             return (
               <Link key={link.path} href={link.path}>
                 <div className={cn('more-menu-item', link.className)}>

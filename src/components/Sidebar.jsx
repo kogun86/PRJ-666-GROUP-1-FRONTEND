@@ -15,9 +15,11 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const navLinks = [
     { name: 'Courses', path: '/courses', icon: BookText, color: 'bg-[#52796F]' },
@@ -71,10 +73,10 @@ const Sidebar = () => {
 
         {/* Logout button */}
         <div className="sidebar-footer">
-          <Link href="/login" className="logout-button">
+          <button onClick={logout} className="logout-button">
             <LogOut className="logout-icon" />
             <span className="logout-text">Log Out</span>
-          </Link>
+          </button>
         </div>
       </div>
     </aside>

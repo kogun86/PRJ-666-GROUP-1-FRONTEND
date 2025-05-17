@@ -5,7 +5,13 @@ import '../styles/layout.css';
 import '../styles/profile.css';
 import '../styles/courses.css';
 import '../styles/events.css';
+import '../styles/login.css';
+import { AuthProvider } from '../context/AuthContext';
 
 export default function App({ Component, pageProps }) {
-  return <Component {...pageProps} />;
+  return (
+    <AuthProvider>
+      <Component {...pageProps} />
+    </AuthProvider>
+  );
 }
