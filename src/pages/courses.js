@@ -27,27 +27,24 @@ export default function Courses() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">My Courses</h1>
-        <div className="space-y-4">
+      <div className="courses-container">
+        <h1 className="courses-title">My Courses</h1>
+        <div className="courses-list">
           {courses.map((course) => (
-            <div key={course.id} className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-semibold">{course.name}</h2>
-                  <p className="text-gray-600">Instructor: {course.instructor}</p>
-                  <p className="text-gray-600">Schedule: {course.schedule}</p>
+            <div key={course.id} className="course-card">
+              <div className="course-header">
+                <div className="course-info">
+                  <h2 className="course-name">{course.name}</h2>
+                  <p className="course-instructor">Instructor: {course.instructor}</p>
+                  <p className="course-schedule">Schedule: {course.schedule}</p>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-600">Progress</div>
-                  <div className="text-lg font-semibold">{course.progress}%</div>
+                <div className="course-progress-container">
+                  <div className="course-progress-label">Progress</div>
+                  <div className="course-progress-value">{course.progress}%</div>
                 </div>
               </div>
-              <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${course.progress}%` }}
-                ></div>
+              <div className="course-progress-bar-container">
+                <div className="course-progress-bar" style={{ width: `${course.progress}%` }}></div>
               </div>
             </div>
           ))}

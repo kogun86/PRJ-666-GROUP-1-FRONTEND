@@ -30,30 +30,28 @@ export default function Events() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Upcoming Events</h1>
-        <div className="space-y-4">
+      <div className="events-container">
+        <h1 className="events-title">Upcoming Events</h1>
+        <div className="events-list">
           {events.map((event) => (
-            <div key={event.id} className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-semibold">{event.title}</h2>
-                  <p className="text-gray-600 mt-1">{event.description}</p>
-                  <div className="mt-2 space-y-1">
-                    <p className="text-sm text-gray-500">
-                      <span className="font-medium">Date:</span> {event.date}
+            <div key={event.id} className="event-card">
+              <div className="event-header">
+                <div className="event-info">
+                  <h2 className="event-title">{event.title}</h2>
+                  <p className="event-description">{event.description}</p>
+                  <div className="event-details">
+                    <p className="event-detail">
+                      <span className="event-detail-label">Date:</span> {event.date}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      <span className="font-medium">Time:</span> {event.time}
+                    <p className="event-detail">
+                      <span className="event-detail-label">Time:</span> {event.time}
                     </p>
-                    <p className="text-sm text-gray-500">
-                      <span className="font-medium">Location:</span> {event.location}
+                    <p className="event-detail">
+                      <span className="event-detail-label">Location:</span> {event.location}
                     </p>
                   </div>
                 </div>
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                  Register
-                </button>
+                <button className="event-register-button">Register</button>
               </div>
             </div>
           ))}
