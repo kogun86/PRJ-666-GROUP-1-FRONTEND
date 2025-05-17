@@ -19,20 +19,20 @@ import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const navLinks = [
-    { name: 'Courses', path: '/courses', icon: BookText, color: 'bg-[#52796F]' },
-    { name: 'Events', path: '/events', icon: CalendarDays, color: 'bg-[#52796F]' },
-    { name: 'Smart To-Do', path: '/todo', icon: ListTodo, color: 'bg-[#52796F]' },
-    { name: 'Goals', path: '/goals', icon: Target, color: 'bg-[#52796F]' },
-    { name: 'Tips', path: '/tips', icon: HelpCircle, color: 'bg-[#52796F]' },
-    { name: 'Calendar', path: '/calendar', icon: Calendar, color: 'bg-[#52796F]' },
+    { name: 'Courses', path: '/courses', icon: BookText },
+    { name: 'Events', path: '/events', icon: CalendarDays },
+    { name: 'Smart To-Do', path: '/todo', icon: ListTodo },
+    { name: 'Goals', path: '/goals', icon: Target },
+    { name: 'Tips', path: '/tips', icon: HelpCircle },
+    { name: 'Calendar', path: '/calendar', icon: Calendar },
   ];
 
   return (
     <aside className="sidebar">
-      <div className="flex flex-col h-full">
+      <div className="sidebar-container">
         {/* User profile section */}
         <div className="sidebar-profile">
           <Link
@@ -43,11 +43,20 @@ const Sidebar = () => {
               <div className="sidebar-avatar-container">
                 <div className="sidebar-avatar-inner">
                   <Avatar>
-                    <AvatarFallback className="bg-[#2F3E46] text-white">DB</AvatarFallback>
+                    <AvatarFallback className="avatar-fallback">
+                      {user?.name
+                        ? user.name
+                            .split(' ')
+                            .map((part) => part[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)
+                        : 'U'}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
               </div>
-              <div className="sidebar-username">Daniil Boiko</div>
+              <div className="sidebar-username">{user?.name || 'User'}</div>
             </div>
           </Link>
         </div>

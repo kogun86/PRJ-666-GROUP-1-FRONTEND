@@ -17,6 +17,13 @@
   }
 }
 
+/* Full-height flex container */
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .sidebar-profile {
   padding: 0 1rem;
   margin-bottom: 1.5rem;
@@ -31,7 +38,7 @@
 .sidebar-profile-container {
   width: 100%;
   height: 70px;
-  background-color: #52796f;
+  /*background-color: #52796f;*/
   display: flex;
   align-items: center;
   padding: 0 1rem;
@@ -69,10 +76,24 @@ body:has([href='/profile'].active) .sidebar-username {
   height: 40px;
 }
 
+.avatar-fallback {
+  background-color: #2f3e46;
+  color: #cad2c5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
 .sidebar-username {
   color: #cad2c5;
   font-size: 1.5rem;
   font-weight: normal;
+  text-align: center;
 }
 
 .sidebar-nav {
