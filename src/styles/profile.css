@@ -124,6 +124,9 @@
   color: #cad2c5;
   font-size: 1.25rem;
   transition: background-color 0.3s;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
 }
 
 .profile-button:hover {
@@ -250,54 +253,158 @@
   }
 }
 
+/* Password Change Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: #cad2c5;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+}
+
+.password-modal {
+  padding: 2rem;
+}
+
+.password-modal-title {
+  color: #2f3e46;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.password-error {
+  background-color: #a72f38;
+  color: #cad2c5;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.password-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.password-label {
+  display: block;
+  color: #2f3e46;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.password-input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 2px solid #52796f;
+  background-color: #fff;
+  color: #2f3e46;
+  font-size: 1rem;
+}
+
+.password-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.password-cancel-button {
+  background-color: transparent;
+  color: #52796f;
+  border: 2px solid #52796f;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.password-cancel-button:hover {
+  background-color: rgba(82, 121, 111, 0.1);
+}
+
+.password-submit-button {
+  background-color: #52796f;
+  color: #cad2c5;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.password-submit-button:hover {
+  background-color: #3a5a40;
+}
+
 .profile-goals-content {
   padding: 1.5rem;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 12rem;
 }
 
 .profile-goals-image {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 12rem;
   object-fit: contain;
 }
 
 .profile-goals-fallback {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-goals-fallback-text {
   color: #2f3e46;
+  text-align: center;
+  font-size: 1rem;
 }
 
-/* Skeleton Styles */
 .profile-skeleton {
+  border-radius: 0.5rem;
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  background-color: #94a3b8;
+  background-color: rgba(47, 62, 70, 0.3);
 }
 
 @keyframes pulse {
   0%,
   100% {
-    opacity: 1;
+    opacity: 0.5;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.3;
   }
 }
 
 .profile-skeleton-main {
-  height: 400px;
-  width: 100%;
-  border-radius: 0.5rem;
+  height: 350px;
   margin-bottom: 2rem;
 }
 
 .profile-skeleton-card {
   height: 250px;
-  width: 100%;
-  border-radius: 0.5rem;
 }

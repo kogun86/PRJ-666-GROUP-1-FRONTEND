@@ -56,6 +56,19 @@ const CheckCircle2 = () => {
   );
 };
 
+// Modal component for password change
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const Skeleton = ({ className }) => {
   return <div className={className}></div>;
 };
@@ -63,6 +76,13 @@ const Skeleton = ({ className }) => {
 export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // Simulate data loading
@@ -77,6 +97,58 @@ export default function Profile() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleOpenModal = () => setModalOpen(true);
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setError('');
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({
+      ...passwordData,
+      [name]: value,
+    });
+  };
+
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+
+    // Form validation
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      setError('All fields are required');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    // Password strength validation (simple example)
+    if (passwordData.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    // Here you would typically call an API to update the password
+    // For this example, we'll just simulate success
+    setTimeout(() => {
+      handleCloseModal();
+      // Could show a success notification here
+    }, 500);
+  };
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -115,7 +187,9 @@ export default function Profile() {
               </div>
 
               <div className="profile-action-row">
-                <Button className="profile-button">Change Password</Button>
+                <Button className="profile-button px-4 py-2 rounded-lg" onClick={handleOpenModal}>
+                  Change Password
+                </Button>
               </div>
             </div>
           </div>
@@ -184,6 +258,68 @@ export default function Profile() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Password Change Modal */}
+        <Modal isOpen={modalOpen} onClose={handleCloseModal}>
+          <div className="password-modal">
+            <h2 className="password-modal-title">Change Password</h2>
+
+            {error && <div className="password-error">{error}</div>}
+
+            <form onSubmit={handlePasswordChange}>
+              <div className="password-form-group">
+                <label htmlFor="currentPassword" className="password-label">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handleInputChange}
+                  className="password-input"
+                />
+              </div>
+
+              <div className="password-form-group">
+                <label htmlFor="newPassword" className="password-label">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handleInputChange}
+                  className="password-input"
+                />
+              </div>
+
+              <div className="password-form-group">
+                <label htmlFor="confirmPassword" className="password-label">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="password-input"
+                />
+              </div>
+
+              <div className="password-actions">
+                <button type="button" onClick={handleCloseModal} className="password-cancel-button">
+                  Cancel
+                </button>
+                <button type="submit" className="password-submit-button">
+                  Change Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
       </div>
     </Layout>
   );
