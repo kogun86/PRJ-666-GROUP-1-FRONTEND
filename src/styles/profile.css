@@ -117,6 +117,8 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .profile-button {
@@ -130,6 +132,14 @@
 }
 
 .profile-button:hover {
+  background-color: #3a5a40;
+}
+
+.profile-edit-button {
+  background-color: #52796f;
+}
+
+.profile-edit-button:hover {
   background-color: #3a5a40;
 }
 

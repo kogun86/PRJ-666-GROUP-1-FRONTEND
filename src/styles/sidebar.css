@@ -97,6 +97,10 @@ body:has([href='/profile'].active) .sidebar-username {
   transition: all 0.2s ease;
 }
 
+.nav-link:hover {
+  background-color: #3a5a40;
+}
+
 .nav-link.active {
   background-color: #cad2c5;
 }

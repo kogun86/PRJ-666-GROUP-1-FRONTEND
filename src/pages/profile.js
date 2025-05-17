@@ -56,7 +56,7 @@ const CheckCircle2 = () => {
   );
 };
 
-// Modal component for password change
+// Modal component for password change and edit profile
 const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
@@ -76,21 +76,35 @@ const Skeleton = ({ className }) => {
 export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+  });
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    dateOfBirth: '',
   });
   const [error, setError] = useState('');
 
   useEffect(() => {
     // Simulate data loading
     const timer = setTimeout(() => {
-      setUser({
+      const userData = {
         name: 'John Doe',
         email: 'john.doe@example.com',
         lastLogin: 'February 10 2025',
+        dateOfBirth: '1990-01-01',
+      };
+
+      setUser(userData);
+      setProfileData({
+        name: userData.name,
+        email: userData.email,
+        dateOfBirth: userData.dateOfBirth || '',
       });
       setIsLoading(false);
     }, 1500);
@@ -98,10 +112,13 @@ export default function Profile() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleOpenModal = () => setModalOpen(true);
+  const handleOpenPasswordModal = () => {
+    setPasswordModalOpen(true);
+    setError('');
+  };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
+  const handleClosePasswordModal = () => {
+    setPasswordModalOpen(false);
     setPasswordData({
       currentPassword: '',
       newPassword: '',
@@ -110,10 +127,33 @@ export default function Profile() {
     setError('');
   };
 
-  const handleInputChange = (e) => {
+  const handleOpenEditProfileModal = () => {
+    setEditProfileModalOpen(true);
+    setProfileData({
+      name: user.name,
+      email: user.email,
+      dateOfBirth: user.dateOfBirth || '',
+    });
+    setError('');
+  };
+
+  const handleCloseEditProfileModal = () => {
+    setEditProfileModalOpen(false);
+    setError('');
+  };
+
+  const handlePasswordInputChange = (e) => {
     const { name, value } = e.target;
     setPasswordData({
       ...passwordData,
+      [name]: value,
+    });
+  };
+
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData({
+      ...profileData,
       [name]: value,
     });
   };
@@ -145,7 +185,37 @@ export default function Profile() {
     // Here you would typically call an API to update the password
     // For this example, we'll just simulate success
     setTimeout(() => {
-      handleCloseModal();
+      handleClosePasswordModal();
+      // Could show a success notification here
+    }, 500);
+  };
+
+  const handleProfileUpdate = (e) => {
+    e.preventDefault();
+
+    // Form validation
+    if (!profileData.name || !profileData.email) {
+      setError('Name and email are required');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(profileData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Here you would typically call an API to update the profile
+    // For this example, we'll just update the local state
+    setTimeout(() => {
+      setUser({
+        ...user,
+        name: profileData.name,
+        email: profileData.email,
+        dateOfBirth: profileData.dateOfBirth,
+      });
+      handleCloseEditProfileModal();
       // Could show a success notification here
     }, 500);
   };
@@ -182,12 +252,29 @@ export default function Profile() {
                 <CheckCircle2 />
               </div>
 
+              {user.dateOfBirth && (
+                <div className="profile-info-row">
+                  <span className="profile-info-text">
+                    Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+
               <div className="profile-info-row">
                 <span className="profile-info-text">Last Login Date: {user.lastLogin}</span>
               </div>
 
               <div className="profile-action-row">
-                <Button className="profile-button px-4 py-2 rounded-lg" onClick={handleOpenModal}>
+                <Button
+                  className="profile-button profile-edit-button px-4 py-2 rounded-lg mr-3"
+                  onClick={handleOpenEditProfileModal}
+                >
+                  Edit Profile
+                </Button>
+                <Button
+                  className="profile-button px-4 py-2 rounded-lg"
+                  onClick={handleOpenPasswordModal}
+                >
                   Change Password
                 </Button>
               </div>
@@ -260,7 +347,7 @@ export default function Profile() {
         </div>
 
         {/* Password Change Modal */}
-        <Modal isOpen={modalOpen} onClose={handleCloseModal}>
+        <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal}>
           <div className="password-modal">
             <h2 className="password-modal-title">Change Password</h2>
 
@@ -276,7 +363,7 @@ export default function Profile() {
                   id="currentPassword"
                   name="currentPassword"
                   value={passwordData.currentPassword}
-                  onChange={handleInputChange}
+                  onChange={handlePasswordInputChange}
                   className="password-input"
                 />
               </div>
@@ -290,7 +377,7 @@ export default function Profile() {
                   id="newPassword"
                   name="newPassword"
                   value={passwordData.newPassword}
-                  onChange={handleInputChange}
+                  onChange={handlePasswordInputChange}
                   className="password-input"
                 />
               </div>
@@ -304,17 +391,87 @@ export default function Profile() {
                   id="confirmPassword"
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
-                  onChange={handleInputChange}
+                  onChange={handlePasswordInputChange}
                   className="password-input"
                 />
               </div>
 
               <div className="password-actions">
-                <button type="button" onClick={handleCloseModal} className="password-cancel-button">
+                <button
+                  type="button"
+                  onClick={handleClosePasswordModal}
+                  className="password-cancel-button"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="password-submit-button">
                   Change Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        {/* Edit Profile Modal */}
+        <Modal isOpen={editProfileModalOpen} onClose={handleCloseEditProfileModal}>
+          <div className="password-modal">
+            {' '}
+            {/* Reusing the same modal styles */}
+            <h2 className="password-modal-title">Edit Profile</h2>
+            {error && <div className="password-error">{error}</div>}
+            <form onSubmit={handleProfileUpdate}>
+              <div className="password-form-group">
+                <label htmlFor="name" className="password-label">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={profileData.name}
+                  onChange={handleProfileInputChange}
+                  className="password-input"
+                />
+              </div>
+
+              <div className="password-form-group">
+                <label htmlFor="email" className="password-label">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={profileData.email}
+                  onChange={handleProfileInputChange}
+                  className="password-input"
+                />
+              </div>
+
+              <div className="password-form-group">
+                <label htmlFor="dateOfBirth" className="password-label">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  value={profileData.dateOfBirth}
+                  onChange={handleProfileInputChange}
+                  className="password-input"
+                />
+              </div>
+
+              <div className="password-actions">
+                <button
+                  type="button"
+                  onClick={handleCloseEditProfileModal}
+                  className="password-cancel-button"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="password-submit-button">
+                  Save Changes
                 </button>
               </div>
             </form>
