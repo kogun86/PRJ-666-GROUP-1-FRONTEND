@@ -2,60 +2,75 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  BookOpen,
+  User,
+  CalendarDays,
+  BookText,
+  ListTodo,
+  Target,
+  HelpCircle,
+  Calendar,
+  LogOut,
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { cn } from '../lib/utils';
 
 const Sidebar = () => {
   const pathname = usePathname();
 
-  const navItems = [
-    { name: 'Calendar', path: '/calendar' },
-    { name: 'Courses', path: '/courses' },
-    { name: 'Events', path: '/events' },
-    { name: 'Goals', path: '/goals' },
-    { name: 'Profile', path: '/profile' },
-    { name: 'Todo', path: '/todo' },
+  const navLinks = [
+    { name: 'Courses', path: '/courses', icon: BookText, color: 'bg-[#52796F]' },
+    { name: 'Events', path: '/events', icon: CalendarDays, color: 'bg-[#52796F]' },
+    { name: 'Smart To-Do', path: '/todo', icon: ListTodo, color: 'bg-[#52796F]' },
+    { name: 'Goals', path: '/goals', icon: Target, color: 'bg-[#52796F]' },
+    { name: 'Tips', path: '/tips', icon: HelpCircle, color: 'bg-[#52796F]' },
+    { name: 'Calendar', path: '/calendar', icon: Calendar, color: 'bg-[#52796F]' },
   ];
 
   return (
-    <aside className="fixed inset-y-0 left-0 bg-[#2F3E46] flex flex-col w-[320px] z-10 test-class">
+    <aside className="sidebar">
       <div className="flex flex-col h-full">
         {/* User profile section */}
-        <div className="p-2 mb-6">
-          <Link href="/profile">
-            <div className="w-full h-[70px] bg-[#CAD2C5] flex items-center px-4 rounded cursor-pointer">
-              <div className="w-[50px] h-[50px] bg-[#2F3E46] rounded-full flex items-center justify-center mr-4">
-                <div className="w-[34px] h-[40px] flex items-center justify-center text-white">
-                  DB
+        <div className="sidebar-profile">
+          <Link href="/profile" className="sidebar-profile-link">
+            <div className="sidebar-profile-container">
+              <div className="sidebar-avatar-container">
+                <div className="sidebar-avatar-inner">
+                  <Avatar>
+                    <AvatarFallback className="bg-[#2F3E46] text-white">DB</AvatarFallback>
+                  </Avatar>
                 </div>
               </div>
-              <div className="text-[#2F3E46] text-2xl font-normal">Daniil Boiko</div>
+              <div className="sidebar-username">Daniil Boiko</div>
             </div>
           </Link>
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 px-4">
-          <div className="space-y-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`bg-[#52796F] w-full h-[35px] flex items-center px-4 rounded ${
-                  pathname === item.path ? 'bg-opacity-80' : ''
-                }`}
-              >
-                <span className="text-[#CAD2C5] text-base">{item.name}</span>
-              </Link>
-            ))}
+        <nav className="sidebar-nav">
+          <div className="sidebar-nav-links">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.path}
+                  href={link.path}
+                  className={cn('nav-link', pathname === link.path && 'active')}
+                >
+                  <Icon className="nav-link-icon" />
+                  <span className="nav-link-text">{link.name}</span>
+                </Link>
+              );
+            })}
           </div>
         </nav>
 
         {/* Logout button */}
-        <div className="px-4 py-4 mt-auto">
-          <Link
-            href="/login"
-            className="bg-[#A72F38] w-full h-[35px] flex items-center px-4 rounded"
-          >
-            <span className="text-[#CAD2C5] text-base">Log Out</span>
+        <div className="sidebar-footer">
+          <Link href="/login" className="logout-button">
+            <LogOut className="logout-icon" />
+            <span className="logout-text">Log Out</span>
           </Link>
         </div>
       </div>

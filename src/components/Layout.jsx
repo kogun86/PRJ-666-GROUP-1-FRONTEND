@@ -1,12 +1,14 @@
 'use client';
 
 import Sidebar from './Sidebar';
+import MobileNav from './MobileNav';
 
 const Layout = ({ children }) => {
   return (
-    <div className="flex">
+    <div className="layout-container">
       <Sidebar />
-      <main className="flex-1 p-8">{children}</main>
+      <main className="main-content">{children}</main>
+      <MobileNav />
     </div>
   );
 };

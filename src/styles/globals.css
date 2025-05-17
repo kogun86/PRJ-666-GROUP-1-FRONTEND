@@ -1,18 +1,38 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Custom styles */
+/* Global CSS Variables */
 :root {
+  /* Main colors */
+  --color-primary: #2f3e46;
+  --color-secondary: #52796f;
+  --color-accent: #cad2c5;
+  --color-destructive: #a72f38;
+
+  /* Background and text colors */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Border and input styles */
+  --border-color: #e5e7eb;
+  --input-bg: #f9fafb;
+  --radius: 0.5rem;
 }
 
+/* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --border-color: #374151;
+    --input-bg: #1f2937;
   }
+}
+
+/* Reset styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
 html,
@@ -27,17 +47,63 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+  line-height: 1.5;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Button styles */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Form element styles */
+input,
+textarea,
+select {
+  font-family: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem;
+  background-color: var(--input-bg);
+  color: var(--foreground);
+}
+
+/* Utility classes */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
