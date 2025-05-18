@@ -2,8 +2,8 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
+import Image from 'next/image';
 
-// UI Components - simplified versions of shadcn/ui components
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
 };
@@ -18,7 +18,16 @@ const AvatarFallback = ({ className, children }) => {
 
 const AvatarImage = ({ src, alt = 'Avatar' }) => {
   return src ? (
-    <img src={src} alt={alt} className="w-full h-full rounded-full object-cover" />
+    <div className="w-full h-full rounded-full relative overflow-hidden">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 100px, 200px"
+        style={{ objectFit: 'cover' }}
+        className="rounded-full"
+      />
+    </div>
   ) : null;
 };
 
@@ -322,15 +331,22 @@ function ProfileContent() {
           <CardContent className="profile-card-content">
             <div className="profile-card-header">Goal Progress</div>
             <div className="profile-goals-content">
-              <img
-                src="/placeholder-image.png"
-                alt="Goal Progress"
-                className="profile-goals-image"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  document.getElementById('fallback-text')?.classList.remove('hidden');
-                }}
-              />
+              <div
+                className="profile-goals-image-container"
+                style={{ position: 'relative', width: '100%', height: '200px' }}
+              >
+                <Image
+                  src="/placeholder-image.png"
+                  alt="Goal Progress"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  style={{ objectFit: 'contain' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    document.getElementById('fallback-text')?.classList.remove('hidden');
+                  }}
+                />
+              </div>
               <div id="fallback-text" className="profile-goals-fallback hidden">
                 <p className="profile-goals-fallback-text">The image you are</p>
                 <p className="profile-goals-fallback-text">requesting does not exist</p>
