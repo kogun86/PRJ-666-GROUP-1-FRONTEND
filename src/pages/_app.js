@@ -5,7 +5,7 @@ import '../styles/layout.css';
 import '../styles/profile.css';
 import '../styles/courses.css';
 import '../styles/events.css';
-import '../styles/login.css';
+//import '../styles/login.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../styles/auth.css';
 import '../styles/notfound.css';
