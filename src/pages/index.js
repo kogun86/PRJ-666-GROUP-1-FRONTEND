@@ -1,5 +1,10 @@
 import Layout from '../components/Layout';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 export default function Home() {
-  return <Layout>{/* Main content will be added when needed */}</Layout>;
+  return (
+    <ProtectedRoute>
+      <Layout></Layout>
+    </ProtectedRoute>
+  );
 }
