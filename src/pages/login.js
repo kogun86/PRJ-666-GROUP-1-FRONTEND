@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, Auth } from '../features/auth';
 import AuthForm from '../components/AuthForm';
-import { Auth } from '../lib/auth';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -15,7 +14,7 @@ export default function Login() {
     // Check if we're running in production (for Cognito) or development (for basic auth)
     const checkEnvironment = async () => {
       try {
-        const response = await fetch('/api/check-environment');
+        const response = await fetch('/api/auth/check-environment');
         const data = await response.json();
         setIsProduction(data.isProduction);
       } catch (err) {

@@ -1,5 +1,5 @@
 // This API endpoint checks if the app is running in production or development
-import { isProduction } from '../../lib/auth';
+import { isProduction } from '../../../features/auth/lib';
 
 export default function handler(req, res) {
   // Use the centralized isProduction helper

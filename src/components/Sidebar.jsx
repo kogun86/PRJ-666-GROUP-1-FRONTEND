@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '../lib/utils';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/context/AuthContext';
 
 const Sidebar = () => {
   const pathname = usePathname();

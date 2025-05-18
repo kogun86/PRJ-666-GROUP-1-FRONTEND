@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Auth, isProduction as checkIsProduction } from '../lib/auth';
+import { Auth, isProduction as checkIsProduction } from '../lib';
 
 const AuthContext = createContext();
 
@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
     async function loadUserFromLocalStorage() {
       try {
         // Check if we're in production or development
-        const envCheck = await fetch('/api/check-environment');
+        const envCheck = await fetch('/api/auth/check-environment');
         const envData = await envCheck.json();
         setIsProduction(envData.isProduction);
 
