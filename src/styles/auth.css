@@ -61,6 +61,14 @@
   font-size: 1rem;
 }
 
+
+/* Style the calendar icon for date inputs */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    /* This filter will tint the icon to a greenish color similar to #52796f */
+  filter: invert(38%) sepia(14%) saturate(682%) hue-rotate(110deg) brightness(90%) contrast(90%);
+  cursor: pointer;
+}
+
 .login-input:focus,
 .password-input:focus {
   outline: none;
