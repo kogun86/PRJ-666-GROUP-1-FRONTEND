@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import Image from 'next/image';
-import { useAuth, useAuthProtection } from '../features/auth';
+import { useAuth } from '../features/auth';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
@@ -502,64 +503,20 @@ function ProfileContent() {
 }
 
 export default function Profile() {
-  // Use our authentication protection hook
-  const { isLoading } = useAuthProtection();
-  const { user } = useAuth();
-
-  // Show loading state while authentication is checked
-  if (isLoading || !user) {
-    return (
+  return (
+    <ProtectedRoute>
       <Layout>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <div className="loading-text">Loading profile...</div>
+        <div className="profile-page">
+          <ProfileContent />
         </div>
         <style jsx>{`
-          .loading-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 70vh;
-          }
-          .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top: 4px solid #333;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-          }
-          .loading-text {
-            font-size: 1.5rem;
-            color: #333;
-          }
-          @keyframes spin {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
+          .profile-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
           }
         `}</style>
       </Layout>
-    );
-  }
-
-  return (
-    <Layout>
-      <div className="profile-page">
-        <ProfileContent />
-      </div>
-      <style jsx>{`
-        .profile-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 2rem 1rem;
-        }
-      `}</style>
-    </Layout>
+    </ProtectedRoute>
   );
 }
