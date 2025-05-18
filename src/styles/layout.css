@@ -1,0 +1,18 @@
+/* Layout styles */
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  padding-bottom: 6rem; /* Extra space for mobile nav */
+}
+
+@media (min-width: 1025px) {
+  .main-content {
+    margin-left: 320px;
+    padding-bottom: 2rem;
+  }
+}
