@@ -12,7 +12,7 @@ const CoursesPage = () => {
     <Layout>
       <div className="profile-container">
         <div className="profile-card">
-          {/* Top Centered Tab Bar */}
+          {/* top tab bar */}
           <div className="profile-action-row" style={{ justifyContent: 'center' }}>
             {tabList.map((tab) => (
               <button
@@ -25,7 +25,7 @@ const CoursesPage = () => {
             ))}
           </div>
 
-          {/* Tab Content */}
+          {/* 2 tabs i've created classes and courses! */}
           <div className="profile-content">
             {activeTab === 'My Classes' && <WeeklyClassesView />}
             {activeTab === 'My Courses' && <CourseForm onSubmit={(data) => console.log(data)} />}
