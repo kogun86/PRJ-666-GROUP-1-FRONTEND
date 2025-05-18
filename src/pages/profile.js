@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
-import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
 import Image from 'next/image';
+import useAuthProtection from '../hooks/useAuthProtection';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
@@ -96,6 +96,11 @@ function ProfileContent() {
   });
   const [error, setError] = useState('');
 
+  // If user is not available, show a loading state
+  if (!user) {
+    return <div className="profile-loading">Loading user data...</div>;
+  }
+
   const handleOpenPasswordModal = () => {
     setPasswordModalOpen(true);
     setError('');
@@ -114,9 +119,9 @@ function ProfileContent() {
   const handleOpenEditProfileModal = () => {
     setEditProfileModalOpen(true);
     setProfileData({
-      name: user?.name || '',
-      email: user?.email || '',
-      dateOfBirth: user?.dateOfBirth || '',
+      name: user.name || '',
+      email: user.email || '',
+      dateOfBirth: user.dateOfBirth || '',
     });
     setError('');
   };
@@ -193,16 +198,19 @@ function ProfileContent() {
     // Here you would typically call an API to update the profile
     // For this example, we'll just update the local state
     setTimeout(() => {
-      // Update local user data
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          ...user,
-          name: profileData.name,
-          email: profileData.email,
-          dateOfBirth: profileData.dateOfBirth,
-        })
-      );
+      // Make sure user exists before updating
+      if (user) {
+        // Update local user data
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            ...user,
+            name: profileData.name,
+            email: profileData.email,
+            dateOfBirth: profileData.dateOfBirth,
+          })
+        );
+      }
 
       // In a real application, you would update the context state
       // but for this demo we'll just reload the page
@@ -237,7 +245,7 @@ function ProfileContent() {
             <div className="profile-avatar-circle">
               <Avatar className="profile-avatar">
                 <AvatarFallback className="profile-avatar-text">
-                  {getInitials(user.name)}
+                  {getInitials(user?.name)}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -246,15 +254,15 @@ function ProfileContent() {
           {/* User Information */}
           <div className="profile-info">
             <div className="profile-info-row">
-              <span className="profile-info-text">Name: {user.name}</span>
+              <span className="profile-info-text">Name: {user?.name || 'Not set'}</span>
             </div>
 
             <div className="profile-info-row">
-              <span className="profile-info-text">Email: {user.email}</span>
+              <span className="profile-info-text">Email: {user?.email || 'Not set'}</span>
               <CheckCircle2 />
             </div>
 
-            {user.dateOfBirth && (
+            {user?.dateOfBirth && (
               <div className="profile-info-row">
                 <span className="profile-info-text">
                   Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
@@ -264,7 +272,8 @@ function ProfileContent() {
 
             <div className="profile-info-row">
               <span className="profile-info-text">
-                Last Login Date: {new Date(user.lastLogin).toLocaleDateString()}
+                Last Login Date:{' '}
+                {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Unknown'}
               </span>
             </div>
 
@@ -494,11 +503,64 @@ function ProfileContent() {
 }
 
 export default function Profile() {
-  return (
-    <ProtectedRoute>
+  // Use our authentication protection hook
+  const { isLoading } = useAuthProtection();
+  const { user } = useAuth();
+
+  // Show loading state while authentication is checked
+  if (isLoading || !user) {
+    return (
       <Layout>
-        <ProfileContent />
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Loading profile...</div>
+        </div>
+        <style jsx>{`
+          .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 70vh;
+          }
+          .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #333;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+          }
+          .loading-text {
+            font-size: 1.5rem;
+            color: #333;
+          }
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </Layout>
-    </ProtectedRoute>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="profile-page">
+        <ProfileContent />
+      </div>
+      <style jsx>{`
+        .profile-page {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem 1rem;
+        }
+      `}</style>
+    </Layout>
   );
 }

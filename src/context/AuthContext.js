@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { Auth, isProduction as checkIsProduction } from '../lib/auth';
 
 const AuthContext = createContext();
 
@@ -18,26 +19,36 @@ export function AuthProvider({ children }) {
         const envData = await envCheck.json();
         setIsProduction(envData.isProduction);
 
-        // In production, check for JWT token
+        // In production, check for authenticated user with Amplify
         if (envData.isProduction) {
-          const token = localStorage.getItem('authToken');
-          if (token) {
-            // Verify token with backend
-            const response = await fetch('/api/auth/verify-token', {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
+          try {
+            // Get current authenticated user
+            const currentUser = await Auth.currentAuthenticatedUser();
+            if (currentUser) {
+              // Get user attributes
+              const userAttributes = await Auth.userAttributes(currentUser);
 
-            if (response.ok) {
-              const userData = await response.json();
+              // For Amplify v6, userAttributes is now an object not an array
+              const userData = {
+                name: userAttributes.name || currentUser.username || 'User',
+                email: userAttributes.email || currentUser.username,
+                // Add other attributes as needed
+                lastLogin: new Date().toISOString(),
+              };
+
               setUser(userData);
-            } else {
-              // Token invalid or expired
-              localStorage.removeItem('authToken');
-              localStorage.removeItem('user');
-              setUser(null);
+              localStorage.setItem('user', JSON.stringify(userData));
+
+              // If we're on the login page and user is authenticated, redirect to profile
+              if (window.location.pathname === '/login') {
+                router.replace('/profile');
+              }
             }
+          } catch (error) {
+            // No authenticated user
+            console.log('No authenticated user found:', error);
+            localStorage.removeItem('user');
+            setUser(null);
           }
         } else {
           // In development, check for simple auth flag
@@ -46,6 +57,11 @@ export function AuthProvider({ children }) {
             const savedUser = localStorage.getItem('user');
             if (savedUser) {
               setUser(JSON.parse(savedUser));
+
+              // If we're on the login page and user is authenticated, redirect to profile
+              if (window.location.pathname === '/login') {
+                router.replace('/profile');
+              }
             }
           }
         }
@@ -57,7 +73,7 @@ export function AuthProvider({ children }) {
     }
 
     loadUserFromLocalStorage();
-  }, []);
+  }, [router]);
 
   // Login function
   const login = async (email, password) => {
@@ -65,25 +81,34 @@ export function AuthProvider({ children }) {
 
     try {
       if (isProduction) {
-        // Use Cognito auth in production
-        const response = await fetch('/api/auth/cognito-login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Authentication failed');
+        try {
+          // First try to sign out any existing session
+          await Auth.signOut();
+        } catch (signOutError) {
+          // Ignore sign out errors
+          console.log('No user to sign out or sign out failed', signOutError);
         }
 
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
-        //setIsAuthenticated(true);
+        // Use Amplify Auth in production
+        const user = await Auth.signIn(email, password);
+
+        if (!user) {
+          throw new Error('Authentication failed');
+        }
+
+        // Get user attributes - in v6 this directly returns an object
+        const userAttributes = await Auth.userAttributes();
+
+        // Create user object from attributes
+        const userData = {
+          name: userAttributes.name || email.split('@')[0] || 'User',
+          email: userAttributes.email || email,
+          // Add other attributes as needed
+          lastLogin: new Date().toISOString(),
+        };
+
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
         return true;
       } else {
         // Use simple auth in development
@@ -112,12 +137,21 @@ export function AuthProvider({ children }) {
   };
 
   // Logout function
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      if (isProduction) {
+        // Use Amplify Auth in production
+        await Auth.signOut();
+      }
+
+      // Clear local storage and state in both environments
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+      setUser(null);
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

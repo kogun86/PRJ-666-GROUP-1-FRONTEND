@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import AuthForm from '../components/AuthForm';
-import { signIn, signOut } from 'aws-amplify/auth';
-
+import { Auth } from '../lib/auth';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -30,44 +29,43 @@ export default function Login() {
   }, []);
 
   const handleLogin = async ({ email, password }) => {
-  // const result = await signOut({username: email, password });
-  setError('');
-  setLoading(true);
+    setError('');
+    setLoading(true);
 
-  try {
-    await signOut();
-    // Front-end validation
-    if (!email || !password) {
-      throw new Error('Email and password are required');
+    try {
+      // Front-end validation
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+
+      console.log('Username:', email);
+      // Don't log passwords in production
+      if (!isProduction) {
+        console.log('Password:', password);
+      }
+
+      let authResult;
+
+      // Call the context login function which handles both dev and prod
+      authResult = await login(email, password);
+
+      // Check for error in the returned result
+      if (authResult && authResult.error) {
+        throw new Error(authResult.error);
+      }
+
+      console.log('Login successful, redirecting to profile...');
+
+      // Force redirect to profile page - using replace instead of push to prevent back-button issues
+      router.replace('/profile');
+    } catch (error) {
+      console.error('Login error:', error.message, error);
+      setError(error.message || 'Failed to login');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    console.log("Username:", email);
-    console.log("Password:", password);
-
-    const result = await signIn({ username: email, password });
-    
-    if (!result || result.error) {
-      throw new Error(result?.error || 'Login failed');
-    }
-
-    console.log("User signed in:", result);
-    console.log('Login successful, redirecting to profile...');
-
-    // ✅ SET AUTH CONTEXT STATE HERE
-    await login(email, password); // call your context's login function
-
-    // Redirect after short delay
-    setTimeout(() => {
-      router.push('/profile');
-    }, 100);
-
-  } catch (error) {
-    console.error("Login error:", error.message, error);
-    setError(error.message || 'Failed to login');
-  } finally {
-    setLoading(false);
-  }
-};
   // Define form fields
   const loginFields = [
     {
