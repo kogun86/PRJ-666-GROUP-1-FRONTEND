@@ -1,11 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AuthForm from '../components/AuthForm';
+import { Auth } from '../lib/auth';
 
 export default function Registration() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isProduction, setIsProduction] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if we're running in production (for Cognito) or development (for basic auth)
+    const checkEnvironment = async () => {
+      try {
+        const response = await fetch('/api/check-environment');
+        const data = await response.json();
+        setIsProduction(data.isProduction);
+      } catch (err) {
+        console.error('Failed to check environment:', err);
+        // Default to development mode if we can't determine
+        setIsProduction(false);
+      }
+    };
+
+    checkEnvironment();
+  }, []);
 
   const handleRegistration = async (values) => {
     setError('');
@@ -21,14 +40,40 @@ export default function Registration() {
         throw new Error('Email addresses do not match');
       }
 
-      // Here you would typically call your API to register the user
-      console.log('Registration data:', values);
+      if (isProduction) {
+        // Use Cognito for production sign up
+        try {
+          const result = await Auth.signUp({
+            username: values.email,
+            password: values.password,
+            options: {
+              userAttributes: {
+                email: values.email,
+                given_name: values.firstName,
+                family_name: values.lastName,
+                name: `${values.firstName} ${values.lastName}`,
+              },
+            },
+          });
 
-      // Mock API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+          console.log('User successfully registered:', result);
 
-      // Redirect to login page after successful registration
-      router.push('/login');
+          // Redirect to confirmation page or directly to login
+          router.push('/login');
+        } catch (cognitoError) {
+          console.error('Cognito registration error:', cognitoError);
+          throw new Error(cognitoError.message || 'Failed to register with Cognito');
+        }
+      } else {
+        // Development mode - just log and redirect
+        console.log('Development mode registration:', values);
+
+        // Mock API call delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Redirect to login page after successful registration
+        router.push('/login');
+      }
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to register');

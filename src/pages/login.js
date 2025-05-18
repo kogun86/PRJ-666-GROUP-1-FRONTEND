@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import AuthForm from '../components/AuthForm';
+import { Auth } from '../lib/auth';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -27,31 +28,39 @@ export default function Login() {
     checkEnvironment();
   }, []);
 
-  const handleLogin = async (values) => {
+  const handleLogin = async ({ email, password }) => {
     setError('');
     setLoading(true);
 
     try {
-      if (!values.email || !values.password) {
+      // Front-end validation
+      if (!email || !password) {
         throw new Error('Email and password are required');
       }
 
-      // Use the login function from AuthContext
-      const result = await login(values.email, values.password);
+      console.log('Username:', email);
+      // Don't log passwords in production
+      if (!isProduction) {
+        console.log('Password:', password);
+      }
 
-      if (result && result.error) {
-        throw new Error(result.error);
+      let authResult;
+
+      // Call the context login function which handles both dev and prod
+      authResult = await login(email, password);
+
+      // Check for error in the returned result
+      if (authResult && authResult.error) {
+        throw new Error(authResult.error);
       }
 
       console.log('Login successful, redirecting to profile...');
 
-      // Redirect to profile page after successful login
-      setTimeout(() => {
-        router.push('/profile');
-      }, 100);
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(err.message || 'Failed to login');
+      // Force redirect to profile page - using replace instead of push to prevent back-button issues
+      router.replace('/profile');
+    } catch (error) {
+      console.error('Login error:', error.message, error);
+      setError(error.message || 'Failed to login');
     } finally {
       setLoading(false);
     }

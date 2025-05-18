@@ -8,6 +8,7 @@ import '../styles/events.css';
 import '../styles/auth.css';
 import '../styles/notfound.css';
 import '../styles/calendar.css';
+import '../lib/auth/amplifyClient';
 import { AuthProvider } from '../context/AuthContext';
 
 export default function App({ Component, pageProps }) {
