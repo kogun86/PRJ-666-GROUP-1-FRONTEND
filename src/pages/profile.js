@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
-import { useAuth } from '../context/AuthContext';
 import Image from 'next/image';
-import useAuthProtection from '../hooks/useAuthProtection';
+import { useAuth, useAuthProtection } from '../features/auth';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;

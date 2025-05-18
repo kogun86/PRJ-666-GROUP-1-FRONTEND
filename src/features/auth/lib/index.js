@@ -14,7 +14,8 @@ export const isProduction = () => {
     process.env.NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID &&
     process.env.NEXT_PUBLIC_AWS_COGNITO_CLIENT_ID;
 
-  return process.env.NODE_ENV === 'production' && hasCognitoConfig;
+  // Return boolean value explicitly
+  return process.env.NODE_ENV === 'production' && hasCognitoConfig ? true : false;
 };
 
 // In development mode, provide mock Auth

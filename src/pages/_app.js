@@ -8,8 +8,8 @@ import '../styles/events.css';
 import '../styles/auth.css';
 import '../styles/notfound.css';
 import '../styles/calendar.css';
-import '../lib/auth/amplifyClient';
-import { AuthProvider } from '../context/AuthContext';
+import '../features/auth/lib/amplifyClient';
+import { AuthProvider } from '../features/auth';
 
 export default function App({ Component, pageProps }) {
   return (

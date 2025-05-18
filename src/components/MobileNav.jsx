@@ -15,7 +15,7 @@ import {
 import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../features/auth/context/AuthContext';
 
 export default function MobileNav() {
   const pathname = usePathname();

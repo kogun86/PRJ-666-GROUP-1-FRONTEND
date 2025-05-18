@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AuthForm from '../components/AuthForm';
-import { Auth } from '../lib/auth';
+import { Auth } from '../features/auth';
 
 export default function Registration() {
   const [error, setError] = useState('');
@@ -13,7 +13,7 @@ export default function Registration() {
     // Check if we're running in production (for Cognito) or development (for basic auth)
     const checkEnvironment = async () => {
       try {
-        const response = await fetch('/api/check-environment');
+        const response = await fetch('/api/auth/check-environment');
         const data = await response.json();
         setIsProduction(data.isProduction);
       } catch (err) {
