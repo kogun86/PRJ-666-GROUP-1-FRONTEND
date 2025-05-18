@@ -67,7 +67,7 @@
 .course-progress-bar-container {
   margin-top: 1rem;
   width: 100%;
-  background-color: #e2e8f0;
+  background-color: #e2f0eb;
   border-radius: 9999px;
   height: 0.5rem;
 }
@@ -76,4 +76,48 @@
   height: 0.5rem;
   border-radius: 9999px;
   background-color: #52796f;
+}
+
+/* ─── Tabs bar container ────────────────────────────────── */
+.tabs-bar {
+  display: flex;
+  background-color: var(--color-accent); /* cream container */
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 0 auto 1rem;
+}
+
+/* ─── Individual tab buttons ───────────────────────────── */
+.tabs-bar .profile-button {
+  flex: 1; /* equal width */
+  margin: 0; /* flush against neighbors */
+  border: none;
+  border-radius: 0; /* no rounding here */
+  background-color: var(--color-secondary); /* green inactive */
+  color: var(--color-accent); /* cream text */
+  font-weight: bold;
+  font-size: 1.25rem;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+/* ─── Rounded corners on the outside ───────────────────── */
+.tabs-bar .profile-button:first-child {
+  border-top-left-radius: var(--radius);
+  border-bottom-left-radius: var(--radius);
+}
+.tabs-bar .profile-button:last-child {
+  border-top-right-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+}
+
+/* ─── Active tab styling + divider ─────────────────────── */
+.tabs-bar .profile-button.active {
+  background-color: var(--color-accent); /* cream */
+  color: var(--color-primary); /* dark text */
+}
+/* only the active button that’s not the last one draws the mid-divider */
+.tabs-bar .profile-button.active:not(:last-child) {
+  border-right: 1px solid var(--color-primary);
 }

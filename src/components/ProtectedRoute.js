@@ -1,27 +1,53 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '../features/auth/context/AuthContext';
+import { useAuth, useAuthProtection } from '../features/auth';
+import Layout from './Layout';
 
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-  const router = useRouter();
+  // Use our authentication protection hook
+  const { isLoading } = useAuthProtection();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // If not loading and not authenticated, redirect to login
-    if (!loading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, loading, router]);
-
-  // Show nothing while loading or redirecting
-  if (loading || !isAuthenticated) {
+  // Show loading state while authentication is checked
+  if (isLoading || !user) {
     return (
-      <div className="protected-route-loading">
-        <div className="loading-spinner"></div>
-      </div>
+      <Layout>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Loading...</div>
+        </div>
+        <style jsx>{`
+          .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 70vh;
+          }
+          .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #333;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+          }
+          .loading-text {
+            font-size: 1.5rem;
+            color: #333;
+          }
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
+      </Layout>
     );
   }
 
   // If authenticated, render the children
-  return <>{children}</>;
+  return children;
 }
