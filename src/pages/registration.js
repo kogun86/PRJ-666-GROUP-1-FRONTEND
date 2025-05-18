@@ -40,6 +40,10 @@ export default function Registration() {
         throw new Error('Email addresses do not match');
       }
 
+      if (values.birthdate !== values.birthdate) {
+        throw new Error('Birthdate Does not Match');
+      }
+
       if (isProduction) {
         // Use Cognito for production sign up
         try {
@@ -52,6 +56,7 @@ export default function Registration() {
                 given_name: values.firstName,
                 family_name: values.lastName,
                 name: `${values.firstName} ${values.lastName}`,
+                birthdate: values.birthdate,
               },
             },
           });
@@ -59,7 +64,10 @@ export default function Registration() {
           console.log('User successfully registered:', result);
 
           // Redirect to confirmation page or directly to login
-          router.push('/login');
+          router.push({
+  pathname: '/confirmPage',
+  query: { email: values.email },
+});
         } catch (cognitoError) {
           console.error('Cognito registration error:', cognitoError);
           throw new Error(cognitoError.message || 'Failed to register with Cognito');
@@ -99,6 +107,13 @@ export default function Registration() {
       placeholder: 'Doe',
       required: true,
       row: 0, // Group in first row
+    },
+    {
+      name: 'birthdate',
+      type: 'date',
+      label: 'Birthdate',
+      placeholder: 'YYYY-MM-DD',
+      required: true,
     },
     {
       name: 'email',

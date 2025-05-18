@@ -1,5 +1,5 @@
 import { Amplify } from 'aws-amplify';
-import { signIn, signOut, signUp, fetchUserAttributes, getCurrentUser } from 'aws-amplify/auth';
+import { signIn, signOut, signUp, fetchUserAttributes, getCurrentUser, confirmSignUp } from 'aws-amplify/auth';
 
 /**
  * AWS Amplify configuration for authentication
@@ -75,6 +75,14 @@ const Auth = {
       );
     }
     return signUp(params);
+  },
+  confirmSignUp: (username, code) => {
+    if (!hasRequiredConfig) {
+      return Promise.reject(
+        new Error('Cognito configuration missing. Set required environment variables.')
+      );
+    }
+    return confirmSignUp({ username, confirmationCode: code });
   },
   userAttributes: () => {
     if (!hasRequiredConfig) {
