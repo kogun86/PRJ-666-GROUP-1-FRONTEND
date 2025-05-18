@@ -7,6 +7,7 @@ import '../styles/courses.css';
 import '../styles/events.css';
 import '../styles/auth.css';
 import '../styles/notfound.css';
+import '../styles/calendar.css';
 import { AuthProvider } from '../context/AuthContext';
 
 export default function App({ Component, pageProps }) {
