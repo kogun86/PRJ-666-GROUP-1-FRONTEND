@@ -5,7 +5,7 @@ import '../styles/layout.css';
 import '../styles/profile.css';
 import '../styles/courses.css';
 import '../styles/events.css';
-import '../styles/login.css';
+import '../styles/auth.css';
 import { AuthProvider } from '../context/AuthContext';
 
 export default function App({ Component, pageProps }) {
