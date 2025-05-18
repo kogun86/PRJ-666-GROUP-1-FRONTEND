@@ -1,97 +1,101 @@
-import Layout from '../components/Layout';
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import AuthForm from '../components/AuthForm';
 
 export default function Registration() {
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleRegistration = async (values) => {
+    setError('');
+    setLoading(true);
+
+    try {
+      // Validation
+      if (values.password !== values.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      if (values.email !== values.confirmEmail) {
+        throw new Error('Email addresses do not match');
+      }
+
+      // Here you would typically call your API to register the user
+      console.log('Registration data:', values);
+
+      // Mock API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Redirect to login page after successful registration
+      router.push('/login');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Failed to register');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Define form fields
+  const registrationFields = [
+    {
+      name: 'firstName',
+      type: 'text',
+      label: 'First Name',
+      placeholder: 'John',
+      required: true,
+      row: 0, // Group in first row
+    },
+    {
+      name: 'lastName',
+      type: 'text',
+      label: 'Last Name',
+      placeholder: 'Doe',
+      required: true,
+      row: 0, // Group in first row
+    },
+    {
+      name: 'email',
+      type: 'email',
+      label: 'Email',
+      placeholder: 'john.doe@example.com',
+      required: true,
+    },
+    {
+      name: 'confirmEmail',
+      type: 'email',
+      label: 'Confirm Email',
+      placeholder: 'john.doe@example.com',
+      required: true,
+    },
+    {
+      name: 'password',
+      type: 'password',
+      label: 'Password',
+      placeholder: '••••••••',
+      required: true,
+    },
+    {
+      name: 'confirmPassword',
+      type: 'password',
+      label: 'Confirm Password',
+      placeholder: '••••••••',
+      required: true,
+    },
+  ];
+
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Registration</h1>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <form className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">First Name</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="John"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Doe"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="john.doe@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <input
-                type="password"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-              <input
-                type="password"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Student ID</label>
-              <input
-                type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="123456789"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Program</label>
-              <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                <option>Select a program</option>
-                <option>Computer Programming</option>
-                <option>Software Engineering</option>
-                <option>Computer Science</option>
-                <option>Information Technology</option>
-              </select>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">
-                I agree to the terms and conditions
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Register
-            </button>
-          </form>
-        </div>
-      </div>
-    </Layout>
+    <AuthForm
+      title="Registration"
+      fields={registrationFields}
+      submitLabel="Register"
+      onSubmit={handleRegistration}
+      loading={loading}
+      error={error}
+      footerText="Already have an account?"
+      footerLinkText="Login"
+      footerLinkHref="/login"
+    />
   );
 }
