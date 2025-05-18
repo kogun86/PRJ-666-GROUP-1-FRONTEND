@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
+        //setIsAuthenticated(true);
         return true;
       } else {
         // Use simple auth in development
