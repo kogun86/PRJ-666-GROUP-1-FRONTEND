@@ -1,19 +1,10 @@
 /* Global CSS Variables */
 :root {
-  /* Main colors */
-  --color-primary: #2f3e46;
-  --color-secondary: #52796f;
-  --color-accent: #cad2c5;
-  --color-destructive: #a72f38;
-
-  /* Background and text colors */
-  --background: #ffffff;
-  --foreground: #171717;
-
-  /* Border and input styles */
-  --border-color: #e5e7eb;
-  --input-bg: #f9fafb;
-  --radius: 0.5rem;
+  --color-primary: #2f3e46; /* dark slate for text & backgrounds */
+  --color-secondary: #52796f; /* mid-tone green for buttons, nav */
+  --color-accent: #cad2c5; /* light cream for highlights */
+  --color-destructive: #a72f38; /* red for errors or important accents */
+  --radius: 0.5rem; /* consistent rounded corners */
 }
 
 /* Dark mode */
