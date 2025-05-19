@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import Image from 'next/image';
 import { useAuth } from '../features/auth';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { ChangePasswordForm } from '../components/ChangePasswordForm';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
@@ -81,14 +82,9 @@ const Modal = ({ isOpen, onClose, children }) => {
 };
 
 function ProfileContent() {
-  const { user, logout } = useAuth();
+  const { user, logout, isProduction } = useAuth();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -103,17 +99,10 @@ function ProfileContent() {
 
   const handleOpenPasswordModal = () => {
     setPasswordModalOpen(true);
-    setError('');
   };
 
   const handleClosePasswordModal = () => {
     setPasswordModalOpen(false);
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
-    setError('');
   };
 
   const handleOpenEditProfileModal = () => {
@@ -131,52 +120,12 @@ function ProfileContent() {
     setError('');
   };
 
-  const handlePasswordInputChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData({
-      ...passwordData,
-      [name]: value,
-    });
-  };
-
   const handleProfileInputChange = (e) => {
     const { name, value } = e.target;
     setProfileData({
       ...profileData,
       [name]: value,
     });
-  };
-
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-
-    // Form validation
-    if (
-      !passwordData.currentPassword ||
-      !passwordData.newPassword ||
-      !passwordData.confirmPassword
-    ) {
-      setError('All fields are required');
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-
-    // Password strength validation (simple example)
-    if (passwordData.newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
-    // Here you would typically call an API to update the password
-    // For this example, we'll just simulate success
-    setTimeout(() => {
-      handleClosePasswordModal();
-      // Could show a success notification here
-    }, 500);
   };
 
   const handleProfileUpdate = (e) => {
@@ -366,70 +315,12 @@ function ProfileContent() {
         </Card>
       </div>
 
-      {/* Password Change Modal */}
+      {/* Password Change Modal - Use new component */}
       <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal}>
-        <div className="password-modal">
-          <h2 className="password-modal-title">Change Password</h2>
-
-          {error && <div className="password-error">{error}</div>}
-
-          <form onSubmit={handlePasswordChange}>
-            <div className="password-form-group">
-              <label htmlFor="currentPassword" className="password-label">
-                Current Password
-              </label>
-              <input
-                type="password"
-                id="currentPassword"
-                name="currentPassword"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordInputChange}
-                className="password-input"
-              />
-            </div>
-
-            <div className="password-form-group">
-              <label htmlFor="newPassword" className="password-label">
-                New Password
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                name="newPassword"
-                value={passwordData.newPassword}
-                onChange={handlePasswordInputChange}
-                className="password-input"
-              />
-            </div>
-
-            <div className="password-form-group">
-              <label htmlFor="confirmPassword" className="password-label">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordInputChange}
-                className="password-input"
-              />
-            </div>
-
-            <div className="password-actions">
-              <button
-                type="button"
-                onClick={handleClosePasswordModal}
-                className="password-cancel-button"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="password-submit-button">
-                Change Password
-              </button>
-            </div>
-          </form>
-        </div>
+        <ChangePasswordForm
+          onSuccess={handleClosePasswordModal}
+          onCancel={handleClosePasswordModal}
+        />
       </Modal>
 
       {/* Edit Profile Modal */}
@@ -514,6 +405,17 @@ export default function Profile() {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 1rem;
+          }
+        `}</style>
+        <style jsx global>{`
+          .password-success {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border-radius: 0.25rem;
+            text-align: center;
+            font-weight: 500;
           }
         `}</style>
       </Layout>
