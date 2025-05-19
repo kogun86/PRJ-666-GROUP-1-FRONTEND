@@ -1,5 +1,18 @@
 import { Amplify } from 'aws-amplify';
-import { signIn, signOut, signUp, fetchUserAttributes, getCurrentUser, confirmSignUp } from 'aws-amplify/auth';
+import {
+  signIn,
+  signOut,
+  signUp,
+  fetchUserAttributes,
+  getCurrentUser,
+  confirmSignUp,
+  // Import but don't use directly to avoid bundling issues
+  // changePassword,
+} from 'aws-amplify/auth';
+
+// Remove debug logs which could cause issues
+// console.log('Imported changePassword from aws-amplify/auth:', changePassword);
+// console.log('Type of imported changePassword:', typeof changePassword);
 
 /**
  * AWS Amplify configuration for authentication
@@ -97,6 +110,57 @@ const Auth = {
       );
     }
     return getCurrentUser();
+  },
+  // Update to use the Amplify global object directly
+  changePassword: async (oldPassword, newPassword) => {
+    if (!hasRequiredConfig) {
+      return Promise.reject(
+        new Error('Cognito configuration missing. Set required environment variables.')
+      );
+    }
+
+    console.log('amplifyClient changePassword called');
+
+    try {
+      // Get the current authenticated user first
+      const user = await getCurrentUser();
+      console.log('Got current user:', user);
+
+      // Try to access the global Amplify object directly
+      if (typeof window !== 'undefined' && window.aws_amplify && window.aws_amplify.Auth) {
+        console.log('Using global aws_amplify.Auth object');
+        return await window.aws_amplify.Auth.changePassword({
+          oldPassword,
+          newPassword,
+        });
+      }
+
+      // Try another approach with direct import
+      try {
+        const { changePassword: directChangePassword } = require('aws-amplify/auth');
+        if (typeof directChangePassword === 'function') {
+          console.log('Using required changePassword function');
+          return await directChangePassword({
+            oldPassword,
+            newPassword,
+          });
+        }
+      } catch (importError) {
+        console.error('Failed to require aws-amplify/auth:', importError);
+      }
+
+      // As a last resort, use the direct API if the user object supports it
+      if (user && typeof user.changePassword === 'function') {
+        console.log('Using user.changePassword method');
+        return await user.changePassword(oldPassword, newPassword);
+      }
+
+      // If all else fails
+      throw new Error('Could not find a valid changePassword implementation');
+    } catch (error) {
+      console.error('changePassword implementation error:', error);
+      throw error;
+    }
   },
 };
 

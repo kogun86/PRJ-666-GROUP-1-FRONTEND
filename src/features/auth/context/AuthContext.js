@@ -154,6 +154,51 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Change password function
+  const changePassword = async (oldPassword, newPassword) => {
+    try {
+      console.log('AuthContext changePassword called');
+
+      if (!isProduction) {
+        console.log('Mock changePassword in dev mode');
+        // In dev mode, just return success
+        return Promise.resolve({ success: true });
+      }
+
+      // For production, we'll use a completely different approach
+      console.log('Production changePassword attempt');
+
+      // Use direct API call to cognito
+      try {
+        // Get the current user
+        const currentUser = await Auth.currentAuthenticatedUser();
+        console.log('Current authenticated user:', currentUser);
+
+        if (!currentUser) {
+          throw new Error('No authenticated user found');
+        }
+
+        // The Cognito SDK allows us to call changePassword directly on the current user
+        // This should work in v6 since it's a standard Cognito API
+        if (typeof currentUser.changePassword === 'function') {
+          console.log('Using currentUser.changePassword method');
+          return await currentUser.changePassword(oldPassword, newPassword);
+        }
+
+        // Fallback for Amplify v6
+        console.log('Trying alternate method with Auth object');
+        // Use the Auth module directly which should have been initialized correctly
+        return await Auth.changePassword(oldPassword, newPassword);
+      } catch (error) {
+        console.error('Change password error:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Overall change password error:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -163,6 +208,8 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isProduction,
+        Auth,
+        changePassword,
       }}
     >
       {children}

@@ -29,6 +29,14 @@ if (!isProduction()) {
     signUp: (params) => Promise.resolve({ user: params }),
     userAttributes: () => Promise.resolve({}),
     currentAuthenticatedUser: () => Promise.reject(new Error('No authenticated user in dev mode')),
+    changePassword: (oldPassword, newPassword) => {
+      // Check if parameters are provided to match Amplify's behavior
+      if (!oldPassword || !newPassword) {
+        return Promise.reject(new Error('oldPassword and newPassword are required'));
+      }
+      console.log('Mock changePassword called with', { oldPassword, newPassword });
+      return Promise.resolve({ success: true });
+    },
   };
 } else {
   // In production, import the real Auth implementation
