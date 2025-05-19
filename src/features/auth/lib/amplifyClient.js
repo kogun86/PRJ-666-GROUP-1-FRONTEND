@@ -5,6 +5,7 @@ import {
   signUp,
   fetchUserAttributes,
   getCurrentUser,
+  confirmSignUp,
   // Import but don't use directly to avoid bundling issues
   // changePassword,
 } from 'aws-amplify/auth';
@@ -87,6 +88,14 @@ const Auth = {
       );
     }
     return signUp(params);
+  },
+  confirmSignUp: (username, code) => {
+    if (!hasRequiredConfig) {
+      return Promise.reject(
+        new Error('Cognito configuration missing. Set required environment variables.')
+      );
+    }
+    return confirmSignUp({ username, confirmationCode: code });
   },
   userAttributes: () => {
     if (!hasRequiredConfig) {
