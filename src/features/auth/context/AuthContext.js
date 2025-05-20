@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Auth, isProduction as checkIsProduction } from '../lib';
+import { formatUser } from '../lib/amplifyClient';
 
 const AuthContext = createContext();
 
@@ -23,21 +24,21 @@ export function AuthProvider({ children }) {
         if (envData.isProduction) {
           try {
             // Get current authenticated user
-            const currentUser = await Auth.currentAuthenticatedUser();
+            const currentUser = await Auth.getCurrentUser();
             if (currentUser) {
               // Get user attributes
-              const userAttributes = await Auth.userAttributes(currentUser);
+              //const userAttributes = await Auth.userAttributes(currentUser);
 
-              // For Amplify v6, userAttributes is now an object not an array
-              const userData = {
-                name: userAttributes.name || currentUser.username || 'User',
-                email: userAttributes.email || currentUser.username,
-                // Add other attributes as needed
-                lastLogin: new Date().toISOString(),
-              };
+              // // For Amplify v6, userAttributes is now an object not an array
+              // const userData = {
+              //   name: userAttributes.name || currentUser.username || 'User',
+              //   email: userAttributes.email || currentUser.username,
+              //   // Add other attributes as needed
+              //   lastLogin: new Date().toISOString(),
+              // };
 
-              setUser(userData);
-              localStorage.setItem('user', JSON.stringify(userData));
+              setUser(currentUser);
+              localStorage.setItem('user', JSON.stringify(currentUser));
 
               // If we're on the login page and user is authenticated, redirect to profile
               if (window.location.pathname === '/login') {
@@ -91,25 +92,15 @@ export function AuthProvider({ children }) {
 
         // Use Amplify Auth in production
         const user = await Auth.signIn(email, password);
-
+        console.log("User Signed In Successfully");
         if (!user) {
           throw new Error('Authentication failed');
         }
-
-        // Get user attributes - in v6 this directly returns an object
-        const userAttributes = await Auth.userAttributes();
-
-        // Create user object from attributes
-        const userData = {
-          name: userAttributes.name || email.split('@')[0] || 'User',
-          email: userAttributes.email || email,
-          // Add other attributes as needed
-          lastLogin: new Date().toISOString(),
-        };
-
-        localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
+        setUser(user);
+        console.log("USER: " + user);
+        localStorage.setItem('user', JSON.stringify(user));
         return true;
+
       } else {
         // Use simple auth in development
         if (!email || !password) {
@@ -171,7 +162,7 @@ export function AuthProvider({ children }) {
       // Use direct API call to cognito
       try {
         // Get the current user
-        const currentUser = await Auth.currentAuthenticatedUser();
+        const currentUser = await Auth.getCurrentUser();
         console.log('Current authenticated user:', currentUser);
 
         if (!currentUser) {
