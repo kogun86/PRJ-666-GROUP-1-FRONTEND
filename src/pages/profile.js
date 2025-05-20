@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useAuth } from '../features/auth';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { ChangePasswordForm } from '../components/ChangePasswordForm';
+import AIChatWindow from '../components/AIChatWindow';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
@@ -314,6 +315,9 @@ function ProfileContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Chat Window */}
+      <AIChatWindow />
 
       {/* Password Change Modal - Use new component */}
       <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal}>
