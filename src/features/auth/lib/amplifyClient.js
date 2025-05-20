@@ -6,6 +6,7 @@ import {
   fetchUserAttributes,
   getCurrentUser,
   confirmSignUp,
+  fetchAuthSession,
   // Import but don't use directly to avoid bundling issues
   // changePassword,
 } from 'aws-amplify/auth';
@@ -65,15 +66,56 @@ if (hasRequiredConfig) {
   // This is ok in development mode where we use mock auth
 }
 
+export async function formatUser(user) {
+  let attributes = user.attributes;
+  if(!attributes && user.userId){
+    attributes = await fetchUserAttributes();
+  }
+  const session = await fetchAuthSession();
+  const idToken = session.tokens?.idToken?.toString();
+  const accessToken = session.tokens?.accessToken?.toString();
+  // Adjust fields as needed for user object
+  return {
+    // username: user.username,
+    username: user.username || user.userId,
+    name: attributes?.name,
+    email: attributes?.email, 
+    ownerId: attributes?.sub,
+    idToken,
+    accessToken,
+    authorizationHeaders: (type = 'application/json') => ({
+      'Content-Type': type,
+      Authorization: `Bearer ${idToken || ''}`,
+    }),
+  };
+}
+
 // Create Auth object compatible with our app
 const Auth = {
-  signIn: (username, password) => {
+  getCurrentUser: async () => {
+    if (!hasRequiredConfig) {
+      return null;
+    }
+    try {
+      const user = await getCurrentUser();
+      console.log("username: ", user.username);
+      console.log("user ID: " , user.userId)
+      console.log("user Sign In Details: " , user.signInDetails)
+      return await formatUser(user);
+    } catch (err) {
+      console.error("Get User Error:", err);
+      return null;
+    }
+  },
+  signIn: async (username, password) => {
     if (!hasRequiredConfig) {
       return Promise.reject(
         new Error('Cognito configuration missing. Set required environment variables.')
       );
     }
-    return signIn({ username, password });
+    await signIn({ username, password }); 
+    const user = await getCurrentUser();  
+    return await formatUser(user);             
   },
   signOut: () => {
     if (!hasRequiredConfig) {
