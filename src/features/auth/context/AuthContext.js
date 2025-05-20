@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Auth, isProduction as checkIsProduction } from '../lib';
-import { formatUser } from '../lib/amplifyClient';
 
 const AuthContext = createContext();
 
@@ -23,20 +22,9 @@ export function AuthProvider({ children }) {
         // In production, check for authenticated user with Amplify
         if (envData.isProduction) {
           try {
-            // Get current authenticated user
+            // Get current authenticated user attributes
             const currentUser = await Auth.getCurrentUser();
             if (currentUser) {
-              // Get user attributes
-              //const userAttributes = await Auth.userAttributes(currentUser);
-
-              // // For Amplify v6, userAttributes is now an object not an array
-              // const userData = {
-              //   name: userAttributes.name || currentUser.username || 'User',
-              //   email: userAttributes.email || currentUser.username,
-              //   // Add other attributes as needed
-              //   lastLogin: new Date().toISOString(),
-              // };
-
               setUser(currentUser);
               localStorage.setItem('user', JSON.stringify(currentUser));
 
@@ -109,11 +97,20 @@ export function AuthProvider({ children }) {
 
         // For demo, allow any non-empty values in dev
         const mockUser = {
+          username: 'Username (Development)',
           name: 'Development User',
           email: email,
           dateOfBirth: '1990-01-01',
           lastLogin: new Date().toISOString(),
+          authorizationHeaders: (type = 'application/json') => ({
+            'Content-type': type,
+            Authorization: 'Bearer mock-id-token',
+          })
         };
+  
+        console.log(mockUser.authorizationHeaders());
+        console.log("Mock User: ", mockUser);
+  
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('user', JSON.stringify(mockUser));
         setUser(mockUser);

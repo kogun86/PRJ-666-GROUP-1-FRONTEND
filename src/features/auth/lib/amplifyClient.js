@@ -66,6 +66,7 @@ if (hasRequiredConfig) {
   // This is ok in development mode where we use mock auth
 }
 
+// Builds the user object 
 export async function formatUser(user) {
   let attributes = user.attributes;
   if(!attributes && user.userId){
@@ -73,16 +74,13 @@ export async function formatUser(user) {
   }
   const session = await fetchAuthSession();
   const idToken = session.tokens?.idToken?.toString();
-  const accessToken = session.tokens?.accessToken?.toString();
-  // Adjust fields as needed for user object
+
   return {
-    // username: user.username,
     username: user.username || user.userId,
     name: attributes?.name,
     email: attributes?.email, 
-    ownerId: attributes?.sub,
-    idToken,
-    accessToken,
+    dateOfBirth: attributes?.birthdate,
+    lastLogin: new Date().toISOString(),
     authorizationHeaders: (type = 'application/json') => ({
       'Content-Type': type,
       Authorization: `Bearer ${idToken || ''}`,
