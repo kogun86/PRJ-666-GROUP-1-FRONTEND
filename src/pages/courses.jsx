@@ -119,7 +119,7 @@ export default function CoursesPage() {
   return (
     <ProtectedRoute>
       <Layout>
-        <div className="profile-container">
+        <div className="courses-container">
           <div className="profile-card">
             {/* Tab bar */}
             <div className="profile-action-row tabs-bar">
