@@ -105,24 +105,56 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Course internals */
-.course-header {
+/* ─── My Courses header: title + add button ───────────────────────── */
+.courses-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
-.course-info {
-  flex-grow: 1;
-}
-.course-name {
-  font-size: 1.25rem;
+
+.courses-section-title {
+  margin: 0;
+  font-size: 1rem;
   font-weight: 600;
-  color: #2f3e46;
-  margin-bottom: 0.5rem;
+  color: var(--color-primary);
 }
-.course-instructor,
-.course-schedule {
-  color: #52796f;
-  margin-bottom: 0.25rem;
+
+/* Add Course button */
+.add-course-button {
+  justify-self: start;
+  align-self: start; /* prevents vertical stretching */
+  width: auto; /* ensure it sizes to its content */
+  max-width: max-content;
+}
+/* Modal popup overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal container */
+.modal {
+  background-color: var(--color-accent);
+  padding: 2rem;
+  border-radius: var(--radius);
+  max-width: 90%;
+  width: 400px;
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+/* Keep the form’s own margin */
+.course-form {
+  margin: 0;
 }
 
 /* Mobile View */
@@ -132,4 +164,71 @@
   .courses-container .courses-list {
     grid-template-columns: 1fr; /* single column :) */
   }
+}
+
+/*  Course Form Styles  */
+.course-form {
+  border: 2px solid var(--color-secondary);
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  margin-bottom: 1rem;
+}
+
+/* General form groups */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Labels */
+.course-form-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Inputs, selects, dates, times */
+.form-input,
+.form-select,
+.form-date,
+.form-time {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--color-primary);
+}
+
+/* Row layout */
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Schedule item block */
+.schedule-item {
+  align-items: center;
+}
+
+/* Primary / secondary */
+.button-primary {
+  background-color: var(--color-primary);
+  color: var(--color-accent);
+}
+
+.button-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-accent);
+}
+
+/* Error message */
+.error-message {
+  color: var(--color-destructive);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
