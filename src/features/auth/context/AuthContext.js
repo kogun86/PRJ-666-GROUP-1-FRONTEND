@@ -22,22 +22,11 @@ export function AuthProvider({ children }) {
         // In production, check for authenticated user with Amplify
         if (envData.isProduction) {
           try {
-            // Get current authenticated user
-            const currentUser = await Auth.currentAuthenticatedUser();
+            // Get current authenticated user attributes
+            const currentUser = await Auth.getCurrentUser();
             if (currentUser) {
-              // Get user attributes
-              const userAttributes = await Auth.userAttributes(currentUser);
-
-              // For Amplify v6, userAttributes is now an object not an array
-              const userData = {
-                name: userAttributes.name || currentUser.username || 'User',
-                email: userAttributes.email || currentUser.username,
-                // Add other attributes as needed
-                lastLogin: new Date().toISOString(),
-              };
-
-              setUser(userData);
-              localStorage.setItem('user', JSON.stringify(userData));
+              setUser(currentUser);
+              localStorage.setItem('user', JSON.stringify(currentUser));
 
               // If we're on the login page and user is authenticated, redirect to profile
               if (window.location.pathname === '/login') {
@@ -91,25 +80,15 @@ export function AuthProvider({ children }) {
 
         // Use Amplify Auth in production
         const user = await Auth.signIn(email, password);
-
+        console.log("User Signed In Successfully");
         if (!user) {
           throw new Error('Authentication failed');
         }
-
-        // Get user attributes - in v6 this directly returns an object
-        const userAttributes = await Auth.userAttributes();
-
-        // Create user object from attributes
-        const userData = {
-          name: userAttributes.name || email.split('@')[0] || 'User',
-          email: userAttributes.email || email,
-          // Add other attributes as needed
-          lastLogin: new Date().toISOString(),
-        };
-
-        localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
+        setUser(user);
+        console.log("USER: " + user);
+        localStorage.setItem('user', JSON.stringify(user));
         return true;
+
       } else {
         // Use simple auth in development
         if (!email || !password) {
@@ -118,11 +97,20 @@ export function AuthProvider({ children }) {
 
         // For demo, allow any non-empty values in dev
         const mockUser = {
+          username: 'Username (Development)',
           name: 'Development User',
           email: email,
           dateOfBirth: '1990-01-01',
           lastLogin: new Date().toISOString(),
+          authorizationHeaders: (type = 'application/json') => ({
+            'Content-type': type,
+            Authorization: 'Bearer mock-id-token',
+          })
         };
+  
+        console.log(mockUser.authorizationHeaders());
+        console.log("Mock User: ", mockUser);
+  
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('user', JSON.stringify(mockUser));
         setUser(mockUser);
@@ -171,7 +159,7 @@ export function AuthProvider({ children }) {
       // Use direct API call to cognito
       try {
         // Get the current user
-        const currentUser = await Auth.currentAuthenticatedUser();
+        const currentUser = await Auth.getCurrentUser();
         console.log('Current authenticated user:', currentUser);
 
         if (!currentUser) {

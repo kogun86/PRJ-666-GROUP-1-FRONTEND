@@ -1,7 +1,12 @@
+import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
+import { apiRequest } from '../lib/api.js';
+import { useAuth } from '../features/auth/context/AuthContext'
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function Events() {
-  const events = [
+  const { user, isProduction } = useAuth();
+  const [events, setEvents] = useState([
     {
       id: 1,
       title: 'Career Fair',
@@ -25,10 +30,19 @@ export default function Events() {
       time: '2:00 PM - 4:00 PM',
       location: 'Room 101',
       description: 'AI and Machine Learning in Modern Applications.',
-    },
-  ];
+    },]);
+  // Call API and set events for user 
+  // Production will show events on API
+  // Development will show events hardcoded above
+  useEffect(() => {
+    if (!user || !isProduction) return; // Wait for user to be loaded, Only run in production
+    apiRequest('/v1/events/upcoming', {}, user)
+    .then(data => setEvents(data.events || []))
+    .catch(console.error);
+  }, [user, isProduction]);
 
   return (
+  <ProtectedRoute>
     <Layout>
       <div className="events-container">
         <h1 className="events-title">Upcoming Events</h1>
@@ -58,5 +72,6 @@ export default function Events() {
         </div>
       </div>
     </Layout>
+    </ProtectedRoute>
   );
 }
