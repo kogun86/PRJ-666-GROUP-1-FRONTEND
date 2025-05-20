@@ -1,5 +1,5 @@
 /*  White thing in the background removed! */
-.profile-container .profile-card {
+.courses-container .profile-card {
   background-color: transparent !important;
   box-shadow: none !important;
 }
@@ -51,7 +51,7 @@
 }
 
 /*  content wrapping into two columns  */
-.profile-content {
+.courses-container .profile-content {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1rem; /* gutter between each date-group or course card */
@@ -127,9 +127,9 @@
 
 /* Mobile View */
 @media (max-width: 768px) {
-  .profile-content,
-  .session-container,
-  .courses-list {
+  .courses-container .profile-content,
+  .courses-container .session-container,
+  .courses-container .courses-list {
     grid-template-columns: 1fr; /* single column :) */
   }
 }
