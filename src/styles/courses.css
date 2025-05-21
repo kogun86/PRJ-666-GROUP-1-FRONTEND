@@ -18,7 +18,7 @@
   color: #2f3e46;
 }
 
-/* ─── Tab bar ───────────────────────────────────────── */
+/*  Tab bar  */
 .tabs-bar {
   display: flex;
   justify-content: center;
@@ -51,7 +51,7 @@
   border-color: var(--color-secondary);
 }
 
-/* ─── Add Course row (below tabs) ──────────────────── */
+/*  Add Course which is below the tabs   */
 .add-course-row {
   display: flex;
   justify-content: center;
@@ -152,7 +152,7 @@
   cursor: pointer;
 }
 
-/* ─── Modal overlay & container ───────────────────── */
+/*  Modal overlay & container  */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -177,7 +177,7 @@
   box-sizing: border-box;
 }
 
-/* ─── CourseForm Styles ───────────────────────────── */
+/*  CourseForm Styles  */
 .course-form {
   display: flex;
   flex-direction: column;
