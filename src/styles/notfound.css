@@ -1,0 +1,59 @@
+/* Not Found (404) Page Styles */
+
+.notfound-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 60vh;
+}
+
+.notfound-code {
+  font-size: 6rem;
+  font-weight: 700;
+  color: #2f3e46;
+  margin-bottom: 1rem;
+}
+
+.notfound-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #52796f;
+  margin-bottom: 1rem;
+}
+
+.notfound-message {
+  color: #4b5563;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.notfound-button {
+  background-color: #52796f;
+  color: #cad2c5;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.notfound-button:hover {
+  background-color: #3a5a40;
+}
+
+.notfound-button:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #cad2c5,
+    0 0 0 4px #52796f;
+}
