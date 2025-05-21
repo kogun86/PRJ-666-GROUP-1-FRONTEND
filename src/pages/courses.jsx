@@ -7,8 +7,8 @@ export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState('My Classes');
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [editIndex, setEditIndex] = useState(null);
 
-  // turn30file1
   const [myCourses, setMyCourses] = useState([
     {
       title: 'Introduction to Programming',
@@ -48,7 +48,6 @@ export default function CoursesPage() {
     },
   ]);
 
-  // turn30file1
   const classesData = [
     {
       date: 'Monday 02.10',
@@ -122,38 +121,67 @@ export default function CoursesPage() {
 
   const tabs = ['My Classes', 'My Courses'];
 
-  const handleAdd = () => {
+  function handleAdd() {
     setEditData(null);
+    setEditIndex(null);
     setShowForm(true);
-  };
+  }
 
-  const handleSubmit = (data) => {
-    // map and append
-    const newCourse = {
+  function handleEdit(course, index) {
+    const initialFormData = {
+      name: course.title,
+      code: course.code,
+      professor: course.professor,
+      color: course.color,
+      schedule: course.schedule.map((s) => {
+        const [startTime, endTime] = s.time.split('–');
+        return { day: s.weekDay, startTime, endTime };
+      }),
+    };
+    setEditData(initialFormData);
+    setEditIndex(index);
+    setShowForm(true);
+  }
+
+  function handleDelete(index) {
+    setMyCourses((cs) => cs.filter((_, i) => i !== index));
+    if (editIndex === index) handleCancel();
+  }
+
+  function handleSubmit(data) {
+    const mapped = {
       title: data.name,
       code: data.code,
       professor: data.professor,
       color: data.color,
-      grade: 0,
+      grade: editIndex != null ? myCourses[editIndex].grade : 0,
       schedule: data.schedule.map((s) => ({
         time: `${s.startTime}–${s.endTime}`,
         weekDay: s.day,
-        room: '',
-        type: '',
       })),
     };
-    setMyCourses((c) => [...c, newCourse]);
-    setShowForm(false);
-  };
 
-  const handleCancel = () => setShowForm(false);
+    if (editIndex != null) {
+      setMyCourses((cs) => cs.map((c, i) => (i === editIndex ? mapped : c)));
+    } else {
+      setMyCourses((cs) => [...cs, mapped]);
+    }
+
+    handleCancel();
+  }
+
+  function handleCancel() {
+    setShowForm(false);
+    setEditData(null);
+    setEditIndex(null);
+  }
 
   return (
     <ProtectedRoute>
       <Layout>
         <div className="courses-container">
           <div className="profile-card">
-            {/* ─── Tab bar + Add button ───────────────────────── */}
+            {/* Tabs */}
             <div className="profile-action-row tabs-bar">
               {tabs.map((tab) => (
                 <button
@@ -167,19 +195,18 @@ export default function CoursesPage() {
                   {tab}
                 </button>
               ))}
-
-              {activeTab === 'My Courses' && !showForm && (
-                <button
-                  className="button button-primary add-course-button"
-                  onClick={handleAdd}
-                  aria-label="Add a new course"
-                >
-                  + Add Course
-                </button>
-              )}
             </div>
 
-            {/* ─── Content ─────────────────────────────────────── */}
+            {/* + Add Course (below tabs) */}
+            {activeTab === 'My Courses' && !showForm && (
+              <div className="add-course-row">
+                <button className="button button-primary add-course-button" onClick={handleAdd}>
+                  + Add Course
+                </button>
+              </div>
+            )}
+
+            {/* Content */}
             <div className="profile-content mt-4">
               {/* My Classes */}
               {activeTab === 'My Classes' &&
@@ -229,7 +256,6 @@ export default function CoursesPage() {
               {/* My Courses */}
               {activeTab === 'My Courses' && (
                 <>
-                  {/* Popup form */}
                   {showForm && (
                     <div className="modal-overlay">
                       <div className="modal">
@@ -243,13 +269,27 @@ export default function CoursesPage() {
                   )}
 
                   <div className="courses-list">
-                    {myCourses.map((c) => (
+                    {myCourses.map((c, idx) => (
                       <div
-                        key={c.code}
+                        key={`${c.code}-${idx}`}
                         className="course-card"
-                        style={{ backgroundColor: c.color, color: 'var(--color-primary)' }}
+                        style={{ backgroundColor: c.color }}
                       >
-                        <h3 className="course-name">{c.title}</h3>
+                        <div className="course-actions">
+                          <button className="edit-course-button" onClick={() => handleEdit(c, idx)}>
+                            Edit
+                          </button>
+                          <button
+                            className="delete-course-button"
+                            onClick={() => handleDelete(idx)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+
+                        <h3 className="course-name" style={{ color: 'var(--color-primary)' }}>
+                          {c.title}
+                        </h3>
                         <div className="course-info">
                           <div>
                             <strong>Code:</strong> {c.code}
@@ -258,7 +298,9 @@ export default function CoursesPage() {
                             <strong>Professor:</strong> {c.professor}
                           </div>
                         </div>
-                        <h4 className="schedule-heading">Schedule</h4>
+                        <h4 className="schedule-heading" style={{ color: 'var(--color-primary)' }}>
+                          Schedule
+                        </h4>
                         {c.schedule.map((s, i) => (
                           <div key={i} className="schedule-item">
                             <div>
