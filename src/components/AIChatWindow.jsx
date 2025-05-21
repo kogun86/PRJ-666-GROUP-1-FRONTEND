@@ -32,25 +32,36 @@ const AIChatWindow = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/chat', {
+      const response = await fetch('http://localhost:8080/api/v1/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // You may need to add authorization header here
+          Authorization: 'Bearer mock-id-token',
         },
         body: JSON.stringify({ message: inputMessage }),
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', response.status, errorText);
+        throw new Error(`API error ${response.status}: ${errorText}`);
+      }
+
       const data = await response.json();
 
-      const aiResponse = {
-        id: Date.now() + 1,
-        text: data.response,
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString(),
-      };
+      if (data.status === 'ok' && data.data) {
+        const aiResponse = {
+          id: data.data.metadata.messageId || Date.now() + 1,
+          text: data.data.message,
+          sender: 'ai',
+          timestamp: new Date(data.data.metadata.timestamp).toLocaleTimeString(),
+        };
 
-      setMessages((prev) => [...prev, aiResponse]);
+        setMessages((prev) => [...prev, aiResponse]);
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       // Add error message to chat
@@ -58,7 +69,7 @@ const AIChatWindow = () => {
         ...prev,
         {
           id: Date.now() + 1,
-          text: 'Sorry, there was an error processing your request.',
+          text: `Sorry, there was an error: ${error.message}`,
           sender: 'ai',
           timestamp: new Date().toLocaleTimeString(),
         },
