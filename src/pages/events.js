@@ -47,28 +47,32 @@ export default function Events() {
       <div className="events-container">
         <h1 className="events-title">Upcoming Events</h1>
         <div className="events-list">
-          {events.map((event) => (
-            <div key={event.id} className="event-card">
-              <div className="event-header">
-                <div className="event-info">
-                  <h2 className="event-title">{event.title}</h2>
-                  <p className="event-description">{event.description}</p>
-                  <div className="event-details">
-                    <p className="event-detail">
-                      <span className="event-detail-label">Date:</span> {event.date}
-                    </p>
-                    <p className="event-detail">
-                      <span className="event-detail-label">Time:</span> {event.time}
-                    </p>
-                    <p className="event-detail">
-                      <span className="event-detail-label">Location:</span> {event.location}
-                    </p>
+          {events.length === 0 ? (
+            <p className='event-title'>You have no upcoming events.</p>
+          ): (
+            events.map((event) => (
+              <div key={event.id} className="event-card">
+                <div className="event-header">
+                  <div className="event-info">
+                    <h2 className="event-title">{event.title}</h2>
+                    <p className="event-description">{event.description}</p>
+                    <div className="event-details">
+                      <p className="event-detail">
+                        <span className="event-detail-label">Due Date:</span> {event.dueDate}
+                      </p>
+                      <p className="event-detail">
+                        <span className="event-detail-label">Course Code:</span> {event.courseCode}
+                      </p>
+                      <p className="event-detail">
+                        <span className="event-detail-label">type:</span> {event.type}
+                      </p>
+                    </div>
                   </div>
+                  <button className="event-register-button">Register</button>
                 </div>
-                <button className="event-register-button">Register</button>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </Layout>
