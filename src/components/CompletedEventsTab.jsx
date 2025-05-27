@@ -4,55 +4,53 @@ import EventCard from './EventCard';
 import GradeInput from './GradeInput';
 
 function CompletedEventsTab({ groups, setGroups }) {
-  const [editingTask, setEditingTask] = useState({ groupId: null, taskId: null });
-  const [pageNumberByGroup, setPageNumberByGroup] = useState({});
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const [editing, setEditing] = useState({ groupDate: null, taskId: null });
+  const [pageNumbers, setPageNumbers] = useState({});
+  const [width, setWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    const handleResize = () => setScreenWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const getTasksPerPage = () => {
-    if (screenWidth < 768) return 1;
-    else if (screenWidth < 1199) return 2;
-    else return 3;
+  const tasksPerPage = () => {
+    if (width < 768) return 1;
+    if (width < 1199) return 2;
+    return 3;
   };
 
-  const startEditingGrade = (groupId, taskId) => {
-    setEditingTask({ groupId, taskId });
+  const startEditing = (groupDate, taskId) => {
+    setEditing({ groupDate, taskId });
   };
 
   const cancelEditing = () => {
-    setEditingTask({ groupId: null, taskId: null });
+    setEditing({ groupDate: null, taskId: null });
   };
 
   const saveGrade = (grade) => {
-    const { groupId, taskId } = editingTask;
-    if (!groupId || !taskId) return;
+    const { groupDate, taskId } = editing;
+    if (!groupDate || !taskId) return;
 
-    const updatedGroups = groups.map((group) => {
-      if (group.date === groupId) {
-        const updatedTasks = group.tasks.map((task) => {
-          if (task.id === taskId && task.isCompleted) {
-            return { ...task, grade };
-          }
-          return task;
-        });
-        return { ...group, tasks: updatedTasks };
-      }
-      return group;
+    const updated = groups.map((group) => {
+      if (group.date !== groupDate) return group;
+      const updatedTasks = group.tasks.map((task) => {
+        if (task.id === taskId && task.isCompleted) {
+          return { ...task, grade };
+        }
+        return task;
+      });
+      return { ...group, tasks: updatedTasks };
     });
 
-    setGroups(updatedGroups);
+    setGroups(updated);
     cancelEditing();
   };
 
-  const handlePageChange = (groupDate) => (selectedItem) => {
-    setPageNumberByGroup((prev) => ({
+  const onPageChange = (groupDate) => (data) => {
+    setPageNumbers((prev) => ({
       ...prev,
-      [groupDate]: selectedItem.selected,
+      [groupDate]: data.selected,
     }));
   };
 
@@ -67,12 +65,12 @@ function CompletedEventsTab({ groups, setGroups }) {
     <>
       {completedGroups.length > 0 ? (
         completedGroups.map((group) => {
-          const tasksPerPage = getTasksPerPage();
-          const pageNumber = pageNumberByGroup[group.date] || 0;
-          const pageCount = Math.ceil(group.tasks.length / tasksPerPage);
-          const displayedTasks = group.tasks.slice(
-            pageNumber * tasksPerPage,
-            (pageNumber + 1) * tasksPerPage
+          const perPage = tasksPerPage();
+          const currentPage = pageNumbers[group.date] || 0;
+          const pageCount = Math.ceil(group.tasks.length / perPage);
+          const visibleTasks = group.tasks.slice(
+            currentPage * perPage,
+            (currentPage + 1) * perPage
           );
 
           return (
@@ -86,8 +84,8 @@ function CompletedEventsTab({ groups, setGroups }) {
               </h2>
 
               <div className="tasks-grid">
-                {displayedTasks.map((task) =>
-                  editingTask.groupId === group.date && editingTask.taskId === task.id ? (
+                {visibleTasks.map((task) =>
+                  editing.groupDate === group.date && editing.taskId === task.id ? (
                     <div key={task.id} className="task-card">
                       <h3 className="task-title">{task.title}</h3>
                       <GradeInput
@@ -100,7 +98,7 @@ function CompletedEventsTab({ groups, setGroups }) {
                     <EventCard
                       key={task.id}
                       task={task}
-                      onSetGrade={() => startEditingGrade(group.date, task.id)}
+                      onSetGrade={() => startEditing(group.date, task.id)}
                     />
                   )
                 )}
@@ -111,8 +109,8 @@ function CompletedEventsTab({ groups, setGroups }) {
                   previousLabel={<span className="pagination-arrow">&lt;</span>}
                   nextLabel={<span className="pagination-arrow">&gt;</span>}
                   pageCount={pageCount}
-                  onPageChange={handlePageChange(group.date)}
-                  forcePage={pageNumber}
+                  onPageChange={onPageChange(group.date)}
+                  forcePage={currentPage}
                   containerClassName="pagination-container"
                   pageClassName="pagination-item"
                   pageLinkClassName="pagination-link"

@@ -8,15 +8,6 @@ import CompletedEventsTab from '@/components/CompletedEventsTab';
 import MyEventsTab from '@/components/MyEventsTab';
 import { Settings, Plus, X } from 'lucide-react';
 
-const formatDisplayDate = (dateString) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: '2-digit',
-    day: '2-digit',
-  });
-};
-
 const getDateKey = (dateString) => {
   const date = new Date(dateString);
   return date.toISOString().split('T')[0];
