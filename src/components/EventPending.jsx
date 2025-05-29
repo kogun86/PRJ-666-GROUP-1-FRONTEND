@@ -20,7 +20,7 @@ function EventsPending({ groups, setGroups }) {
         ? {
             ...group,
             tasks: group.tasks.map((t) =>
-              t.id === taskId && !t.isCompleted ? { ...t, isCompleted: true } : t
+              t._id === taskId && !t.isCompleted ? { ...t, isCompleted: true } : t
             ),
           }
         : group
@@ -71,12 +71,14 @@ function EventsPending({ groups, setGroups }) {
 
             <div className="events-tasks-grid">
               {shownTasks.map((task) => (
-                <EventCard
-                  key={task.id}
-                  task={task}
-                  onToggle={() => markDone(group.date, task.id)}
-                  onSetGrade={null}
-                />
+                <>
+                  <EventCard
+                    key={task._id}
+                    task={task}
+                    onToggle={() => markDone(group.date, task._id)}
+                    onSetGrade={null}
+                  />
+                </>
               ))}
             </div>
 

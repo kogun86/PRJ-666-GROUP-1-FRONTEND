@@ -1,12 +1,25 @@
 import React from 'react';
 
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  // Format options example: June 3, 2025
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 function EventCard({ task, onToggle, onSetGrade }) {
+  const displayDate = formatDate(task.dueDate || task.date);
+
   return (
     <div className="events-task-card">
       <h3 className="events-task-title">{task.title}</h3>
       <div className="events-task-meta">
         <div>
-          <span>Due date: {task.dueDate || task.date}</span>
+          <span>Due date: {displayDate}</span>
           {task.weight && <span> · Weight: {task.weight}</span>}
         </div>
         <div>
