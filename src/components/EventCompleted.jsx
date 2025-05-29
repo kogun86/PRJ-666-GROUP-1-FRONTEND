@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactPaginate from 'react-paginate';
 import EventCard from './EventCard';
-import GradeInput from './GradeInput';
+import EventGradeInput from './EventGradeInput';
 
-function CompletedEventsTab({ groups, setGroups }) {
+function EventCompleted({ groups, setGroups }) {
   const [editing, setEditing] = useState({ groupDate: null, taskId: null });
   const [pageNumbers, setPageNumbers] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
@@ -74,8 +74,8 @@ function CompletedEventsTab({ groups, setGroups }) {
           );
 
           return (
-            <div key={group.date} className="group-container">
-              <h2 className="group-date">
+            <div key={group.date} className="events-group-container">
+              <h2 className="events-group-date">
                 {new Date(group.date).toLocaleDateString('en-US', {
                   weekday: 'long',
                   month: '2-digit',
@@ -83,12 +83,12 @@ function CompletedEventsTab({ groups, setGroups }) {
                 })}
               </h2>
 
-              <div className="tasks-grid">
+              <div className="events-tasks-grid">
                 {visibleTasks.map((task) =>
                   editing.groupDate === group.date && editing.taskId === task.id ? (
-                    <div key={task.id} className="task-card">
-                      <h3 className="task-title">{task.title}</h3>
-                      <GradeInput
+                    <div key={task.id} className="events-task-card">
+                      <h3 className="events-task-title">{task.title}</h3>
+                      <EventGradeInput
                         initialGrade={task.grade}
                         onSave={saveGrade}
                         onCancel={cancelEditing}
@@ -106,18 +106,18 @@ function CompletedEventsTab({ groups, setGroups }) {
 
               {pageCount > 1 && (
                 <ReactPaginate
-                  previousLabel={<span className="pagination-arrow">&lt;</span>}
-                  nextLabel={<span className="pagination-arrow">&gt;</span>}
+                  previousLabel={<span className="events-pagination-arrow">&lt;</span>}
+                  nextLabel={<span className="events-pagination-arrow">&gt;</span>}
                   pageCount={pageCount}
                   onPageChange={onPageChange(group.date)}
                   forcePage={currentPage}
-                  containerClassName="pagination-container"
-                  pageClassName="pagination-item"
-                  pageLinkClassName="pagination-link"
-                  activeClassName="active-page"
-                  previousClassName="pagination-nav"
-                  nextClassName="pagination-nav"
-                  disabledClassName="disabled-nav"
+                  containerClassName="events-pagination-container"
+                  pageClassName="events-pagination-item"
+                  pageLinkClassName="events-pagination-link"
+                  activeClassName="events-active-page"
+                  previousClassName="events-pagination-nav"
+                  nextClassName="events-pagination-nav"
+                  disabledClassName="events-disabled-nav"
                   breakLabel="..."
                   marginPagesDisplayed={1}
                   pageRangeDisplayed={2}
@@ -133,4 +133,4 @@ function CompletedEventsTab({ groups, setGroups }) {
   );
 }
 
-export default CompletedEventsTab;
+export default EventCompleted;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function GradeInput({ initialGrade, onSave, onCancel }) {
+function EventGradeInput({ initialGrade, onSave, onCancel }) {
   const [grade, setGrade] = useState(initialGrade || '');
   const [error, setError] = useState('');
 
@@ -32,7 +32,7 @@ function GradeInput({ initialGrade, onSave, onCancel }) {
           setGrade(e.target.value);
           if (error) setError('');
         }}
-        placeholder="0–100"
+        placeholder="0-100"
         autoFocus
         style={{ marginRight: 8 }}
       />
@@ -45,4 +45,4 @@ function GradeInput({ initialGrade, onSave, onCancel }) {
   );
 }
 
-export default GradeInput;
+export default EventGradeInput;

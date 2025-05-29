@@ -20,7 +20,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
   return (
     <form className="event-form" onSubmit={handleSubmit(onSubmit)}>
       {/* Title */}
-      <div className="form-group">
+      <div className="event-form-group">
         <label className="form-label" htmlFor="title">
           Title
         </label>
@@ -33,7 +33,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Date */}
-      <div className="form-group">
+      <div className="event-form-group">
         <label className="form-label" htmlFor="date">
           Date
         </label>
@@ -55,7 +55,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Course Code */}
-      <div className="form-group">
+      <div className="event-form-group">
         <label className="form-label" htmlFor="courseCode">
           Course Code
         </label>
@@ -68,7 +68,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Weight */}
-      <div className="form-group">
+      <div className="event-form-group">
         <label className="form-label" htmlFor="weight">
           Weight (%)
         </label>
@@ -82,7 +82,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Type */}
-      <div className="form-group">
+      <div className="event-form-group">
         <label className="form-label" htmlFor="type">
           Type
         </label>
@@ -93,7 +93,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Description */}
-      <div className="form-group">
+      <div className="event-form-group">
         <label className="form-label" htmlFor="description">
           Description
         </label>
@@ -106,7 +106,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Buttons */}
-      <div className="form-group form-actions">
+      <div className="event-form-group form-actions">
         <button type="submit" className="button button-primary">
           Save
         </button>

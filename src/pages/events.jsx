@@ -4,8 +4,8 @@ import { apiRequest } from '../lib/api.js';
 import { useAuth } from '../features/auth/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import EventForm from '@/components/EventForm';
-import CompletedEventsTab from '@/components/CompletedEventsTab';
-import MyEventsTab from '@/components/MyEventsTab';
+import EventCompleted from '@/components/EventCompleted';
+import EventPending from '@/components/EventPending';
 import { Settings, Plus, X } from 'lucide-react';
 
 const getDateKey = (dateString) => {
@@ -136,33 +136,33 @@ export default function Events() {
     <>
       <ProtectedRoute>
         <Layout>
-          <div className="event-tabs-container">
-            <div className="tabs-header">
+          <div className="events-tabs-container">
+            <div className="events-tabs-header">
               <button
                 onClick={() => setActiveTab('home')}
-                className={`tab-button ${activeTab === 'home' ? 'tab-active' : 'tab-inactive'}`}
+                className={`events-tab-button ${activeTab === 'home' ? 'events-tab-active' : 'events-tab-inactive'}`}
               >
                 My Events
               </button>
               <button
                 onClick={() => setActiveTab('completed')}
-                className={`tab-button ${activeTab === 'completed' ? 'tab-active' : 'tab-inactive'}`}
+                className={`events-tab-button ${activeTab === 'completed' ? 'events-tab-active' : 'events-tab-inactive'}`}
               >
                 Completed Events
               </button>
             </div>
 
-            <div className="tab-content" hidden={activeTab !== 'home'}>
-              <MyEventsTab groups={groups} setGroups={setGroups} />
+            <div className="events-tab-content" hidden={activeTab !== 'home'}>
+              <EventPending groups={groups} setGroups={setGroups} />
             </div>
 
-            <div className="tab-content" hidden={activeTab !== 'completed'}>
-              <CompletedEventsTab groups={groups} setGroups={setGroups} />
+            <div className="events-tab-content" hidden={activeTab !== 'completed'}>
+              <EventCompleted groups={groups} setGroups={setGroups} />
             </div>
           </div>
 
           {activeTab === 'home' && (
-            <div className="icon-bar">
+            <div className="events-icon-bar">
               <button onClick={() => setShowForm(true)}>
                 <Plus size={20} />
               </button>
@@ -173,12 +173,8 @@ export default function Events() {
           )}
 
           {showForm && (
-            <div className="form-modal">
-              <div className="form-content">
-                <button className="close-button" onClick={() => setShowForm(false)}>
-                  <X size={24} />
-                </button>
-                <h2 className="form-title">Add New Event</h2>
+            <div className="modal-overlay">
+              <div className="modal">
                 <EventForm
                   initialData={formData}
                   onSubmit={handleFormSubmit}

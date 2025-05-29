@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactPaginate from 'react-paginate';
 import EventCard from './EventCard';
 
-function MyEventsTab({ groups, setGroups }) {
+function EventsPending({ groups, setGroups }) {
   const [pages, setPages] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
 
@@ -60,8 +60,8 @@ function MyEventsTab({ groups, setGroups }) {
         const shownTasks = group.tasks.slice(start, start + perPage);
 
         return (
-          <div key={group.date} className="group-container">
-            <h2 className="group-date">
+          <div key={group.date} className="events-group-container">
+            <h2 className="events-group-date">
               {new Date(group.date).toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: '2-digit',
@@ -69,7 +69,7 @@ function MyEventsTab({ groups, setGroups }) {
               })}
             </h2>
 
-            <div className="tasks-grid">
+            <div className="events-tasks-grid">
               {shownTasks.map((task) => (
                 <EventCard
                   key={task.id}
@@ -82,18 +82,18 @@ function MyEventsTab({ groups, setGroups }) {
 
             {totalPages > 1 && (
               <ReactPaginate
-                previousLabel={<span className="pagination-arrow">&lt;</span>}
-                nextLabel={<span className="pagination-arrow">&gt;</span>}
+                previousLabel={<span className="events-pagination-arrow">&lt;</span>}
+                nextLabel={<span className="events-pagination-arrow">&gt;</span>}
                 pageCount={totalPages}
                 onPageChange={changePage(group.date)}
                 forcePage={page}
-                containerClassName="pagination-container"
-                pageClassName="pagination-item"
-                pageLinkClassName="pagination-link"
-                activeClassName="active-page"
-                previousClassName="pagination-nav"
-                nextClassName="pagination-nav"
-                disabledClassName="disabled-nav"
+                containerClassName="events-pagination-container"
+                pageClassName="events-pagination-item"
+                pageLinkClassName="events-pagination-link"
+                activeClassName="events-active-page"
+                previousClassName="events-pagination-nav"
+                nextClassName="events-pagination-nav"
+                disabledClassName="events-disabled-nav"
                 breakLabel="..."
                 marginPagesDisplayed={1}
                 pageRangeDisplayed={2}
@@ -106,4 +106,4 @@ function MyEventsTab({ groups, setGroups }) {
   );
 }
 
-export default MyEventsTab;
+export default EventsPending;
