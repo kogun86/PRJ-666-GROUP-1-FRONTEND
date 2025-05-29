@@ -35,7 +35,7 @@ function EventCompleted({ groups, setGroups }) {
     const updated = groups.map((group) => {
       if (group.date !== groupDate) return group;
       const updatedTasks = group.tasks.map((task) => {
-        if (task.id === taskId && task.isCompleted) {
+        if (task._id === taskId && task.isCompleted) {
           return { ...task, grade };
         }
         return task;
@@ -85,8 +85,8 @@ function EventCompleted({ groups, setGroups }) {
 
               <div className="events-tasks-grid">
                 {visibleTasks.map((task) =>
-                  editing.groupDate === group.date && editing.taskId === task.id ? (
-                    <div key={task.id} className="events-task-card">
+                  editing.groupDate === group.date && editing.taskId === task._id ? (
+                    <div key={task._id} className="events-task-card">
                       <h3 className="events-task-title">{task.title}</h3>
                       <EventGradeInput
                         initialGrade={task.grade}
@@ -96,9 +96,9 @@ function EventCompleted({ groups, setGroups }) {
                     </div>
                   ) : (
                     <EventCard
-                      key={task.id}
+                      key={task._id}
                       task={task}
-                      onSetGrade={() => startEditing(group.date, task.id)}
+                      onSetGrade={() => startEditing(group.date, task._id)}
                     />
                   )
                 )}

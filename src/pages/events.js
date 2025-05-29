@@ -24,11 +24,17 @@ export default function Events() {
     if (!user) return;
 
     if (isProduction) {
-      apiRequest('/v1/events/upcoming', {}, user)
-        .then((data) => setEvents(data.events || []))
-        .catch(console.error);
+      apiRequest(`/v1/events/upcoming`, {}, user)
+        .then((data) => {
+          console.log('Fetched events data:', data);
+          setEvents(data.events || []);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch events:', error);
+          setEvents([]);
+        });
     } else {
-      setEvents();
+      setEvents([]);
     }
   }, [user, isProduction]);
 
@@ -102,9 +108,12 @@ export default function Events() {
     return Object.values(groups);
   };
 
-  const [groups, setGroups] = useState(groupTasksByDate(initialTasks));
+  const [groups, setGroups] = useState([]);
+  useEffect(() => {
+    setGroups(groupTasksByDate(events));
+  }, [events]);
 
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = async (data) => {
     const dateKey = getDateKey(data.date);
     const newTask = {
       id: Date.now(),
@@ -118,6 +127,32 @@ export default function Events() {
       grade: '0',
     };
 
+    try {
+      if (user && isProduction) {
+        // POST request to API to save new event
+        const response = await apiRequest(
+          '/v1/events',
+          {
+            method: 'POST',
+            body: JSON.stringify(newTask),
+            headers: { 'Content-Type': 'application/json' },
+          },
+          user
+        );
+
+        if (!response || response.error) {
+          throw new Error(response?.error || 'Failed to create event');
+        }
+
+        // Assuming API returns created event, you might update newTask with the response if needed
+        // For example: newTask.id = response.event.id;
+      }
+    } catch (error) {
+      console.error('Failed to save event:', error);
+      // Optionally show error message to user here
+    }
+
+    // Update local state anyway
     setGroups((prevGroups) => {
       const groupIndex = prevGroups.findIndex((g) => g.date === dateKey);
       if (groupIndex > -1) {
