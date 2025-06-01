@@ -12,6 +12,7 @@ export default function CoursesPage() {
   const [classesData, setClassesData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch courses and classes from the backend
   useEffect(() => {
     const fetchCoursesAndClasses = async () => {
       try {
@@ -23,12 +24,12 @@ export default function CoursesPage() {
         });
         if (!courseRes.ok) throw new Error(`HTTP error! status: ${courseRes.status}`);
         const courseData = await courseRes.json();
-
         const courses = courseData.courses || [];
+
         const fetchedCourses = courses.map((course) => ({
           title: course.title,
           code: course.code,
-          professor: course.instructor.name,
+          professor: course.instructor?.name,
           color: '#cad2c5',
           grade: 0,
           schedule: course.schedule.map((s) => ({
@@ -36,7 +37,6 @@ export default function CoursesPage() {
             weekDay: getWeekday(s.weekday),
           })),
         }));
-
         setMyCourses(fetchedCourses);
 
         const classRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/classes`, {
@@ -66,7 +66,7 @@ export default function CoursesPage() {
       courseMap[c._id] = {
         title: c.title,
         code: c.code,
-        professor: c.instructor.name,
+        professor: c.instructor?.name,
         color: '#84a98c',
       };
     });
@@ -92,7 +92,6 @@ export default function CoursesPage() {
           minute: '2-digit',
           timeZone: 'UTC',
         }),
-
         room: 'TBD',
         type: cls.classType,
         code: courseInfo.code,
@@ -116,62 +115,111 @@ export default function CoursesPage() {
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   }
 
+  function convertToSeconds(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) {
+      console.error('❌ Invalid time format:', timeStr);
+      return 0;
+    }
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 3600 + minutes * 60;
+  }
+
   function handleAdd() {
     setEditData(null);
     setEditIndex(null);
     setShowForm(true);
   }
 
-  function handleEdit(course, index) {
-    const initialFormData = {
-      name: course.title,
-      code: course.code,
-      professor: course.professor,
-      color: course.color,
-      schedule: course.schedule.map((s) => {
-        const [startTime, endTime] = s.time.split('–');
-        return { day: s.weekDay, startTime, endTime };
-      }),
-    };
-    setEditData(initialFormData);
-    setEditIndex(index);
-    setShowForm(true);
-  }
-
-  function handleDelete(index) {
-    setMyCourses((cs) => cs.filter((_, i) => i !== index));
-    if (editIndex === index) handleCancel();
-  }
-
   function handleSubmit(data) {
-    const mapped = {
-      title: data.name,
+    const weekDayToIndex = {
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
+    };
+
+    if (
+      !data.title ||
+      !data.code ||
+      !data.startDate ||
+      !data.endDate ||
+      !data.instructor?.name ||
+      !data.instructor?.email ||
+      !data.instructor?.availableTimeSlots?.length ||
+      !data.schedule?.length
+    ) {
+      alert('All fields are required.');
+      return;
+    }
+
+    const newCourse = {
+      userId: '1234',
+      title: data.title,
       code: data.code,
-      professor: data.professor,
-      color: data.color,
-      grade: editIndex != null ? myCourses[editIndex].grade : 0,
-      schedule: data.schedule.map((s) => ({
-        time: `${s.startTime}–${s.endTime}`,
-        weekDay: s.day,
+      status: 'active',
+      startDate: data.startDate,
+      endDate: data.endDate,
+      instructor: {
+        name: data.instructor.name,
+        email: data.instructor.email,
+        availableTimeSlots: data.instructor.availableTimeSlots.map((s) => ({
+          weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
+          startTime: convertToSeconds(s.startTime),
+          endTime: convertToSeconds(s.endTime),
+        })),
+      },
+      schedule: data.schedule.map((s, idx) => ({
+        classType: s.classType || (idx === 0 ? 'lecture' : 'lab'),
+        weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
+        startTime: convertToSeconds(s.startTime),
+        endTime: convertToSeconds(s.endTime),
       })),
     };
 
-    if (editIndex != null) {
-      setMyCourses((cs) => cs.map((c, i) => (i === editIndex ? mapped : c)));
-    } else {
-      setMyCourses((cs) => [...cs, mapped]);
-    }
+    console.log('📤 Submitting course to backend:', JSON.stringify(newCourse, null, 2));
 
-    handleCancel();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+      },
+      body: JSON.stringify(newCourse),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Server responded with:', errorText);
+          console.error('📤 Payload was:', JSON.stringify(newCourse, null, 2));
+          throw new Error(`Failed to create course: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((result) => {
+        console.log('✅ Course created:', result);
+        setMyCourses((prev) => [
+          ...prev,
+          {
+            title: newCourse.title,
+            code: newCourse.code,
+            professor: newCourse.instructor.name,
+            grade: 0,
+            schedule: data.schedule.map((s) => ({
+              time: `${s.startTime}–${s.endTime}`,
+              weekDay: s.day,
+            })),
+          },
+        ]);
+        setShowForm(false);
+      })
+      .catch((err) => {
+        console.error('Error creating course:', err);
+        alert('Failed to create course.');
+      });
   }
-
-  function handleCancel() {
-    setShowForm(false);
-    setEditData(null);
-    setEditIndex(null);
-  }
-
-  const tabs = ['My Classes', 'My Courses'];
 
   return (
     <ProtectedRoute>
@@ -179,7 +227,7 @@ export default function CoursesPage() {
         <div className="courses-container">
           <div className="profile-card">
             <div className="profile-action-row tabs-bar">
-              {tabs.map((tab) => (
+              {['My Classes', 'My Courses'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => {
@@ -213,11 +261,7 @@ export default function CoursesPage() {
                         {sessions.map((s, idx) => (
                           <div
                             key={`${s.code}-${idx}`}
-                            className={`session-card${
-                              s.color === 'var(--color-destructive)'
-                                ? ' session-card--light-text'
-                                : ''
-                            }`}
+                            className="session-card"
                             style={{ backgroundColor: s.color }}
                           >
                             <h5 className="session-title">{s.title}</h5>
@@ -242,11 +286,6 @@ export default function CoursesPage() {
                             <div>
                               <strong>Professor:</strong> {s.professor}
                             </div>
-                            {s.events && (
-                              <div>
-                                <strong>Events:</strong> {s.events}
-                              </div>
-                            )}
                           </div>
                         ))}
                       </div>
@@ -261,7 +300,7 @@ export default function CoursesPage() {
                           <CourseForm
                             initialData={editData}
                             onSubmit={handleSubmit}
-                            onCancel={handleCancel}
+                            onCancel={() => setShowForm(false)}
                           />
                         </div>
                       </div>
@@ -277,13 +316,17 @@ export default function CoursesPage() {
                           <div className="course-actions">
                             <button
                               className="edit-course-button"
-                              onClick={() => handleEdit(c, idx)}
+                              onClick={() => {
+                                setEditData(c);
+                                setEditIndex(idx);
+                                setShowForm(true);
+                              }}
                             >
                               Edit
                             </button>
                             <button
                               className="delete-course-button"
-                              onClick={() => handleDelete(idx)}
+                              onClick={() => setMyCourses((cs) => cs.filter((_, i) => i !== idx))}
                             >
                               Delete
                             </button>

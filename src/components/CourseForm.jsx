@@ -11,118 +11,144 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
     formState: { errors },
   } = useForm({
     defaultValues: initialData || {
-      name: '',
+      title: '',
       code: '',
-      professor: '',
+      instructor: {
+        name: '',
+        email: '',
+        availableTimeSlots: [{ weekday: 1, startTime: '09:00', endTime: '10:00' }],
+      },
       startDate: '',
       endDate: '',
-      color: '#52796f',
-      schedule: [],
+      schedule: [{ classType: 'lecture', weekday: 1, startTime: '09:00', endTime: '10:00' }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: scheduleFields,
+    append: appendSchedule,
+    remove: removeSchedule,
+  } = useFieldArray({
     control,
     name: 'schedule',
   });
 
+  const {
+    fields: slotFields,
+    append: appendSlot,
+    remove: removeSlot,
+  } = useFieldArray({
+    control,
+    name: 'instructor.availableTimeSlots',
+  });
+
   return (
     <form className="course-form" onSubmit={handleSubmit(onSubmit)}>
-      {/* Course Name */}
+      {/* Title */}
       <div className="form-group">
-        <label className="course-form-label" htmlFor="name">
-          Course Name
-        </label>
-        <input id="name" {...register('name', { required: 'Required' })} className="form-input" />
-        {errors.name && <div className="error-message">{errors.name.message}</div>}
+        <label>Course Title</label>
+        <input {...register('title', { required: 'Required' })} className="form-input" />
+        {errors.title && <span className="error-message">{errors.title.message}</span>}
       </div>
 
-      {/* Course Code */}
+      {/* Code */}
       <div className="form-group">
-        <label className="course-form-label" htmlFor="code">
-          Course Code
-        </label>
-        <input id="code" {...register('code', { required: 'Required' })} className="form-input" />
-        {errors.code && <div className="error-message">{errors.code.message}</div>}
+        <label>Course Code</label>
+        <input {...register('code', { required: 'Required' })} className="form-input" />
+        {errors.code && <span className="error-message">{errors.code.message}</span>}
       </div>
 
       {/* Instructor */}
       <div className="form-group">
-        <label className="course-form-label" htmlFor="professor">
-          Instructor
-        </label>
-        <input id="professor" {...register('professor')} className="form-input" />
+        <label>Instructor Name</label>
+        <input {...register('instructor.name', { required: 'Required' })} className="form-input" />
+        <label>Instructor Email</label>
+        <input {...register('instructor.email', { required: 'Required' })} className="form-input" />
       </div>
 
-      {/* Period */}
-      <div className="form-row">
-        <div className="form-group">
-          <label className="course-form-label" htmlFor="startDate">
-            Start Date
-          </label>
-          <input type="date" id="startDate" {...register('startDate')} className="form-date" />
-        </div>
-        <div className="form-group">
-          <label className="course-form-label" htmlFor="endDate">
-            End Date
-          </label>
-          <input type="date" id="endDate" {...register('endDate')} className="form-date" />
-        </div>
-      </div>
-
-      {/* Color */}
+      {/* Instructor Time Slots */}
       <div className="form-group">
-        <label className="course-form-label" htmlFor="color">
-          Course Color
-        </label>
-        <input type="color" id="color" {...register('color')} className="form-input" />
-      </div>
-
-      {/* Dynamic Schedule */}
-      <div className="form-group">
-        <label className="course-form-label">Class Schedule</label>
-        {fields.map((field, idx) => (
+        <label>Instructor Available Time Slots</label>
+        {slotFields.map((field, idx) => (
           <div key={field.id} className="form-row schedule-item">
             <select
-              {...register(`schedule.${idx}.day`, { required: true })}
-              className="form-select"
+              {...register(`instructor.availableTimeSlots.${idx}.weekday`, { valueAsNumber: true })}
             >
-              {DAYS.map((d) => (
-                <option key={d} value={d}>
+              {DAYS.map((d, i) => (
+                <option key={i} value={i + 1}>
                   {d}
                 </option>
               ))}
             </select>
-            <input
-              type="time"
-              {...register(`schedule.${idx}.startTime`, { required: true })}
-              className="form-time"
-            />
-            <input
-              type="time"
-              {...register(`schedule.${idx}.endTime`, { required: true })}
-              className="form-time"
-            />
-            <button type="button" className="button button-secondary" onClick={() => remove(idx)}>
+            <input type="time" {...register(`instructor.availableTimeSlots.${idx}.startTime`)} />
+            <input type="time" {...register(`instructor.availableTimeSlots.${idx}.endTime`)} />
+            <button type="button" onClick={() => removeSlot(idx)}>
               Remove
             </button>
           </div>
         ))}
         <button
           type="button"
-          className="button button-secondary"
-          onClick={() => append({ day: 'Monday', startTime: '09:00', endTime: '10:00' })}
+          onClick={() => appendSlot({ weekday: 1, startTime: '09:00', endTime: '10:00' })}
         >
-          + Add Session
+          + Add Slot
         </button>
       </div>
 
-      {/* Actions */}
-      <div className="form-group form-actions">
-        <button type="submit" className="button button-primary">
-          Save
+      {/* Start / End Date */}
+      <div className="form-row">
+        <div className="form-group">
+          <label>Start Date</label>
+          <input type="date" {...register('startDate', { required: 'Required' })} />
+        </div>
+        <div className="form-group">
+          <label>End Date</label>
+          <input type="date" {...register('endDate', { required: 'Required' })} />
+        </div>
+      </div>
+
+      {/* Schedule */}
+      <div className="form-group">
+        <label>Schedule</label>
+        {scheduleFields.map((field, idx) => (
+          <div key={field.id} className="form-row schedule-item">
+            <select {...register(`schedule.${idx}.classType`)}>
+              <option value="lecture">Lecture</option>
+              <option value="lab">Lab</option>
+            </select>
+            <select {...register(`schedule.${idx}.weekday`, { valueAsNumber: true })}>
+              {DAYS.map((d, i) => (
+                <option key={i} value={i + 1}>
+                  {d}
+                </option>
+              ))}
+            </select>
+            <input type="time" {...register(`schedule.${idx}.startTime`)} />
+            <input type="time" {...register(`schedule.${idx}.endTime`)} />
+            <button type="button" onClick={() => removeSchedule(idx)}>
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            appendSchedule({
+              classType: 'lecture',
+              weekday: 1,
+              startTime: '09:00',
+              endTime: '10:00',
+            })
+          }
+        >
+          + Add Class
         </button>
-        <button type="button" onClick={onCancel} className="button button-secondary">
+      </div>
+
+      {/* Submit */}
+      <div className="form-group">
+        <button type="submit">Save</button>
+        <button type="button" onClick={onCancel}>
           Cancel
         </button>
       </div>

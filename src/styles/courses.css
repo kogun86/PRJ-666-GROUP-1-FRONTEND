@@ -94,11 +94,11 @@
 }
 
 .session-card {
-  background-color: var(--color-accent);
+  background-color: #edf6f9; /* updated: soft readable background */
   color: var(--color-primary);
   padding: 1rem;
   border-radius: var(--radius);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .session-card--light-text {
@@ -113,11 +113,11 @@
 }
 
 .course-card {
-  position: relative; /* for the action buttons */
-  background-color: #cad2c5;
+  position: relative;
+  background-color: #fefae0; /* updated: soft warm background */
   padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
   color: var(--color-primary);
 }
 
@@ -130,7 +130,7 @@
   gap: 0.5rem;
 }
 
-/* Edit button (static inside .course-actions) */
+/* Edit button */
 .course-actions .edit-course-button {
   background-color: var(--color-primary);
   color: var(--color-accent);
@@ -152,7 +152,7 @@
   cursor: pointer;
 }
 
-/*  Modal overlay & container  */
+/* Modal overlay & container */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -177,16 +177,16 @@
   box-sizing: border-box;
 }
 
-/*  CourseForm Styles  */
+/* CourseForm Styles */
 .course-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  border: 2px solid var(--color-secondary);
+  border: 2px solid var(--color-primary);
   padding: 1rem;
   border-radius: var(--radius);
-  background: var(--color-accent);
-  margin: 0;
+  background: #f8f9fa;
+  color: #212529;
   box-sizing: border-box;
 }
 
@@ -199,7 +199,115 @@
 .course-form-label {
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: #343a40;
+}
+
+.form-input,
+.form-select,
+.form-date,
+.form-time {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: var(--radius);
+  background: #fff;
+  color: #212529;
+}
+
+.form-row {
+  display: block !important;
+}
+.form-row .form-group {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+}
+
+.schedule-item .form-select,
+.schedule-item .form-time {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+/* Fix spacing for buttons */
+.schedule-item button,
+.form-group button {
+  margin-top: 0.25rem;
+}
+
+.add-session-button,
+.button-primary,
+.button-secondary {
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.add-session-button {
+  background: #007bff;
+  color: #ffffff;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.form-actions .button-primary {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.form-actions .button-secondary {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .schedule-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* DISTINCT BACKGROUNDS FOR VISUAL SEPARATION */
+
+/* Courses (yellow-ish background) */
+.course-card {
+  background-color: #fff3cd !important; /* pastel yellow */
+  color: #212529 !important; /* dark readable text */
+}
+
+/* Classes (blue-ish background) */
+.session-card {
+  background-color: #d1ecf1 !important; /* pastel cyan */
+  color: #0c5460 !important; /* deep blue text */
 }
 
 .form-input,
