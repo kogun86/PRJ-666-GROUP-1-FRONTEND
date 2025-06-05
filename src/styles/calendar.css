@@ -208,8 +208,8 @@
   background-color: #fff;
   border-radius: 0.375rem;
   overflow: hidden;
-  height: 600px;
-  min-height: 600px;
+  height: 500px;
+  min-height: 500px;
 }
 
 .week-view-header {
@@ -220,6 +220,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  margin-right: 8px; /* Account for scrollbar width */
 }
 
 .time-header {
@@ -253,13 +254,15 @@
   flex-direction: column;
   overflow-y: auto;
   flex: 1;
+  scrollbar-gutter: stable;
+  height: calc(9 * 50px + 1px);
 }
 
 .time-row {
   display: grid;
   grid-template-columns: 60px repeat(7, 1fr);
-  min-height: 50px;
   border-bottom: 1px solid #e5e7eb;
+  height: 50px;
 }
 
 .time-label {
@@ -281,8 +284,31 @@
   border-right: 1px solid #e5e7eb;
   padding: 0.25rem;
   position: relative;
-  height: 100%;
-  overflow: visible;
+  min-height: 50px;
+  height: 50px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* Hide scrollbar for time cells but keep functionality */
+.time-cell::-webkit-scrollbar {
+  width: 4px;
+}
+
+.time-cell::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.time-cell::-webkit-scrollbar-thumb {
+  background-color: rgba(82, 121, 111, 0.3);
+  border-radius: 2px;
+}
+
+/* Hide scrollbar when not hovering */
+.time-cell:not(:hover)::-webkit-scrollbar-thumb {
+  background-color: transparent;
 }
 
 .time-cell.current {
@@ -290,9 +316,9 @@
 }
 
 .week-event {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   padding: 0.25rem;
-  border-radius: 0.125rem;
+  border-radius: 0.25rem;
   background-color: #84a98c;
   color: #fff;
   white-space: nowrap;
@@ -301,7 +327,9 @@
   margin-bottom: 0.125rem;
   position: relative;
   z-index: 1;
-  min-height: 1.25rem;
+  min-height: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .week-event.event-deadline {

@@ -1,5 +1,5 @@
-// Hours for the weekly view (8am to 10pm)
-const timeSlots = Array.from({ length: 15 }, (_, i) => i + 8);
+// Hours for the weekly view (8am to 4pm)
+const timeSlots = Array.from({ length: 9 }, (_, i) => i + 8);
 
 export default function WeekView({ calendarDays, weeklyEvents }) {
   // Get events for a specific day and time slot in weekly view

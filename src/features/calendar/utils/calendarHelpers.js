@@ -72,10 +72,10 @@ export function organizeWeeklyEvents(weekDays, events) {
   if (!events?.length || !weekDays?.length) return weeklyEventsMap;
 
   events.forEach((event) => {
-    // Check if the event falls within the current week
     const eventDate = new Date(event.date);
     const eventDay = eventDate.getDay(); // 0 = Sunday, 6 = Saturday
 
+    // Check if the event falls within the current week
     const weekDay = weekDays.find((day) => {
       const isSameDate =
         day.date.getDate() === eventDate.getDate() &&
@@ -92,7 +92,10 @@ export function organizeWeeklyEvents(weekDays, events) {
 
     // Handle events that span across hours
     const eventEndHour = endHour === 0 ? 24 : endHour; // Handle midnight end time
-    for (let hour = startHour; hour < eventEndHour; hour++) {
+    const eventStartHour = startHour < 8 ? 8 : startHour; // Ensure start hour is not before 8am
+    const eventFinalEndHour = eventEndHour > 16 ? 16 : eventEndHour; // Cap end hour at 4pm
+
+    for (let hour = eventStartHour; hour < eventFinalEndHour; hour++) {
       const timeSlotKey = `${eventDay}-${hour}`;
 
       if (!weeklyEventsMap[timeSlotKey]) {
@@ -103,7 +106,7 @@ export function organizeWeeklyEvents(weekDays, events) {
       if (!weeklyEventsMap[timeSlotKey].some((e) => e.id === event.id)) {
         weeklyEventsMap[timeSlotKey].push({
           ...event,
-          title: `${event.title} ${event.startTime}-${event.endTime}`, // Add time to title for better visibility
+          title: `${event.title} (${event.startTime}-${event.endTime})`, // Add time to title for better visibility
         });
       }
     }
