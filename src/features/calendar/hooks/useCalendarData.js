@@ -78,32 +78,46 @@ export function useCalendarData() {
       // Only update state if the component is still mounted
       if (!abortController.signal.aborted) {
         // Transform classes data to calendar format
-        const transformedClasses = classesData.classes.map((cls) => ({
-          id: cls._id,
-          title: cls.classType.toUpperCase(),
-          type: cls.classType,
-          date: new Date(cls.startTime),
-          startTime: new Date(cls.startTime).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          }),
-          endTime: new Date(cls.endTime).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          }),
-        }));
+        const transformedClasses = classesData.classes.map((cls) => {
+          const startDate = new Date(cls.startTime);
+          const endDate = new Date(cls.endTime);
+
+          return {
+            id: cls._id,
+            title: cls.classType.toUpperCase(),
+            type: cls.classType,
+            date: startDate,
+            startTime: startDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }),
+            endTime: endDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }),
+            // Additional fields that might be useful for FullCalendar
+            courseCode: cls.courseCode || '',
+            description: cls.description || '',
+          };
+        });
 
         // Transform events data to calendar format
-        const transformedEvents = eventsData.events.map((event) => ({
-          id: event._id,
-          title: 'Completed',
-          type: 'completed',
-          date: new Date(event.date),
-          startTime: '00:00',
-          endTime: '23:59',
-        }));
+        const transformedEvents = eventsData.events.map((event) => {
+          const eventDate = new Date(event.date);
+
+          return {
+            id: event._id,
+            title: 'Completed',
+            type: 'completed',
+            date: eventDate,
+            startTime: '00:00',
+            endTime: '23:59',
+            // Additional fields
+            description: event.description || '',
+          };
+        });
 
         setClasses(transformedClasses);
         setEvents(transformedEvents);
