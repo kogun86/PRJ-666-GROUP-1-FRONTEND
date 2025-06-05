@@ -1,35 +1,71 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCalendarData } from '../hooks/useCalendarData';
-import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
-import {
-  generateMonthView,
-  generateWeekView,
-  organizeWeeklyEvents,
-} from '../utils/calendarHelpers';
-import MonthView from './MonthView';
-import WeekView from './WeekView';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/light.css';
+
+// Import custom components
+import CalendarHeader from './CalendarHeader';
+import CalendarLoading from './CalendarLoading';
+import CalendarError from './CalendarError';
+import EventModal from './EventModal';
+
+// Import utilities
+import { transformEvents } from '../utils/eventUtils';
 
 export default function Calendar() {
   const mounted = useRef(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [viewMode, setViewMode] = useState('monthly');
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const today = new Date();
-    const firstDayOfWeek = new Date(today);
-    const dayOfWeek = today.getDay();
-    firstDayOfWeek.setDate(today.getDate() - dayOfWeek);
-    return firstDayOfWeek;
-  });
+  const calendarRef = useRef(null);
+  const [viewMode, setViewMode] = useState('dayGridMonth'); // 'dayGridMonth' or 'timeGridWeek'
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const { calendarEvents, isLoading, error } = useCalendarData();
 
-  const { prevPeriod, nextPeriod, getPeriodString } = useCalendarNavigation({
-    currentMonth,
-    setCurrentMonth,
-    currentWeekStart,
-    setCurrentWeekStart,
-    viewMode,
-  });
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkIsMobile();
+
+    // Add event listener for resize
+    window.addEventListener('resize', checkIsMobile);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkIsMobile);
+    };
+  }, []);
+
+  // Update view mode based on screen size
+  useEffect(() => {
+    if (calendarRef.current) {
+      const api = calendarRef.current.getApi();
+
+      if (isMobile && viewMode === 'dayGridMonth') {
+        api.changeView('listMonth');
+        setViewMode('listMonth');
+      } else if (isMobile && viewMode === 'timeGridWeek') {
+        api.changeView('listWeek');
+        setViewMode('listWeek');
+      } else if (!isMobile && viewMode === 'listMonth') {
+        api.changeView('dayGridMonth');
+        setViewMode('dayGridMonth');
+      } else if (!isMobile && viewMode === 'listWeek') {
+        api.changeView('timeGridWeek');
+        setViewMode('timeGridWeek');
+      }
+    }
+  }, [isMobile, viewMode]);
 
   // Cleanup effect
   useEffect(() => {
@@ -39,40 +75,123 @@ export default function Calendar() {
     };
   }, []);
 
-  // Memoize calendar days generation
-  const calendarDays = useMemo(() => {
-    if (!currentMonth || !currentWeekStart) return [];
-
-    return viewMode === 'monthly'
-      ? generateMonthView(currentMonth.getFullYear(), currentMonth.getMonth())
-      : generateWeekView(currentWeekStart);
-  }, [currentMonth, viewMode, currentWeekStart]);
-
-  // Memoize weekly events organization
-  const weeklyEvents = useMemo(() => {
-    if (viewMode !== 'weekly' || !calendarDays.length || !calendarEvents?.length) return {};
-
-    return organizeWeeklyEvents(calendarDays, calendarEvents);
-  }, [viewMode, calendarDays, calendarEvents]);
+  // Transform events for FullCalendar format
+  const transformedEvents = transformEvents(calendarEvents);
 
   // Switch view mode
   const switchToMonthly = () => {
     if (mounted.current) {
-      setViewMode('monthly');
+      const newViewMode = isMobile ? 'listMonth' : 'dayGridMonth';
+      setViewMode(newViewMode);
+      if (calendarRef.current) {
+        calendarRef.current.getApi().changeView(newViewMode);
+      }
     }
   };
 
   const switchToWeekly = () => {
     if (mounted.current) {
-      setViewMode('weekly');
+      const newViewMode = isMobile ? 'listWeek' : 'timeGridWeek';
+      setViewMode(newViewMode);
+      if (calendarRef.current) {
+        calendarRef.current.getApi().changeView(newViewMode);
+      }
     }
   };
 
-  // Handle day click
-  const handleDayClick = (day) => {
-    if (mounted.current) {
-      console.log('Day clicked:', day.date);
+  // Navigation functions
+  const prevPeriod = () => {
+    if (calendarRef.current) {
+      calendarRef.current.getApi().prev();
+      setCurrentDate(calendarRef.current.getApi().getDate());
     }
+  };
+
+  const nextPeriod = () => {
+    if (calendarRef.current) {
+      calendarRef.current.getApi().next();
+      setCurrentDate(calendarRef.current.getApi().getDate());
+    }
+  };
+
+  // Get period string for display
+  const getPeriodString = () => {
+    if (!calendarRef.current) return '';
+
+    const api = calendarRef.current.getApi();
+    const view = api.view;
+
+    if (viewMode.includes('Month')) {
+      return currentDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    } else {
+      // For weekly view, calculate the start and end of the week
+      if (!api) return '';
+
+      const start = new Date(view.activeStart);
+      const end = new Date(view.activeEnd);
+      end.setDate(end.getDate() - 1); // Adjust end date (exclusive to inclusive)
+
+      const startStr = start.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+
+      const endStr = end.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
+      return `${startStr} - ${endStr}`;
+    }
+  };
+
+  // Handle event click
+  const handleEventClick = (info) => {
+    if (mounted.current) {
+      const eventId = info.event.id;
+      const originalEvent = calendarEvents.find((event) => event.id === eventId);
+      if (originalEvent) {
+        setSelectedEvent(originalEvent);
+      }
+    }
+  };
+
+  // Handle date click
+  const handleDateClick = (info) => {
+    if (mounted.current) {
+      console.log('Date clicked:', info.date);
+    }
+  };
+
+  // Setup tooltips for events
+  const handleEventMount = (info) => {
+    const { event } = info;
+    const { type, courseCode, description } = event.extendedProps;
+
+    let tooltipContent = `
+      <div class="event-tooltip">
+        <h4>${event.title}</h4>
+        <p><strong>Time:</strong> ${event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+        ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
+        <p><strong>Type:</strong> ${type || 'N/A'}</p>
+        ${courseCode ? `<p><strong>Course:</strong> ${courseCode}</p>` : ''}
+        ${description ? `<p><strong>Description:</strong> ${description}</p>` : ''}
+      </div>
+    `;
+
+    tippy(info.el, {
+      content: tooltipContent,
+      allowHTML: true,
+      theme: 'light',
+      placement: 'top',
+      arrow: true,
+      interactive: true,
+      appendTo: document.body,
+    });
   };
 
   if (!mounted.current) {
@@ -83,62 +202,61 @@ export default function Calendar() {
     <div className="calendar-container">
       <div className="calendar-card">
         {/* Calendar Header with Navigation and View Toggle */}
-        <div className="calendar-header">
-          <div className="calendar-month">{getPeriodString()}</div>
-          <div className="calendar-controls">
-            <div className="view-toggle">
-              <button
-                className={`view-toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
-                onClick={switchToWeekly}
-              >
-                Weekly
-              </button>
-              <button
-                className={`view-toggle-button ${viewMode === 'monthly' ? 'active' : ''}`}
-                onClick={switchToMonthly}
-              >
-                Monthly
-              </button>
-            </div>
-            <div className="calendar-nav">
-              <button className="calendar-nav-button" onClick={prevPeriod}>
-                &lt;
-              </button>
-              <button className="calendar-nav-button" onClick={nextPeriod}>
-                &gt;
-              </button>
-            </div>
-          </div>
-        </div>
+        <CalendarHeader
+          periodString={getPeriodString()}
+          viewMode={viewMode}
+          onPrevPeriod={prevPeriod}
+          onNextPeriod={nextPeriod}
+          onSwitchToWeekly={switchToWeekly}
+          onSwitchToMonthly={switchToMonthly}
+        />
 
         {/* Loading State */}
-        {isLoading && (
-          <div className="calendar-loading">
-            <div className="spinner"></div>
-            <p>Loading calendar data...</p>
-          </div>
-        )}
+        {isLoading && <CalendarLoading />}
 
         {/* Error State */}
-        {error && (
-          <div className="calendar-error">
-            <p>Error: {error}</p>
-            <button onClick={() => window.location.reload()}>Retry</button>
+        {error && <CalendarError error={error} />}
+
+        {/* FullCalendar Component */}
+        {!isLoading && !error && (
+          <div className="fullcalendar-wrapper">
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
+              initialView={isMobile ? 'listMonth' : viewMode}
+              headerToolbar={false} // We're using our custom header
+              events={transformedEvents}
+              eventClick={handleEventClick}
+              dateClick={handleDateClick}
+              eventDidMount={handleEventMount}
+              height="auto"
+              dayMaxEvents={true} // Allow "more" link when too many events
+              slotMinTime="08:00:00" // Start time for week view
+              slotMaxTime="16:00:00" // End time for week view
+              allDaySlot={false} // Hide all-day slot in week view
+              weekends={true} // Show weekends
+              firstDay={0} // Start week on Sunday (0) to match your current implementation
+              views={{
+                dayGridMonth: {
+                  dayMaxEventRows: 3, // Limit number of events per day in month view
+                },
+                listMonth: {
+                  listDayFormat: { weekday: 'long' },
+                  listDaySideFormat: { month: 'long', day: 'numeric' },
+                },
+                listWeek: {
+                  listDayFormat: { weekday: 'long' },
+                  listDaySideFormat: { month: 'short', day: 'numeric' },
+                },
+              }}
+            />
           </div>
         )}
 
-        {/* Calendar Content */}
-        {!isLoading &&
-          !error &&
-          (viewMode === 'monthly' ? (
-            <MonthView
-              calendarDays={calendarDays}
-              events={calendarEvents}
-              onDayClick={handleDayClick}
-            />
-          ) : (
-            <WeekView calendarDays={calendarDays} weeklyEvents={weeklyEvents} />
-          ))}
+        {/* Event Details Modal */}
+        {selectedEvent && (
+          <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        )}
       </div>
     </div>
   );
