@@ -23,8 +23,23 @@ export default function EventModal({ event, onClose }) {
             </div>
 
             <div className="password-form-group">
-              <label className="password-label">Time</label>
-              <div className="password-input">{`${event.startTime} - ${event.endTime}`}</div>
+              <label className="password-label">Time (UTC)</label>
+              <div className="password-input">
+                {event.isUTC
+                  ? `${event.formattedStartTime} - ${event.formattedEndTime}`
+                  : event.originalStartTime
+                    ? `${new Date(event.originalStartTime).toUTCString().slice(17, 22)} - ${new Date(event.originalEndTime).toUTCString().slice(17, 22)}`
+                    : 'N/A'}
+              </div>
+            </div>
+
+            <div className="password-form-group">
+              <label className="password-label">Time (Your Local Time)</label>
+              <div className="password-input">
+                {event.startTime
+                  ? `${new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                  : 'N/A'}
+              </div>
             </div>
 
             {event.courseCode && (

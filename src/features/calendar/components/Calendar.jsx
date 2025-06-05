@@ -25,6 +25,7 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   const { calendarEvents, isLoading, error } = useCalendarData();
 
@@ -77,6 +78,45 @@ export default function Calendar() {
 
   // Transform events for FullCalendar format
   const transformedEvents = transformEvents(calendarEvents);
+
+  // Debug events - log count and sample
+  console.log(`Calendar events count: ${calendarEvents.length}`);
+  console.log(`Transformed events count: ${transformedEvents.length}`);
+  if (transformedEvents.length > 0) {
+    console.log('Sample transformed event:', transformedEvents[0]);
+  }
+
+  // Helper function to navigate to the first class week
+  const goToFirstClassWeek = () => {
+    if (!transformedEvents.length) {
+      setDebugInfo('No events available to navigate to');
+      return;
+    }
+
+    // Sort events by start date
+    const sortedEvents = [...transformedEvents].sort(
+      (a, b) => new Date(a.start) - new Date(b.start)
+    );
+
+    const firstEvent = sortedEvents[0];
+    if (!firstEvent || !firstEvent.start) {
+      setDebugInfo("First event doesn't have a valid start date");
+      return;
+    }
+
+    // Navigate to the week of the first event
+    if (calendarRef.current) {
+      const api = calendarRef.current.getApi();
+      api.gotoDate(firstEvent.start);
+
+      // If we're not in weekly view, switch to it
+      if (!viewMode.includes('Week')) {
+        switchToWeekly();
+      }
+
+      setDebugInfo(`Navigated to date: ${firstEvent.start.toISOString().split('T')[0]}`);
+    }
+  };
 
   // Switch view mode
   const switchToMonthly = () => {
@@ -211,6 +251,41 @@ export default function Calendar() {
           onSwitchToMonthly={switchToMonthly}
         />
 
+        {/* Debug Helper Button */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="debug-controls">
+            <button
+              onClick={goToFirstClassWeek}
+              className="debug-button"
+              style={{
+                padding: '5px 10px',
+                marginBottom: '10px',
+                backgroundColor: '#52796f',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              Go to First Class Week
+            </button>
+            {debugInfo && (
+              <div
+                className="debug-info"
+                style={{
+                  fontSize: '12px',
+                  marginBottom: '5px',
+                  padding: '5px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px',
+                }}
+              >
+                {debugInfo}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Loading State */}
         {isLoading && <CalendarLoading />}
 
@@ -231,11 +306,12 @@ export default function Calendar() {
               eventDidMount={handleEventMount}
               height="auto"
               dayMaxEvents={true} // Allow "more" link when too many events
-              slotMinTime="08:00:00" // Start time for week view
-              slotMaxTime="16:00:00" // End time for week view
+              slotMinTime="08:00:00" // Start time for week view - adjusted to show early classes
+              slotMaxTime="16:00:00" // End time for week view - expanded to show later classes
               allDaySlot={false} // Hide all-day slot in week view
               weekends={true} // Show weekends
               firstDay={0} // Start week on Sunday (0) to match your current implementation
+              timeZone="UTC" // CRITICAL: Use UTC timezone for display
               views={{
                 dayGridMonth: {
                   dayMaxEventRows: 3, // Limit number of events per day in month view

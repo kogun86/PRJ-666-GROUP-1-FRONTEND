@@ -79,25 +79,39 @@ export function useCalendarData() {
       if (!abortController.signal.aborted) {
         // Transform classes data to calendar format
         const transformedClasses = classesData.classes.map((cls) => {
+          // Log the raw class data to debug
+          console.log('Raw class data:', cls);
+
+          // Create Date objects from the API ISO strings
           const startDate = new Date(cls.startTime);
           const endDate = new Date(cls.endTime);
+
+          // Get the UTC time components rather than local time
+          const startHoursUTC = startDate.getUTCHours();
+          const startMinutesUTC = startDate.getUTCMinutes();
+          const endHoursUTC = endDate.getUTCHours();
+          const endMinutesUTC = endDate.getUTCMinutes();
+
+          // Format UTC times for display
+          const formatUTCTime = (hours, minutes) => {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          };
 
           return {
             id: cls._id,
             title: cls.classType.toUpperCase(),
             type: cls.classType,
+            // For weekly view, provide the full ISO strings
+            startTime: cls.startTime,
+            endTime: cls.endTime,
+            // For the event modal and other UI components, use UTC time
+            formattedStartTime: formatUTCTime(startHoursUTC, startMinutesUTC),
+            formattedEndTime: formatUTCTime(endHoursUTC, endMinutesUTC),
+            // Include date for back-compatibility with existing code
             date: startDate,
-            startTime: startDate.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-            }),
-            endTime: endDate.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-            }),
-            // Additional fields that might be useful for FullCalendar
+            // Flag to indicate this is a UTC time event
+            isUTC: true,
+            // Additional fields
             courseCode: cls.courseCode || '',
             description: cls.description || '',
           };
@@ -119,6 +133,7 @@ export function useCalendarData() {
           };
         });
 
+        console.log('Transformed classes:', transformedClasses);
         setClasses(transformedClasses);
         setEvents(transformedEvents);
         setIsLoading(false);

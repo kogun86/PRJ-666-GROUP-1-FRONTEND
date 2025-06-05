@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-export default function CourseForm({ initialData, onSubmit, onCancel }) {
+export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitting, error }) {
   const {
     register,
     control,
@@ -13,6 +13,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
     defaultValues: initialData || {
       title: '',
       code: '',
+      section: 'A',
       instructor: {
         name: '',
         email: '',
@@ -20,7 +21,9 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
       },
       startDate: '',
       endDate: '',
-      schedule: [{ classType: 'lecture', weekday: 1, startTime: '09:00', endTime: '10:00' }],
+      schedule: [
+        { classType: 'lecture', weekday: 1, startTime: '09:00', endTime: '10:00', location: 'TBD' },
+      ],
     },
   });
 
@@ -44,6 +47,9 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
 
   return (
     <form className="course-form" onSubmit={handleSubmit(onSubmit)}>
+      {/* Display any API errors */}
+      {error && <div className="error-message api-error">{error}</div>}
+
       {/* Title */}
       <div className="form-group">
         <label>Course Title</label>
@@ -58,12 +64,32 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
         {errors.code && <span className="error-message">{errors.code.message}</span>}
       </div>
 
+      {/* Section */}
+      <div className="form-group">
+        <label>Section</label>
+        <input {...register('section', { required: 'Required' })} className="form-input" />
+        {errors.section && <span className="error-message">{errors.section.message}</span>}
+      </div>
+
       {/* Instructor */}
       <div className="form-group">
         <label>Instructor Name</label>
         <input {...register('instructor.name', { required: 'Required' })} className="form-input" />
         <label>Instructor Email</label>
-        <input {...register('instructor.email', { required: 'Required' })} className="form-input" />
+        <input
+          {...register('instructor.email', {
+            required: 'Required',
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: 'Invalid email address',
+            },
+          })}
+          className="form-input"
+          type="email"
+        />
+        {errors.instructor?.email && (
+          <span className="error-message">{errors.instructor.email.message}</span>
+        )}
       </div>
 
       {/* Instructor Time Slots */}
@@ -125,6 +151,12 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
             </select>
             <input type="time" {...register(`schedule.${idx}.startTime`)} />
             <input type="time" {...register(`schedule.${idx}.endTime`)} />
+            <input
+              type="text"
+              placeholder="Location"
+              {...register(`schedule.${idx}.location`)}
+              className="form-input"
+            />
             <button type="button" onClick={() => removeSchedule(idx)}>
               Remove
             </button>
@@ -138,6 +170,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
               weekday: 1,
               startTime: '09:00',
               endTime: '10:00',
+              location: 'TBD',
             })
           }
         >
@@ -147,8 +180,10 @@ export default function CourseForm({ initialData, onSubmit, onCancel }) {
 
       {/* Submit */}
       <div className="form-group">
-        <button type="submit">Save</button>
-        <button type="button" onClick={onCancel}>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : 'Save'}
+        </button>
+        <button type="button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </button>
       </div>
