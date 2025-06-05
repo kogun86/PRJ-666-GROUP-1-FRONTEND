@@ -103,6 +103,8 @@
 /* Monthly view specific styles */
 .calendar-grid.month-view {
   gap: 0.5rem;
+  height: 100%;
+  min-height: 600px;
 }
 
 .calendar-weekday {
@@ -125,15 +127,29 @@
   transition: background-color 0.2s;
   display: flex;
   flex-direction: column;
+  height: 0;
+  padding-bottom: 100%;
 }
 
 .calendar-day:hover {
   background-color: rgba(82, 121, 111, 0.1);
 }
 
+.calendar-day-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
 .calendar-day-number {
   font-weight: 500;
   color: #2f3e46;
+  margin-bottom: 0.25rem;
 }
 
 .calendar-day.current {
@@ -149,11 +165,12 @@
 
 .calendar-events {
   margin-top: 0.25rem;
-  overflow: hidden;
+  overflow-y: auto;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-height: calc(100% - 1.5rem);
 }
 
 .calendar-event {
@@ -165,6 +182,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 1.5rem;
 }
 
 .calendar-event.event-deadline {
@@ -179,6 +197,10 @@
   background-color: #3a5a40;
 }
 
+.calendar-event.event-completed {
+  background-color: #84a98c;
+}
+
 /* Weekly View Styles */
 .week-view-container {
   display: flex;
@@ -186,6 +208,8 @@
   background-color: #fff;
   border-radius: 0.375rem;
   overflow: hidden;
+  height: 500px;
+  min-height: 500px;
 }
 
 .week-view-header {
@@ -193,18 +217,27 @@
   grid-template-columns: 60px repeat(7, 1fr);
   background-color: #cad2c5;
   border-bottom: 1px solid #84a98c;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-right: 8px; /* Account for scrollbar width */
 }
 
 .time-header {
   border-right: 1px solid #84a98c;
+  background-color: #f8f9fa;
 }
 
 .day-header {
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem;
   text-align: center;
   font-weight: 600;
   color: #2f3e46;
   border-right: 1px solid #84a98c;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  justify-content: center;
 }
 
 .day-header.current {
@@ -212,38 +245,70 @@
 }
 
 .day-number {
-  font-size: 1.125rem;
-  margin-top: 0.25rem;
+  font-size: 1rem;
+  font-weight: normal;
 }
 
 .week-view-grid {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-gutter: stable;
+  height: calc(9 * 50px + 1px);
 }
 
 .time-row {
   display: grid;
   grid-template-columns: 60px repeat(7, 1fr);
-  min-height: 60px;
   border-bottom: 1px solid #e5e7eb;
+  height: 50px;
 }
 
 .time-label {
-  padding: 0.5rem;
+  padding: 0.25rem;
   font-size: 0.75rem;
   color: #52796f;
   font-weight: 500;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   border-right: 1px solid #84a98c;
   background-color: #f8f9fa;
+  position: sticky;
+  left: 0;
+  z-index: 5;
 }
 
 .time-cell {
   border-right: 1px solid #e5e7eb;
   padding: 0.25rem;
   position: relative;
+  min-height: 50px;
+  height: 50px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* Hide scrollbar for time cells but keep functionality */
+.time-cell::-webkit-scrollbar {
+  width: 4px;
+}
+
+.time-cell::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.time-cell::-webkit-scrollbar-thumb {
+  background-color: rgba(82, 121, 111, 0.3);
+  border-radius: 2px;
+}
+
+/* Hide scrollbar when not hovering */
+.time-cell:not(:hover)::-webkit-scrollbar-thumb {
+  background-color: transparent;
 }
 
 .time-cell.current {
@@ -251,15 +316,20 @@
 }
 
 .week-event {
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.125rem;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
   background-color: #84a98c;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.125rem;
+  position: relative;
+  z-index: 1;
+  min-height: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .week-event.event-deadline {
@@ -272,4 +342,112 @@
 
 .week-event.event-lab {
   background-color: #3a5a40;
+}
+
+.week-event.event-completed {
+  background-color: #84a98c;
+}
+
+/* Loading State */
+.calendar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #52796f;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #52796f;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.calendar-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #a72f38;
+  text-align: center;
+  padding: 2rem;
+}
+
+.calendar-error button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #52796f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.calendar-error button:hover {
+  background-color: #3a5a40;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.event-details-content {
+  padding: 0;
+}
+
+.event-detail-text {
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  color: #2f3e46;
+  font-size: 0.875rem;
+}
+
+/* Make events clickable */
+.calendar-event,
+.week-event {
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;
+}
+
+.calendar-event:hover,
+.week-event:hover {
+  transform: scale(1.02);
 }
