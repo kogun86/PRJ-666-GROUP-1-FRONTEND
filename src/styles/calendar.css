@@ -103,6 +103,8 @@
 /* Monthly view specific styles */
 .calendar-grid.month-view {
   gap: 0.5rem;
+  height: 100%;
+  min-height: 600px;
 }
 
 .calendar-weekday {
@@ -125,15 +127,29 @@
   transition: background-color 0.2s;
   display: flex;
   flex-direction: column;
+  height: 0;
+  padding-bottom: 100%;
 }
 
 .calendar-day:hover {
   background-color: rgba(82, 121, 111, 0.1);
 }
 
+.calendar-day-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
 .calendar-day-number {
   font-weight: 500;
   color: #2f3e46;
+  margin-bottom: 0.25rem;
 }
 
 .calendar-day.current {
@@ -149,11 +165,12 @@
 
 .calendar-events {
   margin-top: 0.25rem;
-  overflow: hidden;
+  overflow-y: auto;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-height: calc(100% - 1.5rem);
 }
 
 .calendar-event {
@@ -165,6 +182,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 1.5rem;
 }
 
 .calendar-event.event-deadline {
@@ -186,6 +204,7 @@
   background-color: #fff;
   border-radius: 0.375rem;
   overflow: hidden;
+  height: 600px;
 }
 
 .week-view-header {
@@ -193,6 +212,9 @@
   grid-template-columns: 60px repeat(7, 1fr);
   background-color: #cad2c5;
   border-bottom: 1px solid #84a98c;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .time-header {
@@ -219,6 +241,8 @@
 .week-view-grid {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .time-row {
@@ -238,12 +262,18 @@
   justify-content: center;
   border-right: 1px solid #84a98c;
   background-color: #f8f9fa;
+  position: sticky;
+  left: 0;
+  z-index: 5;
 }
 
 .time-cell {
   border-right: 1px solid #e5e7eb;
   padding: 0.25rem;
   position: relative;
+  min-width: 100px;
+  height: 60px;
+  overflow-y: auto;
 }
 
 .time-cell.current {
@@ -260,6 +290,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 0.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 .week-event.event-deadline {
