@@ -78,6 +78,30 @@ export default function Calendar() {
   // Transform events for FullCalendar format
   const transformedEvents = transformEvents(calendarEvents);
 
+  // Helper function to navigate to the first class week
+  const goToFirstClassWeek = () => {
+    if (!transformedEvents.length) return;
+
+    // Sort events by start date
+    const sortedEvents = [...transformedEvents].sort(
+      (a, b) => new Date(a.start) - new Date(b.start)
+    );
+
+    const firstEvent = sortedEvents[0];
+    if (!firstEvent || !firstEvent.start) return;
+
+    // Navigate to the week of the first event
+    if (calendarRef.current) {
+      const api = calendarRef.current.getApi();
+      api.gotoDate(firstEvent.start);
+
+      // If we're not in weekly view, switch to it
+      if (!viewMode.includes('Week')) {
+        switchToWeekly();
+      }
+    }
+  };
+
   // Switch view mode
   const switchToMonthly = () => {
     if (mounted.current) {
@@ -231,11 +255,12 @@ export default function Calendar() {
               eventDidMount={handleEventMount}
               height="auto"
               dayMaxEvents={true} // Allow "more" link when too many events
-              slotMinTime="08:00:00" // Start time for week view
-              slotMaxTime="16:00:00" // End time for week view
+              slotMinTime="08:00:00" // Start time for week view - adjusted to show early classes
+              slotMaxTime="16:00:00" // End time for week view - expanded to show later classes
               allDaySlot={false} // Hide all-day slot in week view
               weekends={true} // Show weekends
               firstDay={0} // Start week on Sunday (0) to match your current implementation
+              timeZone="UTC" // CRITICAL: Use UTC timezone for display
               views={{
                 dayGridMonth: {
                   dayMaxEventRows: 3, // Limit number of events per day in month view

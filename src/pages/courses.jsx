@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import CourseForm from '../components/CourseForm';
+import { useCourseSubmit } from '@/features/courses';
 
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState('My Classes');
@@ -11,12 +12,25 @@ export default function CoursesPage() {
   const [myCourses, setMyCourses] = useState([]);
   const [classesData, setClassesData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const {
+    submitCourse,
+    isSubmitting,
+    error: submitError,
+    success: submitSuccess,
+    resetState,
+  } = useCourseSubmit();
 
   // Fetch courses and classes from the backend
   useEffect(() => {
     const fetchCoursesAndClasses = async () => {
       try {
-        const courseRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses?active=true`, {
+        // Construct the API URL using the same pattern as in the hook
+        const API_BASE_URL =
+          process.env.NODE_ENV === 'development'
+            ? 'http://localhost:8080/api/v1'
+            : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
+
+        const courseRes = await fetch(`${API_BASE_URL}/courses?active=true`, {
           headers: {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
             'Content-Type': 'application/json',
@@ -39,7 +53,7 @@ export default function CoursesPage() {
         }));
         setMyCourses(fetchedCourses);
 
-        const classRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/classes`, {
+        const classRes = await fetch(`${API_BASE_URL}/classes`, {
           headers: {
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
             'Content-Type': 'application/json',
@@ -59,6 +73,20 @@ export default function CoursesPage() {
 
     fetchCoursesAndClasses();
   }, []);
+
+  // Reset the submit state when the form is closed
+  useEffect(() => {
+    if (!showForm) {
+      resetState();
+    }
+  }, [showForm, resetState]);
+
+  // If submission was successful, update UI
+  useEffect(() => {
+    if (submitSuccess) {
+      setShowForm(false);
+    }
+  }, [submitSuccess]);
 
   function transformClasses(classes, courses) {
     const courseMap = {};
@@ -130,7 +158,7 @@ export default function CoursesPage() {
     setShowForm(true);
   }
 
-  function handleSubmit(data) {
+  async function handleSubmit(data) {
     const weekDayToIndex = {
       Sunday: 0,
       Monday: 1,
@@ -144,6 +172,7 @@ export default function CoursesPage() {
     if (
       !data.title ||
       !data.code ||
+      !data.section ||
       !data.startDate ||
       !data.endDate ||
       !data.instructor?.name ||
@@ -155,50 +184,39 @@ export default function CoursesPage() {
       return;
     }
 
-    const newCourse = {
-      userId: '1234',
-      title: data.title,
-      code: data.code,
-      status: 'active',
-      startDate: data.startDate,
-      endDate: data.endDate,
-      instructor: {
-        name: data.instructor.name,
-        email: data.instructor.email,
-        availableTimeSlots: data.instructor.availableTimeSlots.map((s) => ({
+    try {
+      const newCourse = {
+        title: data.title,
+        code: data.code,
+        status: 'active',
+        section: data.section || 'A',
+        startDate: data.startDate,
+        endDate: data.endDate,
+        instructor: {
+          name: data.instructor.name,
+          email: data.instructor.email,
+          availableTimeSlots: data.instructor.availableTimeSlots.map((s) => ({
+            weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
+            startTime: convertToSeconds(s.startTime),
+            endTime: convertToSeconds(s.endTime),
+          })),
+        },
+        // Keep schedule as an array as expected by the backend
+        schedule: data.schedule.map((s) => ({
+          classType: s.classType || 'lecture',
           weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
           startTime: convertToSeconds(s.startTime),
           endTime: convertToSeconds(s.endTime),
+          location: s.location || 'TBD',
         })),
-      },
-      schedule: data.schedule.map((s, idx) => ({
-        classType: s.classType || (idx === 0 ? 'lecture' : 'lab'),
-        weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
-        startTime: convertToSeconds(s.startTime),
-        endTime: convertToSeconds(s.endTime),
-      })),
-    };
+      };
 
-    console.log('📤 Submitting course to backend:', JSON.stringify(newCourse, null, 2));
+      console.log('📤 Submitting course to backend:', JSON.stringify(newCourse, null, 2));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
-      },
-      body: JSON.stringify(newCourse),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('❌ Server responded with:', errorText);
-          console.error('📤 Payload was:', JSON.stringify(newCourse, null, 2));
-          throw new Error(`Failed to create course: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((result) => {
+      // Use our new submit course hook
+      const result = await submitCourse(newCourse);
+
+      if (result.success) {
         console.log('✅ Course created:', result);
         setMyCourses((prev) => [
           ...prev,
@@ -213,12 +231,15 @@ export default function CoursesPage() {
             })),
           },
         ]);
-        setShowForm(false);
-      })
-      .catch((err) => {
-        console.error('Error creating course:', err);
-        alert('Failed to create course.');
-      });
+        // Form will be closed by the useEffect watching for submitSuccess
+      } else {
+        console.error('Error creating course:', result.errors);
+        alert(`Failed to create course: ${result.errors?.join(', ') || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Exception during course submission:', error);
+      alert(`An error occurred: ${error.message}`);
+    }
   }
 
   return (
@@ -301,6 +322,8 @@ export default function CoursesPage() {
                             initialData={editData}
                             onSubmit={handleSubmit}
                             onCancel={() => setShowForm(false)}
+                            isSubmitting={isSubmitting}
+                            error={submitError}
                           />
                         </div>
                       </div>
