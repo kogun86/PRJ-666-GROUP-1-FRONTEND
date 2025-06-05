@@ -43,6 +43,8 @@ export function useCalendarData() {
   };
 
   const fetchData = async (abortController) => {
+    if (!user) return;
+
     setIsLoading(true);
     setError(null);
 
@@ -105,43 +107,34 @@ export function useCalendarData() {
 
         setClasses(transformedClasses);
         setEvents(transformedEvents);
+        setIsLoading(false);
       }
     } catch (err) {
       // Only update error state if the error is not due to abort
-      if (err.name !== 'AbortError') {
+      if (err.name !== 'AbortError' && !abortController.signal.aborted) {
         setError(err.message);
         console.error('Error fetching calendar data:', err);
-      }
-    } finally {
-      // Only update loading state if not aborted
-      if (!abortController.signal.aborted) {
         setIsLoading(false);
       }
     }
   };
 
   useEffect(() => {
-    // Create an AbortController for this effect instance
     const abortController = new AbortController();
 
-    if (user) {
-      fetchData(abortController);
-    } else {
+    if (!user) {
       // Reset state when user is not available
       setClasses([]);
       setEvents([]);
       setError(null);
       setIsLoading(false);
+      return;
     }
 
-    // Cleanup function to cancel any pending requests
+    fetchData(abortController);
+
     return () => {
       abortController.abort();
-      // Reset state when component unmounts
-      setClasses([]);
-      setEvents([]);
-      setError(null);
-      setIsLoading(false);
     };
   }, [user]);
 

@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useCalendarData } from '../hooks/useCalendarData';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import {
@@ -12,13 +10,19 @@ import MonthView from './MonthView';
 import WeekView from './WeekView';
 
 export default function Calendar() {
+  const mounted = useRef(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [calendarDays, setCalendarDays] = useState([]);
-  const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'weekly'
-  const [currentWeekStart, setCurrentWeekStart] = useState(null);
-  const [weeklyEvents, setWeeklyEvents] = useState({});
+  const [viewMode, setViewMode] = useState('monthly');
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    const today = new Date();
+    const firstDayOfWeek = new Date(today);
+    const dayOfWeek = today.getDay();
+    firstDayOfWeek.setDate(today.getDate() - dayOfWeek);
+    return firstDayOfWeek;
+  });
 
   const { calendarEvents, isLoading, error } = useCalendarData();
+
   const { prevPeriod, nextPeriod, getPeriodString } = useCalendarNavigation({
     currentMonth,
     setCurrentMonth,
@@ -27,108 +31,115 @@ export default function Calendar() {
     viewMode,
   });
 
-  // Initialize current week on component mount
+  // Cleanup effect
   useEffect(() => {
-    const today = new Date();
-    // Get the first day of the current week (Sunday)
-    const firstDayOfWeek = new Date(today);
-    const dayOfWeek = today.getDay();
-    firstDayOfWeek.setDate(today.getDate() - dayOfWeek);
-    setCurrentWeekStart(firstDayOfWeek);
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
-  // Generate calendar days for the current view mode
-  useEffect(() => {
-    if (!currentMonth || !currentWeekStart) return;
+  // Memoize calendar days generation
+  const calendarDays = useMemo(() => {
+    if (!currentMonth || !currentWeekStart) return [];
 
-    const days =
-      viewMode === 'monthly'
-        ? generateMonthView(currentMonth.getFullYear(), currentMonth.getMonth())
-        : generateWeekView(currentWeekStart);
+    return viewMode === 'monthly'
+      ? generateMonthView(currentMonth.getFullYear(), currentMonth.getMonth())
+      : generateWeekView(currentWeekStart);
+  }, [currentMonth, viewMode, currentWeekStart]);
 
-    setCalendarDays(days);
+  // Memoize weekly events organization
+  const weeklyEvents = useMemo(() => {
+    if (viewMode !== 'weekly' || !calendarDays.length || !calendarEvents?.length) return {};
 
-    if (viewMode === 'weekly') {
-      const weeklyEventsMap = organizeWeeklyEvents(days, calendarEvents);
-      setWeeklyEvents(weeklyEventsMap);
-    }
-  }, [currentMonth, viewMode, currentWeekStart, calendarEvents]);
+    return organizeWeeklyEvents(calendarDays, calendarEvents);
+  }, [viewMode, calendarDays, calendarEvents]);
 
   // Switch view mode
-  const switchToMonthly = () => setViewMode('monthly');
-  const switchToWeekly = () => setViewMode('weekly');
+  const switchToMonthly = () => {
+    if (mounted.current) {
+      setViewMode('monthly');
+    }
+  };
+
+  const switchToWeekly = () => {
+    if (mounted.current) {
+      setViewMode('weekly');
+    }
+  };
 
   // Handle day click
   const handleDayClick = (day) => {
-    console.log('Day clicked:', day.date);
-    // Future feature: open modal with day details or event form
+    if (mounted.current) {
+      console.log('Day clicked:', day.date);
+    }
   };
 
+  if (!mounted.current) {
+    return null;
+  }
+
   return (
-    <ProtectedRoute>
-      <Layout>
-        <div className="calendar-container">
-          <div className="calendar-card">
-            {/* Calendar Header with Navigation and View Toggle */}
-            <div className="calendar-header">
-              <div className="calendar-month">{getPeriodString()}</div>
-              <div className="calendar-controls">
-                <div className="view-toggle">
-                  <button
-                    className={`view-toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
-                    onClick={switchToWeekly}
-                  >
-                    Weekly
-                  </button>
-                  <button
-                    className={`view-toggle-button ${viewMode === 'monthly' ? 'active' : ''}`}
-                    onClick={switchToMonthly}
-                  >
-                    Monthly
-                  </button>
-                </div>
-                <div className="calendar-nav">
-                  <button className="calendar-nav-button" onClick={prevPeriod}>
-                    &lt;
-                  </button>
-                  <button className="calendar-nav-button" onClick={nextPeriod}>
-                    &gt;
-                  </button>
-                </div>
-              </div>
+    <div className="calendar-container">
+      <div className="calendar-card">
+        {/* Calendar Header with Navigation and View Toggle */}
+        <div className="calendar-header">
+          <div className="calendar-month">{getPeriodString()}</div>
+          <div className="calendar-controls">
+            <div className="view-toggle">
+              <button
+                className={`view-toggle-button ${viewMode === 'weekly' ? 'active' : ''}`}
+                onClick={switchToWeekly}
+              >
+                Weekly
+              </button>
+              <button
+                className={`view-toggle-button ${viewMode === 'monthly' ? 'active' : ''}`}
+                onClick={switchToMonthly}
+              >
+                Monthly
+              </button>
             </div>
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="calendar-loading">
-                <div className="spinner"></div>
-                <p>Loading calendar data...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && (
-              <div className="calendar-error">
-                <p>Error: {error}</p>
-                <button onClick={() => window.location.reload()}>Retry</button>
-              </div>
-            )}
-
-            {/* Calendar Content */}
-            {!isLoading &&
-              !error &&
-              (viewMode === 'monthly' ? (
-                <MonthView
-                  calendarDays={calendarDays}
-                  events={calendarEvents}
-                  onDayClick={handleDayClick}
-                />
-              ) : (
-                <WeekView calendarDays={calendarDays} weeklyEvents={weeklyEvents} />
-              ))}
+            <div className="calendar-nav">
+              <button className="calendar-nav-button" onClick={prevPeriod}>
+                &lt;
+              </button>
+              <button className="calendar-nav-button" onClick={nextPeriod}>
+                &gt;
+              </button>
+            </div>
           </div>
         </div>
-      </Layout>
-    </ProtectedRoute>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="calendar-loading">
+            <div className="spinner"></div>
+            <p>Loading calendar data...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="calendar-error">
+            <p>Error: {error}</p>
+            <button onClick={() => window.location.reload()}>Retry</button>
+          </div>
+        )}
+
+        {/* Calendar Content */}
+        {!isLoading &&
+          !error &&
+          (viewMode === 'monthly' ? (
+            <MonthView
+              calendarDays={calendarDays}
+              events={calendarEvents}
+              onDayClick={handleDayClick}
+            />
+          ) : (
+            <WeekView calendarDays={calendarDays} weeklyEvents={weeklyEvents} />
+          ))}
+      </div>
+    </div>
   );
 }
