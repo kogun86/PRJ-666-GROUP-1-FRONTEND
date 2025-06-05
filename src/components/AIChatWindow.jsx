@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styles from '../styles/AIChatWindow.module.css';
+import { useAuth } from '@/features/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+// Define API base URL based on environment
+const API_BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8080/api/v1'
+    : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
 
 const AIChatWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,6 +16,7 @@ const AIChatWindow = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const { user, isProduction } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -17,8 +26,74 @@ const AIChatWindow = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Check if user is authenticated in production
+  const checkAuthentication = () => {
+    const isProd = process.env.NODE_ENV === 'production' || isProduction;
+
+    if (isProd && !user) {
+      console.warn('User not authenticated in production');
+      return false;
+    }
+
+    return true;
+  };
+
+  // Get authentication headers
+  const getHeaders = async () => {
+    const baseHeaders = {
+      'Content-Type': 'application/json',
+    };
+
+    // Check if we're in production based on NODE_ENV or useAuth hook
+    const isProd = process.env.NODE_ENV === 'production' || isProduction;
+
+    if (isProd) {
+      try {
+        console.log('Getting production auth token');
+        // Get the current session
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
+
+        if (!idToken) {
+          console.error('No ID token available in production');
+          throw new Error('No ID token available');
+        }
+
+        console.log('Production token obtained successfully');
+        return {
+          ...baseHeaders,
+          Authorization: `Bearer ${idToken}`,
+        };
+      } catch (err) {
+        console.error('Error getting ID token in production:', err);
+        throw new Error('Failed to get access token');
+      }
+    } else {
+      // Development headers with mock token
+      console.log('Using development mock token');
+      return {
+        ...baseHeaders,
+        Authorization: 'Bearer mock-id-token',
+      };
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
+
+    // Check authentication in production
+    if (!checkAuthentication()) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          text: 'Please log in to use the chat feature.',
+          sender: 'ai',
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
+      return;
+    }
 
     const newMessage = {
       id: Date.now(),
@@ -32,23 +107,38 @@ const AIChatWindow = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/chat', {
+      // Get authentication headers
+      let headers;
+      try {
+        headers = await getHeaders();
+        console.log('Request headers:', JSON.stringify(headers));
+      } catch (authError) {
+        console.error('Authentication error:', authError);
+        throw new Error(`Authentication failed: ${authError.message}`);
+      }
+
+      console.log(`Sending request to: ${API_BASE_URL}/chat`);
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // You may need to add authorization header here
-          Authorization: 'Bearer mock-id-token',
-        },
+        headers,
         body: JSON.stringify({ message: inputMessage }),
       });
+
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error:', response.status, errorText);
+
+        if (response.status === 401) {
+          throw new Error('Authentication failed - please log in again');
+        }
+
         throw new Error(`API error ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Response data:', JSON.stringify(data));
 
       if (data.status === 'ok' && data.data) {
         const aiResponse = {
