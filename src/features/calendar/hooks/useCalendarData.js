@@ -79,9 +79,6 @@ export function useCalendarData() {
       if (!abortController.signal.aborted) {
         // Transform classes data to calendar format
         const transformedClasses = classesData.classes.map((cls) => {
-          // Log the raw class data to debug
-          console.log('Raw class data:', cls);
-
           // Create Date objects from the API ISO strings
           const startDate = new Date(cls.startTime);
           const endDate = new Date(cls.endTime);
@@ -133,7 +130,6 @@ export function useCalendarData() {
           };
         });
 
-        console.log('Transformed classes:', transformedClasses);
         setClasses(transformedClasses);
         setEvents(transformedEvents);
         setIsLoading(false);

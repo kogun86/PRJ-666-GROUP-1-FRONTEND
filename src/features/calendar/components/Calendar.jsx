@@ -25,7 +25,6 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [debugInfo, setDebugInfo] = useState(null);
 
   const { calendarEvents, isLoading, error } = useCalendarData();
 
@@ -79,19 +78,9 @@ export default function Calendar() {
   // Transform events for FullCalendar format
   const transformedEvents = transformEvents(calendarEvents);
 
-  // Debug events - log count and sample
-  console.log(`Calendar events count: ${calendarEvents.length}`);
-  console.log(`Transformed events count: ${transformedEvents.length}`);
-  if (transformedEvents.length > 0) {
-    console.log('Sample transformed event:', transformedEvents[0]);
-  }
-
   // Helper function to navigate to the first class week
   const goToFirstClassWeek = () => {
-    if (!transformedEvents.length) {
-      setDebugInfo('No events available to navigate to');
-      return;
-    }
+    if (!transformedEvents.length) return;
 
     // Sort events by start date
     const sortedEvents = [...transformedEvents].sort(
@@ -99,10 +88,7 @@ export default function Calendar() {
     );
 
     const firstEvent = sortedEvents[0];
-    if (!firstEvent || !firstEvent.start) {
-      setDebugInfo("First event doesn't have a valid start date");
-      return;
-    }
+    if (!firstEvent || !firstEvent.start) return;
 
     // Navigate to the week of the first event
     if (calendarRef.current) {
@@ -113,8 +99,6 @@ export default function Calendar() {
       if (!viewMode.includes('Week')) {
         switchToWeekly();
       }
-
-      setDebugInfo(`Navigated to date: ${firstEvent.start.toISOString().split('T')[0]}`);
     }
   };
 
@@ -250,41 +234,6 @@ export default function Calendar() {
           onSwitchToWeekly={switchToWeekly}
           onSwitchToMonthly={switchToMonthly}
         />
-
-        {/* Debug Helper Button */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="debug-controls">
-            <button
-              onClick={goToFirstClassWeek}
-              className="debug-button"
-              style={{
-                padding: '5px 10px',
-                marginBottom: '10px',
-                backgroundColor: '#52796f',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Go to First Class Week
-            </button>
-            {debugInfo && (
-              <div
-                className="debug-info"
-                style={{
-                  fontSize: '12px',
-                  marginBottom: '5px',
-                  padding: '5px',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '4px',
-                }}
-              >
-                {debugInfo}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Loading State */}
         {isLoading && <CalendarLoading />}
