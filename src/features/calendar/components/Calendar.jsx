@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { useCalendarEvents } from '../hooks/useCalendarEvents';
+import { useCalendarData } from '../hooks/useCalendarData';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import {
   generateMonthView,
@@ -16,8 +16,9 @@ export default function Calendar() {
   const [calendarDays, setCalendarDays] = useState([]);
   const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'weekly'
   const [currentWeekStart, setCurrentWeekStart] = useState(null);
+  const [weeklyEvents, setWeeklyEvents] = useState({});
 
-  const { events, weeklyEvents, setWeeklyEvents } = useCalendarEvents();
+  const { calendarEvents, isLoading, error } = useCalendarData();
   const { prevPeriod, nextPeriod, getPeriodString } = useCalendarNavigation({
     currentMonth,
     setCurrentMonth,
@@ -48,10 +49,10 @@ export default function Calendar() {
     setCalendarDays(days);
 
     if (viewMode === 'weekly') {
-      const weeklyEventsMap = organizeWeeklyEvents(days, events);
+      const weeklyEventsMap = organizeWeeklyEvents(days, calendarEvents);
       setWeeklyEvents(weeklyEventsMap);
     }
-  }, [currentMonth, viewMode, currentWeekStart, events]);
+  }, [currentMonth, viewMode, currentWeekStart, calendarEvents]);
 
   // Switch view mode
   const switchToMonthly = () => setViewMode('monthly');
@@ -97,12 +98,34 @@ export default function Calendar() {
               </div>
             </div>
 
-            {/* Render appropriate view based on viewMode */}
-            {viewMode === 'monthly' ? (
-              <MonthView calendarDays={calendarDays} events={events} onDayClick={handleDayClick} />
-            ) : (
-              <WeekView calendarDays={calendarDays} weeklyEvents={weeklyEvents} />
+            {/* Loading State */}
+            {isLoading && (
+              <div className="calendar-loading">
+                <div className="spinner"></div>
+                <p>Loading calendar data...</p>
+              </div>
             )}
+
+            {/* Error State */}
+            {error && (
+              <div className="calendar-error">
+                <p>Error: {error}</p>
+                <button onClick={() => window.location.reload()}>Retry</button>
+              </div>
+            )}
+
+            {/* Calendar Content */}
+            {!isLoading &&
+              !error &&
+              (viewMode === 'monthly' ? (
+                <MonthView
+                  calendarDays={calendarDays}
+                  events={calendarEvents}
+                  onDayClick={handleDayClick}
+                />
+              ) : (
+                <WeekView calendarDays={calendarDays} weeklyEvents={weeklyEvents} />
+              ))}
           </div>
         </div>
       </Layout>
