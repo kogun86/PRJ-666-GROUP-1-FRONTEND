@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCalendarData } from '../hooks/useCalendarData';
-import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -9,6 +8,15 @@ import listPlugin from '@fullcalendar/list';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
+
+// Import custom components
+import CalendarHeader from './CalendarHeader';
+import CalendarLoading from './CalendarLoading';
+import CalendarError from './CalendarError';
+import EventModal from './EventModal';
+
+// Import utilities
+import { transformEvents } from '../utils/eventUtils';
 
 export default function Calendar() {
   const mounted = useRef(true);
@@ -68,61 +76,7 @@ export default function Calendar() {
   }, []);
 
   // Transform events for FullCalendar format
-  const transformedEvents = calendarEvents.map((event) => {
-    // Determine event color based on type
-    let backgroundColor;
-    let borderColor;
-
-    switch (event.type) {
-      case 'lecture':
-        backgroundColor = '#52796f'; // Updated to match CSS
-        borderColor = '#3a5a40';
-        break;
-      case 'lab':
-        backgroundColor = '#3a5a40'; // Updated to match CSS
-        borderColor = '#2f3e46';
-        break;
-      case 'tutorial':
-        backgroundColor = '#84a98c'; // Updated to match CSS
-        borderColor = '#52796f';
-        break;
-      case 'completed':
-        backgroundColor = '#84a98c'; // Updated to match CSS
-        borderColor = '#52796f';
-        break;
-      default:
-        backgroundColor = '#cad2c5'; // Grey
-        borderColor = '#84a98c';
-    }
-
-    return {
-      id: event.id,
-      title: event.title,
-      start: new Date(
-        event.date.getFullYear(),
-        event.date.getMonth(),
-        event.date.getDate(),
-        parseInt(event.startTime.split(':')[0]),
-        parseInt(event.startTime.split(':')[1])
-      ),
-      end: new Date(
-        event.date.getFullYear(),
-        event.date.getMonth(),
-        event.date.getDate(),
-        parseInt(event.endTime.split(':')[0]),
-        parseInt(event.endTime.split(':')[1])
-      ),
-      allDay: event.startTime === '00:00' && event.endTime === '23:59',
-      backgroundColor,
-      borderColor,
-      className: `event-${event.type}`,
-      extendedProps: {
-        type: event.type,
-        courseCode: event.courseCode,
-        description: event.description,
-      },
-    };
-  });
+  const transformedEvents = transformEvents(calendarEvents);
 
   // Switch view mode
   const switchToMonthly = () => {
@@ -248,49 +202,20 @@ export default function Calendar() {
     <div className="calendar-container">
       <div className="calendar-card">
         {/* Calendar Header with Navigation and View Toggle */}
-        <div className="calendar-header">
-          <div className="calendar-month">{getPeriodString()}</div>
-          <div className="calendar-controls">
-            <div className="view-toggle">
-              <button
-                className={`view-toggle-button ${viewMode.includes('Week') ? 'active' : ''}`}
-                onClick={switchToWeekly}
-              >
-                Weekly
-              </button>
-              <button
-                className={`view-toggle-button ${viewMode.includes('Month') ? 'active' : ''}`}
-                onClick={switchToMonthly}
-              >
-                Monthly
-              </button>
-            </div>
-            <div className="calendar-nav">
-              <button className="calendar-nav-button" onClick={prevPeriod}>
-                &lt;
-              </button>
-              <button className="calendar-nav-button" onClick={nextPeriod}>
-                &gt;
-              </button>
-            </div>
-          </div>
-        </div>
+        <CalendarHeader
+          periodString={getPeriodString()}
+          viewMode={viewMode}
+          onPrevPeriod={prevPeriod}
+          onNextPeriod={nextPeriod}
+          onSwitchToWeekly={switchToWeekly}
+          onSwitchToMonthly={switchToMonthly}
+        />
 
         {/* Loading State */}
-        {isLoading && (
-          <div className="calendar-loading">
-            <div className="spinner"></div>
-            <p>Loading calendar data...</p>
-          </div>
-        )}
+        {isLoading && <CalendarLoading />}
 
         {/* Error State */}
-        {error && (
-          <div className="calendar-error">
-            <p>Error: {error}</p>
-            <button onClick={() => window.location.reload()}>Retry</button>
-          </div>
-        )}
+        {error && <CalendarError error={error} />}
 
         {/* FullCalendar Component */}
         {!isLoading && !error && (
@@ -330,62 +255,7 @@ export default function Calendar() {
 
         {/* Event Details Modal */}
         {selectedEvent && (
-          <div className="modal-overlay">
-            <div className="modal-container">
-              <div className="password-modal">
-                <h2 className="password-modal-title">{selectedEvent.title}</h2>
-
-                <div className="event-details-content">
-                  <div className="password-form-group">
-                    <label className="password-label">Date</label>
-                    <div className="password-input">
-                      {new Date(selectedEvent.date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="password-form-group">
-                    <label className="password-label">Time</label>
-                    <div className="password-input">{`${selectedEvent.startTime} - ${selectedEvent.endTime}`}</div>
-                  </div>
-
-                  {selectedEvent.courseCode && (
-                    <div className="password-form-group">
-                      <label className="password-label">Course</label>
-                      <div className="password-input">{selectedEvent.courseCode}</div>
-                    </div>
-                  )}
-
-                  {selectedEvent.type && (
-                    <div className="password-form-group">
-                      <label className="password-label">Type</label>
-                      <div className="password-input">{selectedEvent.type}</div>
-                    </div>
-                  )}
-
-                  {selectedEvent.description && (
-                    <div className="password-form-group">
-                      <label className="password-label">Description</label>
-                      <div className="password-input">{selectedEvent.description}</div>
-                    </div>
-                  )}
-
-                  <div className="password-actions">
-                    <button
-                      onClick={() => setSelectedEvent(null)}
-                      className="password-cancel-button"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
         )}
       </div>
     </div>
