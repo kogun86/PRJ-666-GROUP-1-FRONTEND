@@ -69,34 +69,42 @@ export function generateWeekView(weekStart) {
 export function organizeWeeklyEvents(weekDays, events) {
   const weeklyEventsMap = {};
 
+  if (!events?.length || !weekDays?.length) return weeklyEventsMap;
+
   events.forEach((event) => {
     // Check if the event falls within the current week
-    const eventDate = event.date;
+    const eventDate = new Date(event.date);
     const eventDay = eventDate.getDay(); // 0 = Sunday, 6 = Saturday
 
-    const weekDay = weekDays.find((day, index) => index === eventDay);
+    const weekDay = weekDays.find((day) => {
+      const isSameDate =
+        day.date.getDate() === eventDate.getDate() &&
+        day.date.getMonth() === eventDate.getMonth() &&
+        day.date.getFullYear() === eventDate.getFullYear();
+      return isSameDate;
+    });
+
     if (!weekDay) return;
 
-    // Check if dates match (ignoring time)
-    const isSameDate =
-      weekDay.date.getDate() === eventDate.getDate() &&
-      weekDay.date.getMonth() === eventDate.getMonth() &&
-      weekDay.date.getFullYear() === eventDate.getFullYear();
+    // Extract time slot information
+    const [startHour] = event.startTime.split(':').map(Number);
+    const [endHour] = event.endTime.split(':').map(Number);
 
-    if (isSameDate) {
-      // Extract time slot information
-      const startHour = parseInt(event.startTime.split(':')[0], 10);
-      const endHour = parseInt(event.endTime.split(':')[0], 10);
+    // Handle events that span across hours
+    const eventEndHour = endHour === 0 ? 24 : endHour; // Handle midnight end time
+    for (let hour = startHour; hour < eventEndHour; hour++) {
+      const timeSlotKey = `${eventDay}-${hour}`;
 
-      // Create a unique key for this day and time slot
-      for (let hour = startHour; hour < endHour; hour++) {
-        const timeSlotKey = `${eventDay}-${hour}`;
+      if (!weeklyEventsMap[timeSlotKey]) {
+        weeklyEventsMap[timeSlotKey] = [];
+      }
 
-        if (!weeklyEventsMap[timeSlotKey]) {
-          weeklyEventsMap[timeSlotKey] = [];
-        }
-
-        weeklyEventsMap[timeSlotKey].push(event);
+      // Only add the event if it's not already in the time slot
+      if (!weeklyEventsMap[timeSlotKey].some((e) => e.id === event.id)) {
+        weeklyEventsMap[timeSlotKey].push({
+          ...event,
+          title: `${event.title} ${event.startTime}-${event.endTime}`, // Add time to title for better visibility
+        });
       }
     }
   });

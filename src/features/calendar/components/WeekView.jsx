@@ -1,5 +1,5 @@
-// Hours for the weekly view (10am to 6pm)
-const timeSlots = Array.from({ length: 9 }, (_, i) => i + 10);
+// Hours for the weekly view (8am to 10pm)
+const timeSlots = Array.from({ length: 15 }, (_, i) => i + 8);
 
 export default function WeekView({ calendarDays, weeklyEvents }) {
   // Get events for a specific day and time slot in weekly view
@@ -13,14 +13,21 @@ export default function WeekView({ calendarDays, weeklyEvents }) {
     return hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
   };
 
+  // Format date for header
+  const formatHeaderDate = (date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      day: 'numeric',
+    });
+  };
+
   return (
     <div className="week-view-container">
       <div className="week-view-header">
         <div className="time-header"></div>
         {calendarDays.map((day, index) => (
           <div key={index} className={`day-header ${day.isToday ? 'current' : ''}`}>
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index]}
-            <div className="day-number">{day.date.getDate()}</div>
+            {formatHeaderDate(day.date)}
           </div>
         ))}
       </div>
