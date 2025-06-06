@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import CourseForm from '../components/CourseForm';
 import { useCourseSubmit } from '@/features/courses';
+import { Auth } from '../features/auth/lib/amplifyClient';
 
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState('My Classes');
@@ -24,19 +25,23 @@ export default function CoursesPage() {
   useEffect(() => {
     const fetchCoursesAndClasses = async () => {
       try {
-        // Construct the API URL using the same pattern as in the hook
-        const API_BASE_URL =
-          process.env.NODE_ENV === 'development'
-            ? 'http://localhost:8080/api/v1'
-            : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+        console.log('🔗 API_BASE_URL:', API_BASE_URL);
 
+        const user = await Auth.getCurrentUser();
+        if (!user || !user.authorizationHeaders) {
+          throw new Error('You must be logged in to view courses.');
+        }
+
+        const headers = user.authorizationHeaders();
+        console.log('🔐 Auth Headers:', headers);
+        //  Fetch courses
         const courseRes = await fetch(`${API_BASE_URL}/courses?active=true`, {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
         });
-        if (!courseRes.ok) throw new Error(`HTTP error! status: ${courseRes.status}`);
+        if (!courseRes.ok) {
+          throw new Error(`HTTP error! status: ${courseRes.status}`);
+        }
         const courseData = await courseRes.json();
         const courses = courseData.courses || [];
 
@@ -53,19 +58,19 @@ export default function CoursesPage() {
         }));
         setMyCourses(fetchedCourses);
 
+        //  Fetch classes
         const classRes = await fetch(`${API_BASE_URL}/classes`, {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
         });
-        if (!classRes.ok) throw new Error(`HTTP error! status: ${classRes.status}`);
-        const classData = await classRes.json();
+        if (!classRes.ok) {
+          throw new Error(`HTTP error! status: ${classRes.status}`);
+        }
 
+        const classData = await classRes.json();
         const classSessions = transformClasses(classData.classes, courses);
         setClassesData(classSessions);
       } catch (err) {
-        console.error('Failed to fetch courses or classes', err);
+        console.error(' Failed to fetch courses or classes:', err.message);
       } finally {
         setLoading(false);
       }
@@ -145,7 +150,7 @@ export default function CoursesPage() {
 
   function convertToSeconds(timeStr) {
     if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) {
-      console.error('❌ Invalid time format:', timeStr);
+      console.error(' Invalid time format:', timeStr);
       return 0;
     }
     const [hours, minutes] = timeStr.split(':').map(Number);
@@ -172,7 +177,6 @@ export default function CoursesPage() {
     if (
       !data.title ||
       !data.code ||
-      !data.section ||
       !data.startDate ||
       !data.endDate ||
       !data.instructor?.name ||
@@ -189,35 +193,31 @@ export default function CoursesPage() {
         title: data.title,
         code: data.code,
         status: 'active',
-        section: data.section || 'A',
         startDate: data.startDate,
         endDate: data.endDate,
         instructor: {
           name: data.instructor.name,
           email: data.instructor.email,
           availableTimeSlots: data.instructor.availableTimeSlots.map((s) => ({
-            weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
+            weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.weekDay],
             startTime: convertToSeconds(s.startTime),
             endTime: convertToSeconds(s.endTime),
           })),
         },
-        // Keep schedule as an array as expected by the backend
         schedule: data.schedule.map((s) => ({
           classType: s.classType || 'lecture',
-          weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.day],
+          weekday: typeof s.weekday === 'number' ? s.weekday : weekDayToIndex[s.weekDay],
           startTime: convertToSeconds(s.startTime),
           endTime: convertToSeconds(s.endTime),
-          location: s.location || 'TBD',
         })),
       };
 
       console.log('📤 Submitting course to backend:', JSON.stringify(newCourse, null, 2));
 
-      // Use our new submit course hook
       const result = await submitCourse(newCourse);
 
       if (result.success) {
-        console.log('✅ Course created:', result);
+        console.log(' Course created:', result);
         setMyCourses((prev) => [
           ...prev,
           {
@@ -225,13 +225,12 @@ export default function CoursesPage() {
             code: newCourse.code,
             professor: newCourse.instructor.name,
             grade: 0,
-            schedule: data.schedule.map((s) => ({
-              time: `${s.startTime}–${s.endTime}`,
-              weekDay: s.day,
+            schedule: newCourse.schedule.map((s) => ({
+              time: `${secondsToTime(s.startTime)}–${secondsToTime(s.endTime)}`,
+              weekDay: getWeekday(s.weekday),
             })),
           },
         ]);
-        // Form will be closed by the useEffect watching for submitSuccess
       } else {
         console.error('Error creating course:', result.errors);
         alert(`Failed to create course: ${result.errors?.join(', ') || 'Unknown error'}`);
