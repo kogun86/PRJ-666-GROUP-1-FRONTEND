@@ -9,7 +9,8 @@ const API_BASE_URL =
 
 export function useCalendarData() {
   const [classes, setClasses] = useState([]);
-  const [events, setEvents] = useState([]);
+  const [completedEvents, setCompletedEvents] = useState([]);
+  const [pendingEvents, setPendingEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user, isProduction } = useAuth();
@@ -63,17 +64,29 @@ export function useCalendarData() {
       }
       const classesData = await classesResponse.json();
 
-      // Fetch events
-      const eventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
+      // Fetch completed events
+      const completedEventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
         headers,
         signal: abortController.signal,
       });
-      if (!eventsResponse.ok) {
+      if (!completedEventsResponse.ok) {
         throw new Error(
-          `Failed to fetch events: ${eventsResponse.status} ${eventsResponse.statusText}`
+          `Failed to fetch completed events: ${completedEventsResponse.status} ${completedEventsResponse.statusText}`
         );
       }
-      const eventsData = await eventsResponse.json();
+      const completedEventsData = await completedEventsResponse.json();
+
+      // Fetch pending events
+      const pendingEventsResponse = await fetch(`${API_BASE_URL}/events/pending`, {
+        headers,
+        signal: abortController.signal,
+      });
+      if (!pendingEventsResponse.ok) {
+        throw new Error(
+          `Failed to fetch pending events: ${pendingEventsResponse.status} ${pendingEventsResponse.statusText}`
+        );
+      }
+      const pendingEventsData = await pendingEventsResponse.json();
 
       // Only update state if the component is still mounted
       if (!abortController.signal.aborted) {
@@ -114,24 +127,48 @@ export function useCalendarData() {
           };
         });
 
-        // Transform events data to calendar format
-        const transformedEvents = eventsData.events.map((event) => {
-          const eventDate = new Date(event.date);
+        // Transform completed events data to calendar format
+        const transformedCompletedEvents = completedEventsData.events.map((event) => {
+          const eventDate = new Date(event.dueDate);
 
           return {
             id: event._id,
-            title: 'Completed',
+            title: `${event.title} (Completed)`,
             type: 'completed',
             date: eventDate,
             startTime: '00:00',
             endTime: '23:59',
             // Additional fields
+            courseCode: event.courseCode || '',
+            weight: event.weight,
             description: event.description || '',
+            grade: event.grade,
+            isCompleted: true,
+          };
+        });
+
+        // Transform pending events data to calendar format
+        const transformedPendingEvents = pendingEventsData.events.map((event) => {
+          const eventDate = new Date(event.dueDate);
+
+          return {
+            id: event._id,
+            title: event.title,
+            type: 'pending',
+            date: eventDate,
+            startTime: '00:00',
+            endTime: '23:59',
+            // Additional fields
+            courseCode: event.courseCode || '',
+            weight: event.weight,
+            description: event.description || '',
+            isCompleted: false,
           };
         });
 
         setClasses(transformedClasses);
-        setEvents(transformedEvents);
+        setCompletedEvents(transformedCompletedEvents);
+        setPendingEvents(transformedPendingEvents);
         setIsLoading(false);
       }
     } catch (err) {
@@ -150,7 +187,8 @@ export function useCalendarData() {
     if (!user) {
       // Reset state when user is not available
       setClasses([]);
-      setEvents([]);
+      setCompletedEvents([]);
+      setPendingEvents([]);
       setError(null);
       setIsLoading(false);
       return;
@@ -164,10 +202,13 @@ export function useCalendarData() {
   }, [user]);
 
   // Combine classes and events for the calendar
-  const calendarEvents = [...classes, ...events];
+  const calendarEvents = [...classes, ...completedEvents, ...pendingEvents];
 
   return {
     calendarEvents,
+    classes,
+    completedEvents,
+    pendingEvents,
     isLoading,
     error,
     refetch: () => fetchData(new AbortController()),

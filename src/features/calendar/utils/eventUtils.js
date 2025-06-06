@@ -30,6 +30,10 @@ export function transformEvents(calendarEvents) {
         backgroundColor = '#84a98c';
         borderColor = '#52796f';
         break;
+      case 'pending':
+        backgroundColor = '#f9c74f';
+        borderColor = '#f8961e';
+        break;
       default:
         backgroundColor = '#cad2c5';
         borderColor = '#84a98c';
@@ -133,6 +137,9 @@ export function transformEvents(calendarEvents) {
         type: event.type,
         courseCode: event.courseCode,
         description: event.description,
+        weight: event.weight,
+        grade: event.grade,
+        isCompleted: event.isCompleted,
         // Store original UTC times for reference
         originalStartTime: event.startTime,
         originalEndTime: event.endTime,

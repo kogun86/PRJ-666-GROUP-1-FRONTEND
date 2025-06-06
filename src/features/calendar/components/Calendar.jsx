@@ -194,16 +194,38 @@ export default function Calendar() {
   // Setup tooltips for events
   const handleEventMount = (info) => {
     const { event } = info;
-    const { type, courseCode, description } = event.extendedProps;
+    const { type, courseCode, description, weight, grade, isCompleted } = event.extendedProps;
+
+    // Determine if this is a class or an event
+    const isClass = ['lecture', 'lab', 'tutorial'].includes(type);
+    const isEvent = ['completed', 'pending'].includes(type);
 
     let tooltipContent = `
       <div class="event-tooltip">
         <h4>${event.title}</h4>
+    `;
+
+    if (isClass) {
+      tooltipContent += `
         <p><strong>Time:</strong> ${event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
         ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
-        <p><strong>Type:</strong> ${type || 'N/A'}</p>
-        ${courseCode ? `<p><strong>Course:</strong> ${courseCode}</p>` : ''}
-        ${description ? `<p><strong>Description:</strong> ${description}</p>` : ''}
+      `;
+    }
+
+    tooltipContent += `
+      <p><strong>Type:</strong> ${type ? type.charAt(0).toUpperCase() + type.slice(1) : 'N/A'}</p>
+      ${courseCode ? `<p><strong>Course:</strong> ${courseCode}</p>` : ''}
+    `;
+
+    if (isEvent) {
+      tooltipContent += `
+        ${weight !== undefined ? `<p><strong>Weight:</strong> ${weight}%</p>` : ''}
+        ${isCompleted && grade !== undefined ? `<p><strong>Grade:</strong> ${grade}%</p>` : ''}
+      `;
+    }
+
+    tooltipContent += `
+      ${description ? `<p><strong>Description:</strong> ${description}</p>` : ''}
       </div>
     `;
 
