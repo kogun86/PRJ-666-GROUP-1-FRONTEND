@@ -12,7 +12,7 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       date: '',
       courseCode: '',
       weight: '',
-      type: 'Homework',
+      type: 'assignment',
       description: '',
     },
   });
@@ -75,7 +75,11 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
         <input
           id="weight"
           type="number"
-          {...register('weight', { required: 'Weight is required', min: 0 })}
+          {...register('weight', {
+            required: 'Weight is required',
+            min: { value: 0, message: 'Weight must be positive' },
+            max: { value: 100, message: 'Weight cannot exceed 100%' },
+          })}
           className="form-input"
         />
         {errors.weight && <div className="error-message">{errors.weight.message}</div>}
@@ -87,8 +91,12 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
           Type
         </label>
         <select id="type" {...register('type')} className="form-select">
-          <option value="Homework">Homework</option>
-          <option value="Study Session">Study Session</option>
+          <option value="assignment">Assignment</option>
+          <option value="quiz">Quiz</option>
+          <option value="exam">Exam</option>
+          <option value="project">Project</option>
+          <option value="study">Study Session</option>
+          <option value="other">Other</option>
         </select>
       </div>
 
