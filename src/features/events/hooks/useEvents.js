@@ -4,41 +4,68 @@ import { fetchUpcomingEvents, createEvent } from '../services/eventService';
 import { groupTasksByDate, getDateKey } from '../utils/dateUtils';
 
 /**
+ * Ensure a date value is in ISO string format
+ * @param {string|Date} date - Date to format
+ * @param {boolean} required - Whether a fallback date should be returned if input is null
+ * @returns {string} ISO formatted date string
+ */
+const formatDateToISO = (date, required = false) => {
+  if (date) {
+    if (date instanceof Date) return date.toISOString();
+    if (typeof date === 'string') {
+      // Handle string that might not be in ISO format
+      const dateObj = new Date(date);
+      return dateObj.toISOString();
+    }
+  }
+
+  // If required and no date provided, return current date
+  return required ? new Date().toISOString() : null;
+};
+
+/**
  * Custom hook for managing events
  * @returns {Object} Events state and methods
  */
 export const useEvents = () => {
-  const { user, isProduction } = useAuth();
+  const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch events on mount
-  useEffect(() => {
-    if (!user) return;
+  // Function to fetch events
+  const fetchEvents = async () => {
+    if (!user) return false;
 
-    const loadEvents = async () => {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        if (isProduction) {
-          const eventsData = await fetchUpcomingEvents();
-          setEvents(eventsData);
-        } else {
-          setEvents([]);
-        }
-      } catch (err) {
-        setError('Failed to load events');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const eventsData = await fetchUpcomingEvents();
 
-    loadEvents();
-  }, [user, isProduction]);
+      // Log the received events data
+      console.log('Received events data:', eventsData);
+
+      // Process events to ensure they have valid date fields
+      const processedEvents = eventsData.map((event) => {
+        return {
+          ...event,
+          // Ensure dueDate is set for grouping
+          dueDate: event.end || event.dueDate || new Date().toISOString(),
+        };
+      });
+
+      setEvents(processedEvents);
+      return true;
+    } catch (err) {
+      setError('Failed to load events');
+      console.error(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Group events by date whenever events change
   useEffect(() => {
@@ -50,47 +77,51 @@ export const useEvents = () => {
     try {
       setLoading(true);
 
+      // Ensure the end date is valid
+      const endDate = formatDateToISO(eventData.end, true);
+
+      // For start date, if not provided, use the same as end date
+      let startDate = formatDateToISO(eventData.start);
+      if (!startDate) {
+        startDate = endDate;
+      }
+
       // Format the event data for the API
       const newTask = {
         title: eventData.title,
-        dueDate: eventData.date,
-        courseCode: eventData.courseCode,
+        courseID: eventData.courseID,
         type: eventData.type,
-        weight: Number(eventData.weight),
         description: eventData.description || '',
+        weight: Number(eventData.weight),
         isCompleted: false,
-        grade: 0,
+        end: endDate,
+        start: startDate, // This will never be null
+        location: eventData.location || '',
+        color: eventData.color || '#E74C3C',
+        grade: null,
       };
 
-      let createdEvent = null;
+      // Always use the API
+      const createdEvent = await createEvent(newTask);
 
-      if (isProduction && user) {
-        // In production, use the API
-        createdEvent = await createEvent(newTask);
-      } else {
-        // In development, create a mock event
-        createdEvent = {
-          ...newTask,
-          _id: Date.now().toString(),
-          userId: 'mock-user-id',
-        };
-      }
-
-      // Update local state with the created event (using API response or mock)
-      const dateKey = getDateKey(createdEvent.dueDate);
+      // Update local state with the created event
+      const dateKey = getDateKey(createdEvent.end);
 
       // Format the event for local state
       const localEvent = {
         id: createdEvent._id || Date.now().toString(),
         title: createdEvent.title,
-        dueDate: createdEvent.dueDate,
-        courseCode: createdEvent.courseCode,
+        dueDate: createdEvent.end, // Make sure this is a valid date string
+        courseID: createdEvent.courseID,
         type: createdEvent.type,
         weight: Number(createdEvent.weight),
         description: createdEvent.description || '',
         isCompleted: createdEvent.isCompleted || false,
-        grade: createdEvent.grade || 0,
+        grade: createdEvent.grade || null,
       };
+
+      // Log the local event to debug
+      console.log('Created local event:', localEvent);
 
       // Update local state
       setGroups((prevGroups) => {
@@ -120,5 +151,6 @@ export const useEvents = () => {
     error,
     setGroups,
     addEvent,
+    fetchEvents,
   };
 };

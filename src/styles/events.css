@@ -307,3 +307,170 @@
     padding: 6px 8px;
   }
 }
+
+/* Loading indicator */
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Icon animation */
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Event Card */
+.event-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.event-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.event-completed {
+  opacity: 0.7;
+  background-color: #f8f8f8;
+}
+
+.event-pending {
+  border-left: 4px solid #3498db;
+}
+
+.event-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.event-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.event-type-badge {
+  background-color: #e9f5fe;
+  color: #3498db;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.event-metadata {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.event-label {
+  font-weight: 500;
+  color: #444;
+}
+
+.event-description {
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.event-description p {
+  margin: 0;
+}
+
+.event-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.event-action-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.event-action-button:hover {
+  background-color: #2980b9;
+}
+
+.event-grade-container {
+  display: flex;
+  align-items: center;
+}
+
+.event-grade-label {
+  margin-right: 8px;
+  font-size: 0.9rem;
+}
+
+.event-grade-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Event Grade Form */
+.event-grade-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.event-grade-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-grade-error {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  margin-top: -8px;
+}
+
+.event-grade-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.event-action-secondary {
+  background-color: #95a5a6;
+}
+
+.event-action-secondary:hover {
+  background-color: #7f8c8d;
+}

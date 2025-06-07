@@ -24,23 +24,36 @@ function EventGradeInput({ initialGrade, onSave, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: 8 }}>
-      <input
-        type="text"
-        value={grade}
-        onChange={(e) => {
-          setGrade(e.target.value);
-          if (error) setError('');
-        }}
-        placeholder="0-100"
-        autoFocus
-        style={{ marginRight: 8 }}
-      />
-      <button type="submit">Save</button>
-      <button type="button" onClick={onCancel} style={{ marginLeft: 4 }}>
-        Cancel
-      </button>
-      {error && <div style={{ color: 'red', marginTop: 4 }}>{error}</div>}
+    <form onSubmit={handleSubmit} className="event-grade-form">
+      <div className="event-grade-field">
+        <label className="event-grade-label">Grade:</label>
+        <input
+          type="text"
+          value={grade}
+          onChange={(e) => {
+            setGrade(e.target.value);
+            if (error) setError('');
+          }}
+          placeholder="0-100"
+          autoFocus
+          className="event-grade-input"
+        />
+      </div>
+
+      {error && <div className="event-grade-error">{error}</div>}
+
+      <div className="event-grade-actions">
+        <button type="submit" className="event-action-button">
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="event-action-button event-action-secondary"
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }
