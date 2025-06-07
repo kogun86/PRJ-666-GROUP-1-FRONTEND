@@ -14,8 +14,14 @@ function EventCard({ task, onToggle, onSetGrade, isUpdating = false }) {
     });
   };
 
+  // Use the event's color or default to the theme color
+  const eventColor = task.color || '#52796f';
+
   return (
-    <div className={`event-card ${task.isCompleted ? 'event-completed' : 'event-pending'}`}>
+    <div
+      className={`event-card ${task.isCompleted ? 'event-completed' : 'event-pending'}`}
+      style={{ '--event-color': eventColor }}
+    >
       <div className="event-title-row">
         <h3 className="event-title">{task.title}</h3>
         <div className="event-type-badge">{task.type}</div>

@@ -92,9 +92,17 @@ function EventCompleted({ groups }) {
             </h2>
 
             <div className="events-tasks-grid">
-              {visibleTasks.map((task) =>
-                editing.groupDate === group.date && editing.taskId === (task.id || task._id) ? (
-                  <div key={task.id || task._id} className="event-card event-completed">
+              {visibleTasks.map((task) => {
+                // Use the event's color or default to the theme color
+                const eventColor = task.color || '#52796f';
+
+                return editing.groupDate === group.date &&
+                  editing.taskId === (task.id || task._id) ? (
+                  <div
+                    key={task.id || task._id}
+                    className="event-card event-completed"
+                    style={{ '--event-color': eventColor }}
+                  >
                     <h3 className="event-title">{task.title}</h3>
                     <EventGradeInput
                       initialGrade={task.grade}
@@ -103,7 +111,11 @@ function EventCompleted({ groups }) {
                     />
                   </div>
                 ) : (
-                  <div key={task.id || task._id} className="event-card event-completed">
+                  <div
+                    key={task.id || task._id}
+                    className="event-card event-completed"
+                    style={{ '--event-color': eventColor }}
+                  >
                     <div className="event-title-row">
                       <h3 className="event-title">{task.title}</h3>
                       <div className="event-type-badge">{task.type}</div>
@@ -148,8 +160,8 @@ function EventCompleted({ groups }) {
                       </button>
                     </div>
                   </div>
-                )
-              )}
+                );
+              })}
             </div>
 
             {pageCount > 1 && (

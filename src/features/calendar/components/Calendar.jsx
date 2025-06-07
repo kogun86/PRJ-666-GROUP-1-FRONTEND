@@ -13,6 +13,7 @@ import 'tippy.js/themes/light.css';
 import CalendarHeader from './CalendarHeader';
 import CalendarLoading from './CalendarLoading';
 import CalendarError from './CalendarError';
+import CalendarDebug from './CalendarDebug';
 import EventModal from './EventModal';
 
 // Import utilities
@@ -26,7 +27,12 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { calendarEvents, isLoading, error } = useCalendarData();
+  const { calendarEvents, isLoading, error, updateCurrentDate } = useCalendarData();
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Raw calendar events from API:', calendarEvents);
+  }, [calendarEvents]);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -78,29 +84,10 @@ export default function Calendar() {
   // Transform events for FullCalendar format
   const transformedEvents = transformEvents(calendarEvents);
 
-  // Helper function to navigate to the first class week
-  const goToFirstClassWeek = () => {
-    if (!transformedEvents.length) return;
-
-    // Sort events by start date
-    const sortedEvents = [...transformedEvents].sort(
-      (a, b) => new Date(a.start) - new Date(b.start)
-    );
-
-    const firstEvent = sortedEvents[0];
-    if (!firstEvent || !firstEvent.start) return;
-
-    // Navigate to the week of the first event
-    if (calendarRef.current) {
-      const api = calendarRef.current.getApi();
-      api.gotoDate(firstEvent.start);
-
-      // If we're not in weekly view, switch to it
-      if (!viewMode.includes('Week')) {
-        switchToWeekly();
-      }
-    }
-  };
+  // Debug logging
+  useEffect(() => {
+    console.log('Transformed events for FullCalendar:', transformedEvents);
+  }, [transformedEvents]);
 
   // Switch view mode
   const switchToMonthly = () => {
@@ -127,14 +114,22 @@ export default function Calendar() {
   const prevPeriod = () => {
     if (calendarRef.current) {
       calendarRef.current.getApi().prev();
-      setCurrentDate(calendarRef.current.getApi().getDate());
+      const newDate = calendarRef.current.getApi().getDate();
+      setCurrentDate(newDate);
+
+      // Fetch data for the new date range if needed
+      updateCurrentDate(newDate);
     }
   };
 
   const nextPeriod = () => {
     if (calendarRef.current) {
       calendarRef.current.getApi().next();
-      setCurrentDate(calendarRef.current.getApi().getDate());
+      const newDate = calendarRef.current.getApi().getDate();
+      setCurrentDate(newDate);
+
+      // Fetch data for the new date range if needed
+      updateCurrentDate(newDate);
     }
   };
 
@@ -176,10 +171,28 @@ export default function Calendar() {
   // Handle event click
   const handleEventClick = (info) => {
     if (mounted.current) {
-      const eventId = info.event.id;
-      const originalEvent = calendarEvents.find((event) => event.id === eventId);
+      console.log('Event clicked:', info.event);
+
+      // Get the original event from extendedProps
+      const originalEvent = info.event.extendedProps.originalEvent;
+
       if (originalEvent) {
+        console.log('Setting selected event:', originalEvent);
         setSelectedEvent(originalEvent);
+      } else {
+        // Fallback to searching by ID
+        const eventId = info.event.id;
+        const foundEvent = calendarEvents.find((event) => {
+          const id = event._id || event.id;
+          return id === eventId;
+        });
+
+        if (foundEvent) {
+          console.log('Found event by ID search:', foundEvent);
+          setSelectedEvent(foundEvent);
+        } else {
+          console.warn('Could not find original event for:', info.event);
+        }
       }
     }
   };
@@ -191,21 +204,38 @@ export default function Calendar() {
     }
   };
 
+  // Handle view change to fetch data for the visible date range
+  const handleViewChange = (viewInfo) => {
+    if (mounted.current) {
+      // Get the visible date range
+      const visibleStart = viewInfo.view.activeStart;
+      const visibleEnd = viewInfo.view.activeEnd;
+
+      console.log('View changed, visible range:', {
+        start: visibleStart,
+        end: visibleEnd,
+      });
+
+      // Use the middle date of the visible range to fetch data
+      const middleDate = new Date((visibleStart.getTime() + visibleEnd.getTime()) / 2);
+      updateCurrentDate(middleDate);
+    }
+  };
+
   // Setup tooltips for events
   const handleEventMount = (info) => {
-    const { event } = info;
-    const { type, courseCode, description, weight, grade, isCompleted } = event.extendedProps;
+    console.log('Event mounted:', info.event);
 
-    // Determine if this is a class or an event
-    const isClass = ['lecture', 'lab', 'tutorial'].includes(type);
-    const isEvent = ['completed', 'pending'].includes(type);
+    const { event } = info;
+    const { type, courseID, description, weight, grade, isCompleted, location } =
+      event.extendedProps;
 
     let tooltipContent = `
       <div class="event-tooltip">
         <h4>${event.title}</h4>
     `;
 
-    if (isClass) {
+    if (event.start && event.end && !event.allDay) {
       tooltipContent += `
         <p><strong>Time:</strong> ${event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
         ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
@@ -214,14 +244,19 @@ export default function Calendar() {
 
     tooltipContent += `
       <p><strong>Type:</strong> ${type ? type.charAt(0).toUpperCase() + type.slice(1) : 'N/A'}</p>
-      ${courseCode ? `<p><strong>Course:</strong> ${courseCode}</p>` : ''}
+      ${courseID ? `<p><strong>Course ID:</strong> ${courseID}</p>` : ''}
     `;
 
-    if (isEvent) {
-      tooltipContent += `
-        ${weight !== undefined ? `<p><strong>Weight:</strong> ${weight}%</p>` : ''}
-        ${isCompleted && grade !== undefined ? `<p><strong>Grade:</strong> ${grade}%</p>` : ''}
-      `;
+    if (weight !== undefined) {
+      tooltipContent += `<p><strong>Weight:</strong> ${weight}%</p>`;
+    }
+
+    if (isCompleted && grade !== undefined) {
+      tooltipContent += `<p><strong>Grade:</strong> ${grade}%</p>`;
+    }
+
+    if (location) {
+      tooltipContent += `<p><strong>Location:</strong> ${location}</p>`;
     }
 
     tooltipContent += `
@@ -263,6 +298,9 @@ export default function Calendar() {
         {/* Error State */}
         {error && <CalendarError error={error} />}
 
+        {/* Debug Info */}
+        <CalendarDebug events={calendarEvents} transformedEvents={transformedEvents} />
+
         {/* FullCalendar Component */}
         {!isLoading && !error && (
           <div className="fullcalendar-wrapper">
@@ -275,6 +313,7 @@ export default function Calendar() {
               eventClick={handleEventClick}
               dateClick={handleDateClick}
               eventDidMount={handleEventMount}
+              datesSet={handleViewChange}
               height="auto"
               dayMaxEvents={true} // Allow "more" link when too many events
               slotMinTime="08:00:00" // Start time for week view - adjusted to show early classes

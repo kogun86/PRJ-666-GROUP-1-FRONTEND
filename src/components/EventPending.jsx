@@ -79,30 +79,32 @@ function EventsPending({ groups }) {
             </h2>
 
             <div className="events-tasks-grid">
-              {shownTasks.map((task) => (
-                <>
-                  <EventCard
-                    key={task.id || task._id}
-                    task={task}
-                    onToggle={() => markDone(task)}
-                    onSetGrade={null}
-                    isUpdating={updatingEventId === (task._id || task.id)}
-                  />
-                  {process.env.NODE_ENV === 'development' && (
-                    <div
-                      className="debug-info"
-                      style={{
-                        fontSize: '10px',
-                        color: '#999',
-                        marginTop: '-12px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      ID: {task.id}, _ID: {task._id}
-                    </div>
-                  )}
-                </>
-              ))}
+              {shownTasks.map((task) => {
+                const taskId = task._id || task.id;
+                return (
+                  <div key={taskId} className="event-card-wrapper">
+                    <EventCard
+                      task={task}
+                      onToggle={() => markDone(task)}
+                      onSetGrade={null}
+                      isUpdating={updatingEventId === taskId}
+                    />
+                    {process.env.NODE_ENV === 'development' && (
+                      <div
+                        className="debug-info"
+                        style={{
+                          fontSize: '10px',
+                          color: '#999',
+                          marginTop: '-12px',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        ID: {task.id}, _ID: {task._id}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {totalPages > 1 && (

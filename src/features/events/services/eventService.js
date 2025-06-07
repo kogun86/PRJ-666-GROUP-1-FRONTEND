@@ -13,6 +13,21 @@ const API_BASE_URL =
  * @returns {Promise<Object>} Headers object with authorization
  */
 const getHeaders = async () => {
+  const baseHeaders = {
+    'Content-Type': 'application/json',
+  };
+
+  // Check if we're in development mode
+  if (process.env.NODE_ENV === 'development') {
+    // Development headers with mock token
+    console.log('Using development mock token');
+    return {
+      ...baseHeaders,
+      Authorization: 'Bearer mock-id-token',
+    };
+  }
+
+  // Production mode - get real token
   try {
     // Get the current session
     const session = await fetchAuthSession();
@@ -23,7 +38,7 @@ const getHeaders = async () => {
     }
 
     return {
-      'Content-Type': 'application/json',
+      ...baseHeaders,
       Authorization: `Bearer ${idToken}`,
     };
   } catch (err) {

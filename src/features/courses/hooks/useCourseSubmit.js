@@ -13,15 +13,20 @@ export function useCourseSubmit() {
     setError(null);
 
     try {
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken?.toString();
-
-      if (!idToken) throw new Error('No ID token available');
-
-      const headers = {
+      let headers = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
       };
+
+      // Use mock token in development mode
+      if (process.env.NODE_ENV === 'development') {
+        headers.Authorization = 'Bearer mock-id-token';
+      } else {
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
+
+        if (!idToken) throw new Error('No ID token available');
+        headers.Authorization = `Bearer ${idToken}`;
+      }
 
       console.log('📤 Submitting course to:', `${API_BASE_URL}/courses`);
       console.log('🔐 Headers:', headers);

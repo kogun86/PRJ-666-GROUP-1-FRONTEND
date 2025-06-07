@@ -100,7 +100,6 @@ export default function CoursesPage() {
         title: c.title,
         code: c.code,
         professor: c.instructor?.name,
-        color: '#84a98c',
       };
     });
 
@@ -270,45 +269,50 @@ export default function CoursesPage() {
             )}
 
             {loading ? (
-              <p>Loading...</p>
+              <div className="loading-indicator">
+                <span className="icon-spin">⟳</span> Loading courses...
+              </div>
             ) : (
               <div className="profile-content mt-4">
                 {activeTab === 'My Classes' &&
-                  classesData.map(({ date, sessions }) => (
-                    <div key={date} className="class-group">
-                      <h4 className="class-group-title">{date}</h4>
-                      <div className="session-container">
-                        {sessions.map((s, idx) => (
-                          <div
-                            key={`${s.code}-${idx}`}
-                            className="session-card"
-                            style={{ backgroundColor: s.color }}
-                          >
-                            <h5 className="session-title">{s.title}</h5>
-                            <div>
-                              <strong>From:</strong> {s.from}
+                  (classesData.length > 0 ? (
+                    classesData.map(({ date, sessions }) => (
+                      <div key={date} className="class-group">
+                        <h4 className="class-group-title">{date}</h4>
+                        <div className="session-container">
+                          {sessions.map((s, idx) => (
+                            <div key={`${s.code}-${idx}`} className="session-card">
+                              <h5 className="session-title">{s.title || s.code}</h5>
+                              <div className="session-meta">
+                                <div className="session-time">
+                                  <strong>Time:</strong> {s.from} - {s.until}
+                                </div>
+                                <div className="session-type">
+                                  <span className="session-type-badge">{s.type}</span>
+                                </div>
+                              </div>
+                              <div className="session-details">
+                                <div>
+                                  <strong>Room:</strong> {s.room}
+                                </div>
+                                <div>
+                                  <strong>Code:</strong> {s.code}
+                                </div>
+                                <div>
+                                  <strong>Section:</strong> {s.section}
+                                </div>
+                                <div>
+                                  <strong>Professor:</strong> {s.professor}
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <strong>Until:</strong> {s.until}
-                            </div>
-                            <div>
-                              <strong>Room:</strong> {s.room}
-                            </div>
-                            <div>
-                              <strong>Type:</strong> {s.type}
-                            </div>
-                            <div>
-                              <strong>Code:</strong> {s.code}
-                            </div>
-                            <div>
-                              <strong>Section:</strong> {s.section}
-                            </div>
-                            <div>
-                              <strong>Professor:</strong> {s.professor}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="empty-state">
+                      <p className="empty-state-message">You don't have any classes scheduled.</p>
                     </div>
                   ))}
 
@@ -329,55 +333,58 @@ export default function CoursesPage() {
                     )}
 
                     <div className="courses-list">
-                      {myCourses.map((c, idx) => (
-                        <div
-                          key={`${c.code}-${idx}`}
-                          className="course-card"
-                          style={{ backgroundColor: c.color }}
-                        >
-                          <div className="course-actions">
-                            <button
-                              className="edit-course-button"
-                              onClick={() => {
-                                setEditData(c);
-                                setEditIndex(idx);
-                                setShowForm(true);
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="delete-course-button"
-                              onClick={() => setMyCourses((cs) => cs.filter((_, i) => i !== idx))}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                          <h3 className="course-name">{c.title}</h3>
-                          <div className="course-info">
-                            <div>
-                              <strong>Code:</strong> {c.code}
+                      {myCourses.length > 0 ? (
+                        myCourses.map((c, idx) => (
+                          <div key={`${c.code}-${idx}`} className="course-card">
+                            <div className="course-actions">
+                              <button
+                                className="edit-course-button"
+                                onClick={() => {
+                                  setEditData(c);
+                                  setEditIndex(idx);
+                                  setShowForm(true);
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="delete-course-button"
+                                onClick={() => setMyCourses((cs) => cs.filter((_, i) => i !== idx))}
+                              >
+                                Delete
+                              </button>
                             </div>
-                            <div>
-                              <strong>Professor:</strong> {c.professor}
+                            <div className="course-title-row">
+                              <h3 className="course-name">{c.title}</h3>
+                              <div className="course-code-badge">{c.code}</div>
                             </div>
-                          </div>
-                          <h4 className="schedule-heading">Schedule</h4>
-                          {c.schedule.map((s, i) => (
-                            <div key={i} className="schedule-item">
+                            <div className="course-metadata">
                               <div>
-                                <strong>Time:</strong> {s.time}
-                              </div>
-                              <div>
-                                <strong>Day:</strong> {s.weekDay}
+                                <span className="course-label">Professor:</span> {c.professor}
                               </div>
                             </div>
-                          ))}
-                          <div className="course-grade">
-                            <strong>Current grade:</strong> {c.grade}
+                            <h4 className="schedule-heading">Schedule</h4>
+                            <div className="course-schedule">
+                              {c.schedule.map((s, i) => (
+                                <div key={i} className="schedule-item">
+                                  <div className="schedule-day">{s.weekDay}</div>
+                                  <div className="schedule-time">{s.time}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="course-grade">
+                              <span className="course-label">Current grade:</span> {c.grade}
+                            </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="empty-state">
+                          <p className="empty-state-message">You haven't added any courses yet.</p>
+                          <button className="add-course-button" onClick={handleAdd}>
+                            + Add Course
+                          </button>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </>
                 )}
