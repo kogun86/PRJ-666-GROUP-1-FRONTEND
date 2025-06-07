@@ -3,9 +3,29 @@ import React from 'react';
 export default function EventModal({ event, onClose }) {
   if (!event) return null;
 
-  // Determine if this is a class or an event
-  const isClass = ['lecture', 'lab', 'tutorial'].includes(event.type);
-  const isEvent = ['completed', 'pending'].includes(event.type);
+  // Format dates
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // Format times
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Get start and end dates
+  const startDate = event.start || new Date(event.start);
+  const endDate = event.end || new Date(event.end);
+
+  // Check if this is a multi-day event
+  const isMultiDayEvent = startDate.toDateString() !== endDate.toDateString();
 
   return (
     <div className="modal-overlay">
@@ -17,43 +37,25 @@ export default function EventModal({ event, onClose }) {
             <div className="password-form-group">
               <label className="password-label">Date</label>
               <div className="password-input">
-                {new Date(event.date).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {isMultiDayEvent
+                  ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+                  : formatDate(startDate)}
               </div>
             </div>
 
-            {isClass && (
-              <>
-                <div className="password-form-group">
-                  <label className="password-label">Time (UTC)</label>
-                  <div className="password-input">
-                    {event.isUTC
-                      ? `${event.formattedStartTime} - ${event.formattedEndTime}`
-                      : event.originalStartTime
-                        ? `${new Date(event.originalStartTime).toUTCString().slice(17, 22)} - ${new Date(event.originalEndTime).toUTCString().slice(17, 22)}`
-                        : 'N/A'}
-                  </div>
+            {!event.allDay && (
+              <div className="password-form-group">
+                <label className="password-label">Time</label>
+                <div className="password-input">
+                  {`${formatTime(startDate)} - ${formatTime(endDate)}`}
                 </div>
-
-                <div className="password-form-group">
-                  <label className="password-label">Time (Your Local Time)</label>
-                  <div className="password-input">
-                    {event.startTime
-                      ? `${new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                      : 'N/A'}
-                  </div>
-                </div>
-              </>
+              </div>
             )}
 
-            {event.courseCode && (
+            {event.courseID && (
               <div className="password-form-group">
-                <label className="password-label">Course</label>
-                <div className="password-input">{event.courseCode}</div>
+                <label className="password-label">Course ID</label>
+                <div className="password-input">{event.courseID}</div>
               </div>
             )}
 
@@ -66,14 +68,21 @@ export default function EventModal({ event, onClose }) {
               </div>
             )}
 
-            {isEvent && typeof event.weight !== 'undefined' && (
+            {event.location && (
+              <div className="password-form-group">
+                <label className="password-label">Location</label>
+                <div className="password-input">{event.location}</div>
+              </div>
+            )}
+
+            {typeof event.weight !== 'undefined' && (
               <div className="password-form-group">
                 <label className="password-label">Weight</label>
                 <div className="password-input">{event.weight}%</div>
               </div>
             )}
 
-            {isEvent && event.isCompleted && typeof event.grade !== 'undefined' && (
+            {event.isCompleted && typeof event.grade !== 'undefined' && (
               <div className="password-form-group">
                 <label className="password-label">Grade</label>
                 <div className="password-input">{event.grade}%</div>

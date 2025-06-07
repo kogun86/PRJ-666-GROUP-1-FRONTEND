@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/features/auth';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
@@ -7,13 +7,34 @@ const API_BASE_URL =
     ? 'http://localhost:8080/api/v1'
     : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
 
+// Helper function to get date range for fetching events
+const getDateRangeForFetch = (date, monthsToFetch = 2) => {
+  // Instead of calculating a narrow date range, use a wider fixed range that we know works
+  // This is a temporary solution to ensure we get events
+  return {
+    from: '2023-09-01T00:00:00Z',
+    to: '2026-12-31T23:59:59Z',
+  };
+};
+
 export function useCalendarData() {
-  const [classes, setClasses] = useState([]);
-  const [completedEvents, setCompletedEvents] = useState([]);
-  const [pendingEvents, setPendingEvents] = useState([]);
+  const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [fetchedDateRanges, setFetchedDateRanges] = useState([]);
   const { user, isProduction } = useAuth();
+
+  // Debug current state
+  useEffect(() => {
+    console.log('Current calendar state:', {
+      events,
+      isLoading,
+      error,
+      currentDate: currentDate.toISOString(),
+      fetchedRanges: fetchedDateRanges,
+    });
+  }, [events, isLoading, error, currentDate, fetchedDateRanges]);
 
   const getHeaders = async () => {
     if (isProduction) {
@@ -43,182 +64,155 @@ export function useCalendarData() {
     }
   };
 
-  const fetchData = async (abortController) => {
-    if (!user) return;
+  // Check if a date range is already fetched
+  const isDateRangeAlreadyFetched = (from, to) => {
+    return fetchedDateRanges.some((range) => {
+      const rangeFrom = new Date(range.from);
+      const rangeTo = new Date(range.to);
+      const checkFrom = new Date(from);
+      const checkTo = new Date(to);
 
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const headers = await getHeaders();
-
-      // ✅ Fetch classes
-      const classesResponse = await fetch(`${API_BASE_URL}/classes`, {
-        method: 'GET',
-        headers,
-        signal: abortController.signal,
-      });
-
-      if (!classesResponse.ok) {
-        const errorText = await classesResponse.text(); // 🔍 Log actual backend error
-        console.error('🔍 Backend 404 response:', errorText);
-        throw new Error(
-          `Failed to fetch classes: ${classesResponse.status} ${classesResponse.statusText}`
-        );
-      }
-
-      const classesData = await classesResponse.json();
-
-      // ✅ Fetch completed events
-      const completedEventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
-        method: 'GET',
-        headers,
-        signal: abortController.signal,
-      });
-
-      if (!completedEventsResponse.ok) {
-        const errorText = await completedEventsResponse.text();
-        console.error('🔍 Backend event response:', errorText);
-        throw new Error(
-          `Failed to fetch completed events: ${completedEventsResponse.status} ${completedEventsResponse.statusText}`
-        );
-      }
-      const completedEventsData = await completedEventsResponse.json();
-
-      // Fetch pending events
-      const pendingEventsResponse = await fetch(`${API_BASE_URL}/events/pending`, {
-        method: 'GET',
-        headers,
-        signal: abortController.signal,
-      });
-      if (!pendingEventsResponse.ok) {
-        const errorText = await pendingEventsResponse.text();
-        console.error('🔍 Backend event response:', errorText);
-        throw new Error(
-          `Failed to fetch pending events: ${pendingEventsResponse.status} ${pendingEventsResponse.statusText}`
-        );
-      }
-      const pendingEventsData = await pendingEventsResponse.json();
-
-      // Only update state if the component is still mounted
-      if (!abortController.signal.aborted) {
-        // Transform classes data to calendar format
-        const transformedClasses = classesData.classes.map((cls) => {
-          // Create Date objects from the API ISO strings
-          const startDate = new Date(cls.startTime);
-          const endDate = new Date(cls.endTime);
-
-          // Format time helper function
-          const formatTime = (date) => {
-            const hours = date.getUTCHours().toString().padStart(2, '0');
-            const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
-          };
-
-          return {
-            id: cls._id,
-            title: cls.classType.toUpperCase(),
-            type: cls.classType,
-            // For weekly view, provide the full ISO strings
-            startTime: cls.startTime,
-            endTime: cls.endTime,
-            // For the event modal and other UI components, use UTC time
-            formattedStartTime: formatTime(startDate),
-            formattedEndTime: formatTime(endDate),
-            // Include date for back-compatibility with existing code
-            date: startDate,
-            // Flag to indicate this is a UTC time event
-            isUTC: true,
-            // Additional fields
-            courseCode: cls.courseCode || '',
-            description: cls.description || '',
-          };
-        });
-
-        // Transform completed events data to calendar format
-        const transformedCompletedEvents = completedEventsData.events.map((event) => {
-          const eventDate = new Date(event.dueDate);
-
-          return {
-            id: event._id,
-            title: `${event.title} (Completed)`,
-            type: 'completed',
-            date: eventDate,
-            startTime: '00:00',
-            endTime: '23:59',
-            // Additional fields
-            courseCode: event.courseCode || '',
-            weight: event.weight,
-            description: event.description || '',
-            grade: event.grade,
-            isCompleted: true,
-          };
-        });
-
-        // Transform pending events data to calendar format
-        const transformedPendingEvents = pendingEventsData.events.map((event) => {
-          const eventDate = new Date(event.dueDate);
-
-          return {
-            id: event._id,
-            title: event.title,
-            type: 'pending',
-            date: eventDate,
-            startTime: '00:00',
-            endTime: '23:59',
-            // Additional fields
-            courseCode: event.courseCode || '',
-            weight: event.weight,
-            description: event.description || '',
-            isCompleted: false,
-          };
-        });
-
-        setClasses(transformedClasses);
-        setCompletedEvents(transformedCompletedEvents);
-        setPendingEvents(transformedPendingEvents);
-        setIsLoading(false);
-      }
-    } catch (err) {
-      // Only update error state if the error is not due to abort
-      if (err.name !== 'AbortError' && !abortController.signal.aborted) {
-        setError(err.message);
-        console.error('❌ Error fetching calendar data:', err);
-        setIsLoading(false);
-      }
-    }
+      return checkFrom >= rangeFrom && checkTo <= rangeTo;
+    });
   };
 
+  const fetchEvents = useCallback(
+    async (date, abortController) => {
+      if (!user) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { from, to } = getDateRangeForFetch(date);
+        console.log('Fetching events for date range:', { from, to });
+
+        // Check if we already have data for this range
+        if (isDateRangeAlreadyFetched(from, to)) {
+          console.log('Date range already fetched, skipping API call');
+          setIsLoading(false);
+          return;
+        }
+
+        const headers = await getHeaders();
+        console.log('Using headers:', headers);
+
+        // Use the exact URL format that works in Thunder Client
+        const url = `${API_BASE_URL}/events?from=${from}&to=${to}`;
+        console.log('Fetching from URL:', url);
+
+        const eventsResponse = await fetch(url, {
+          method: 'GET',
+          headers,
+          signal: abortController.signal,
+        });
+
+        if (!eventsResponse.ok) {
+          const errorText = await eventsResponse.text();
+          console.error('🔍 Backend events response:', errorText);
+          throw new Error(
+            `Failed to fetch events: ${eventsResponse.status} ${eventsResponse.statusText}`
+          );
+        }
+
+        const eventsData = await eventsResponse.json();
+        console.log('API Response:', eventsData);
+
+        // Only update state if the component is still mounted
+        if (!abortController.signal.aborted) {
+          // Extract events from the response, handling different possible structures
+          let newEvents = [];
+
+          if (eventsData.events && Array.isArray(eventsData.events)) {
+            // Standard format: { success: true, events: [...] }
+            newEvents = eventsData.events;
+          } else if (Array.isArray(eventsData)) {
+            // Direct array format: [...]
+            newEvents = eventsData;
+          } else if (eventsData.data && Array.isArray(eventsData.data)) {
+            // Alternative format: { success: true, data: [...] }
+            newEvents = eventsData.data;
+          } else {
+            console.warn('Unexpected API response format:', eventsData);
+            // Try to extract any array from the response
+            const possibleArrays = Object.values(eventsData).filter((val) => Array.isArray(val));
+            if (possibleArrays.length > 0) {
+              // Use the first array found
+              newEvents = possibleArrays[0];
+              console.log('Extracted events from response:', newEvents);
+            }
+          }
+
+          console.log('Extracted events:', newEvents);
+
+          // Add new events to the existing ones, avoiding duplicates
+          setEvents((prevEvents) => {
+            if (!Array.isArray(newEvents) || newEvents.length === 0) {
+              console.log('No new events to add');
+              return prevEvents;
+            }
+
+            const existingEventIds = new Set(prevEvents.map((event) => event._id));
+            const uniqueNewEvents = newEvents.filter((event) => {
+              const eventId = event._id || event.id;
+              return eventId && !existingEventIds.has(eventId);
+            });
+
+            console.log('Unique new events to add:', uniqueNewEvents);
+            return [...prevEvents, ...uniqueNewEvents];
+          });
+
+          // Add this date range to our tracked ranges
+          setFetchedDateRanges((prevRanges) => [...prevRanges, { from, to }]);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        // Only update error state if the error is not due to abort
+        if (err.name !== 'AbortError' && !abortController.signal.aborted) {
+          setError(err.message);
+          console.error('❌ Error fetching calendar data:', err);
+          setIsLoading(false);
+        }
+      }
+    },
+    [user, fetchedDateRanges]
+  );
+
+  // Fetch events when the component mounts or when the user changes
   useEffect(() => {
     const abortController = new AbortController();
 
     if (!user) {
       // Reset state when user is not available
-      setClasses([]);
-      setCompletedEvents([]);
-      setPendingEvents([]);
+      setEvents([]);
       setError(null);
       setIsLoading(false);
       return;
     }
 
-    fetchData(abortController);
+    fetchEvents(currentDate, abortController);
 
     return () => {
       abortController.abort();
     };
-  }, [user]);
+  }, [user, currentDate, fetchEvents]);
 
-  // Combine classes and events for the calendar
-  const calendarEvents = [...classes, ...completedEvents, ...pendingEvents];
+  // Function to update the current date and fetch events for new date range if needed
+  const updateCurrentDate = (newDate) => {
+    console.log('Updating current date:', newDate);
+    setCurrentDate(newDate);
+    const abortController = new AbortController();
+    fetchEvents(newDate, abortController);
+  };
 
   return {
-    calendarEvents,
-    classes,
-    completedEvents,
-    pendingEvents,
+    calendarEvents: events,
     isLoading,
     error,
-    refetch: () => fetchData(new AbortController()),
+    updateCurrentDate,
+    refetch: () => {
+      const abortController = new AbortController();
+      fetchEvents(currentDate, abortController);
+    },
   };
 }

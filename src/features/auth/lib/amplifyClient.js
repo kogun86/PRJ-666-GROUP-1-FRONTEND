@@ -66,10 +66,10 @@ if (hasRequiredConfig) {
   // This is ok in development mode where we use mock auth
 }
 
-// Builds the user object 
+// Builds the user object
 export async function formatUser(user) {
   let attributes = user.attributes;
-  if(!attributes && user.userId){
+  if (!attributes && user.userId) {
     attributes = await fetchUserAttributes();
   }
   const session = await fetchAuthSession();
@@ -78,7 +78,7 @@ export async function formatUser(user) {
   return {
     username: user.username || user.userId,
     name: attributes?.name,
-    email: attributes?.email, 
+    email: attributes?.email,
     dateOfBirth: attributes?.birthdate,
     lastLogin: new Date().toISOString(),
     authorizationHeaders: (type = 'application/json') => ({
@@ -91,17 +91,33 @@ export async function formatUser(user) {
 // Create Auth object compatible with our app
 const Auth = {
   getCurrentUser: async () => {
+    // In development mode, return a mock user
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Using mock user in development mode');
+      return {
+        username: 'mock-user',
+        name: 'Mock User',
+        email: 'mock@example.com',
+        dateOfBirth: '2000-01-01',
+        lastLogin: new Date().toISOString(),
+        authorizationHeaders: (type = 'application/json') => ({
+          'Content-Type': type,
+          Authorization: 'Bearer mock-id-token',
+        }),
+      };
+    }
+
     if (!hasRequiredConfig) {
       return null;
     }
     try {
       const user = await getCurrentUser();
-      console.log("username: ", user.username);
-      console.log("user ID: " , user.userId)
-      console.log("user Sign In Details: " , user.signInDetails)
+      console.log('username: ', user.username);
+      console.log('user ID: ', user.userId);
+      console.log('user Sign In Details: ', user.signInDetails);
       return await formatUser(user);
     } catch (err) {
-      console.error("Get User Error:", err);
+      console.error('Get User Error:', err);
       return null;
     }
   },
@@ -111,9 +127,9 @@ const Auth = {
         new Error('Cognito configuration missing. Set required environment variables.')
       );
     }
-    await signIn({ username, password }); 
-    const user = await getCurrentUser();  
-    return await formatUser(user);             
+    await signIn({ username, password });
+    const user = await getCurrentUser();
+    return await formatUser(user);
   },
   signOut: () => {
     if (!hasRequiredConfig) {
