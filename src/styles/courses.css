@@ -1,8 +1,8 @@
 /*  White thing in the background removed! */
 .courses-container .profile-card {
-  background-color: #cad2c5 !important; /* Match profile-card from profile.css */
+  background-color: #84a98c !important; /* Match profile-card from profile.css */
   box-shadow: none !important;
-  border-radius: 0.5rem; /* Match profile-card from profile.css */
+  border-radius: 2rem; /* Match profile-card from profile.css */
 }
 
 .courses-title {
@@ -20,7 +20,7 @@
   margin: 1.5rem auto;
   background-color: #2f3e46;
   padding: 0.5rem;
-  border-radius: 12px;
+  border-radius: 50px;
   gap: 1rem;
   width: 100%;
 }
@@ -100,7 +100,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.25rem;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .session-card {
@@ -152,14 +152,14 @@
 .courses-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .course-card {
   position: relative;
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 17px;
+  box-shadow: 0 10px 4px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
   margin-bottom: 16px;
   transition: all 0.2s ease;
@@ -181,7 +181,7 @@
 
 .course-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  transform: translateY(-7px);
 }
 
 /* Course title row */
@@ -329,7 +329,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1rem;
+  padding: 0rem;
   border-radius: 8px;
   background: #fff;
   color: #2f3e46;
@@ -347,7 +347,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #2f3e46;
+  color: #2f4637;
 }
 
 .form-input,
@@ -396,7 +396,7 @@
 /* Fix spacing for buttons */
 .schedule-item button,
 .form-group button {
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
 }
 
 .add-session-button,
