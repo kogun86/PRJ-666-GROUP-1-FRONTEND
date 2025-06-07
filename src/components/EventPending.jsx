@@ -4,10 +4,11 @@ import EventCard from './EventCard';
 import { useEvents } from '../features/events';
 
 function EventsPending({ groups }) {
-  const { toggleEventStatus } = useEvents();
+  const { toggleEventStatus, deleteEventById } = useEvents();
   const [pages, setPages] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
   const [updatingEventId, setUpdatingEventId] = useState(null);
+  const [deletingEventId, setDeletingEventId] = useState(null);
 
   useEffect(() => {
     const updateWidth = () => setWidth(window.innerWidth);
@@ -38,6 +39,24 @@ function EventsPending({ groups }) {
       console.error('Failed to mark event as done:', error);
     } finally {
       setUpdatingEventId(null);
+    }
+  };
+
+  const deleteEvent = async (eventId) => {
+    if (!eventId) {
+      console.error('Cannot delete: Missing event ID');
+      return;
+    }
+
+    console.log('Deleting event with ID:', eventId);
+
+    setDeletingEventId(eventId);
+    try {
+      await deleteEventById(eventId);
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+    } finally {
+      setDeletingEventId(null);
     }
   };
 
@@ -87,7 +106,9 @@ function EventsPending({ groups }) {
                       task={task}
                       onToggle={() => markDone(task)}
                       onSetGrade={null}
+                      onDelete={deleteEvent}
                       isUpdating={updatingEventId === taskId}
+                      isDeleting={deletingEventId === taskId}
                     />
                     {process.env.NODE_ENV === 'development' && (
                       <div

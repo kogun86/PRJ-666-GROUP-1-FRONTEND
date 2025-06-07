@@ -6,6 +6,7 @@ import {
   fetchPendingEvents,
   fetchCompletedEvents,
   updateEventStatus,
+  deleteEvent,
 } from '../services/eventService';
 import { groupTasksByDate, getDateKey } from '../utils/dateUtils';
 
@@ -257,6 +258,36 @@ export const useEvents = () => {
     }
   };
 
+  // Function to delete an event
+  const deleteEventById = async (eventId) => {
+    try {
+      setLoading(true);
+
+      // Debug the event ID
+      console.log('Deleting event with ID:', eventId);
+
+      // Call the API to delete the event
+      await deleteEvent(eventId);
+
+      // Remove the event from both pending and completed events
+      setPendingEvents(
+        pendingEvents.filter((event) => event._id !== eventId && event.id !== eventId)
+      );
+
+      setCompletedEvents(
+        completedEvents.filter((event) => event._id !== eventId && event.id !== eventId)
+      );
+
+      return true;
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      setError(err.message || 'Failed to delete event');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     pendingEvents,
     completedEvents,
@@ -268,5 +299,6 @@ export const useEvents = () => {
     fetchCompleted,
     addEvent,
     toggleEventStatus,
+    deleteEventById,
   };
 };
