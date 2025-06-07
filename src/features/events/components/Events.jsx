@@ -13,23 +13,32 @@ export default function Events() {
   const [formData, setFormData] = useState(null);
   const [formError, setFormError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { groups, setGroups, loading, error, addEvent, fetchEvents } = useEvents();
+  const { pendingGroups, completedGroups, loading, error, addEvent, fetchPending, fetchCompleted } =
+    useEvents();
 
-  // Fetch events when component mounts
+  // Fetch pending events when component mounts
   useEffect(() => {
-    handleFetchEvents();
+    handleFetchPending();
   }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    if (tab === 'home' && groups.length === 0) {
-      handleFetchEvents();
+    if (tab === 'home') {
+      handleFetchPending();
+    } else if (tab === 'completed') {
+      handleFetchCompleted();
     }
   };
 
-  const handleFetchEvents = async () => {
+  const handleFetchPending = async () => {
     setRefreshing(true);
-    await fetchEvents();
+    await fetchPending();
+    setRefreshing(false);
+  };
+
+  const handleFetchCompleted = async () => {
+    setRefreshing(true);
+    await fetchCompleted();
     setRefreshing(false);
   };
 
@@ -40,8 +49,8 @@ export default function Events() {
     if (success) {
       setShowForm(false);
       setFormData(null);
-      // Refresh events after adding a new one
-      handleFetchEvents();
+      // Refresh pending events after adding a new one
+      handleFetchPending();
     } else {
       setFormError('Failed to create event. Please try again.');
     }
@@ -54,6 +63,8 @@ export default function Events() {
   if (error && !refreshing) {
     return <EventsError message={error} />;
   }
+
+  const currentGroups = activeTab === 'home' ? pendingGroups : completedGroups;
 
   return (
     <>
@@ -77,12 +88,16 @@ export default function Events() {
           {refreshing ? (
             <div className="loading-indicator">Refreshing events...</div>
           ) : (
-            <EventPending groups={groups} setGroups={setGroups} />
+            <EventPending groups={pendingGroups} />
           )}
         </div>
 
         <div className="events-tab-content" hidden={activeTab !== 'completed'}>
-          <EventCompleted groups={groups} setGroups={setGroups} />
+          {refreshing ? (
+            <div className="loading-indicator">Refreshing events...</div>
+          ) : (
+            <EventCompleted groups={completedGroups} />
+          )}
         </div>
       </div>
 
@@ -91,7 +106,11 @@ export default function Events() {
           <button onClick={() => setShowForm(true)} title="Add new event">
             <Plus size={20} />
           </button>
-          <button onClick={handleFetchEvents} title="Refresh events" disabled={refreshing}>
+          <button
+            onClick={activeTab === 'home' ? handleFetchPending : handleFetchCompleted}
+            title="Refresh events"
+            disabled={refreshing}
+          >
             <RefreshCw size={20} className={refreshing ? 'icon-spin' : ''} />
           </button>
           <button title="Settings">

@@ -405,7 +405,8 @@
 .event-actions {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .event-action-button {
@@ -473,4 +474,18 @@
 
 .event-action-secondary:hover {
   background-color: #7f8c8d;
+}
+
+/* Grade Display */
+.event-grade-display {
+  margin: 8px 0;
+  padding: 8px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.event-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

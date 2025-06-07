@@ -1,6 +1,6 @@
 import React from 'react';
 
-function EventCard({ task, onToggle, onSetGrade }) {
+function EventCard({ task, onToggle, onSetGrade, isUpdating = false }) {
   const isCompletable = !task.isCompleted && typeof onToggle === 'function';
   const isGradable = task.isCompleted && typeof onSetGrade === 'function';
 
@@ -38,24 +38,25 @@ function EventCard({ task, onToggle, onSetGrade }) {
 
       <div className="event-actions">
         {isCompletable && (
-          <button className="event-action-button" onClick={onToggle}>
-            Mark as Done
+          <button className="event-action-button" onClick={onToggle} disabled={isUpdating}>
+            {isUpdating ? 'Updating...' : 'Mark as Done'}
           </button>
         )}
 
         {isGradable && (
           <div className="event-grade-container">
-            <label htmlFor={`grade-${task.id}`} className="event-grade-label">
+            <label htmlFor={`grade-${task.id || task._id}`} className="event-grade-label">
               Grade:
             </label>
             <input
-              id={`grade-${task.id}`}
+              id={`grade-${task.id || task._id}`}
               type="number"
               min="0"
               max="100"
               value={task.grade || ''}
-              onChange={(e) => onSetGrade(task.id, e.target.value)}
+              onChange={(e) => onSetGrade(task.id || task._id, e.target.value)}
               className="event-grade-input"
+              disabled={isUpdating}
             />
           </div>
         )}

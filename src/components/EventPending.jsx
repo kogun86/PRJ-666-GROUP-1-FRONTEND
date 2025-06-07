@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import ReactPaginate from 'react-paginate';
 import EventCard from './EventCard';
+import { useEvents } from '../features/events';
 
-function EventsPending({ groups, setGroups }) {
+function EventsPending({ groups }) {
+  const { toggleEventStatus } = useEvents();
   const [pages, setPages] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
+  const [updatingEventId, setUpdatingEventId] = useState(null);
 
   useEffect(() => {
     const updateWidth = () => setWidth(window.innerWidth);
@@ -14,31 +17,37 @@ function EventsPending({ groups, setGroups }) {
 
   const perPage = width < 768 ? 1 : width < 1199 ? 2 : 3;
 
-  const markDone = (groupDate, taskId) => {
-    const newGroups = groups.map((group) =>
-      group.date === groupDate
-        ? {
-            ...group,
-            tasks: group.tasks.map((t) =>
-              t.id === taskId && !t.isCompleted ? { ...t, isCompleted: true } : t
-            ),
-          }
-        : group
-    );
-    setGroups(newGroups);
+  const markDone = async (task) => {
+    // Debug the task to see what properties are available
+    console.log('Task being marked as done:', task);
+
+    // Extract the correct ID based on what's available
+    const eventId = task._id || task.id;
+
+    if (!eventId) {
+      console.error('Cannot mark as done: Missing task ID', task);
+      return;
+    }
+
+    console.log('Using event ID for update:', eventId);
+
+    setUpdatingEventId(eventId);
+    try {
+      await toggleEventStatus(eventId, true);
+    } catch (error) {
+      console.error('Failed to mark event as done:', error);
+    } finally {
+      setUpdatingEventId(null);
+    }
   };
 
   const changePage = (date) => (selected) => {
     setPages((prev) => ({ ...prev, [date]: selected.selected }));
   };
 
-  const activeGroups = groups
-    .map((g) => ({ ...g, tasks: g.tasks.filter((t) => !t.isCompleted) }))
-    .filter((g) => g.tasks.length);
-
   useEffect(() => {
     const newPages = { ...pages };
-    activeGroups.forEach((g) => {
+    groups.forEach((g) => {
       const maxPage = Math.ceil(g.tasks.length / perPage) - 1;
       if ((pages[g.date] || 0) > maxPage) {
         newPages[g.date] = Math.max(0, maxPage);
@@ -47,13 +56,13 @@ function EventsPending({ groups, setGroups }) {
     setPages(newPages);
   }, [groups, width]);
 
-  if (!activeGroups.length) {
+  if (!groups || !groups.length) {
     return <p className="empty-message">No upcoming events!</p>;
   }
 
   return (
     <>
-      {activeGroups.map((group) => {
+      {groups.map((group) => {
         const page = pages[group.date] || 0;
         const totalPages = Math.ceil(group.tasks.length / perPage);
         const start = page * perPage;
@@ -71,12 +80,28 @@ function EventsPending({ groups, setGroups }) {
 
             <div className="events-tasks-grid">
               {shownTasks.map((task) => (
-                <EventCard
-                  key={task.id}
-                  task={task}
-                  onToggle={() => markDone(group.date, task.id)}
-                  onSetGrade={null}
-                />
+                <>
+                  <EventCard
+                    key={task.id || task._id}
+                    task={task}
+                    onToggle={() => markDone(task)}
+                    onSetGrade={null}
+                    isUpdating={updatingEventId === (task._id || task.id)}
+                  />
+                  {process.env.NODE_ENV === 'development' && (
+                    <div
+                      className="debug-info"
+                      style={{
+                        fontSize: '10px',
+                        color: '#999',
+                        marginTop: '-12px',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      ID: {task.id}, _ID: {task._id}
+                    </div>
+                  )}
+                </>
               ))}
             </div>
 

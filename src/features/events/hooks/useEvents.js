@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
-import { fetchUpcomingEvents, createEvent } from '../services/eventService';
+import {
+  fetchUpcomingEvents,
+  createEvent,
+  fetchPendingEvents,
+  fetchCompletedEvents,
+  updateEventStatus,
+} from '../services/eventService';
 import { groupTasksByDate, getDateKey } from '../utils/dateUtils';
 
 /**
@@ -29,37 +35,42 @@ const formatDateToISO = (date, required = false) => {
  */
 export const useEvents = () => {
   const { user } = useAuth();
-  const [events, setEvents] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const [pendingEvents, setPendingEvents] = useState([]);
+  const [completedEvents, setCompletedEvents] = useState([]);
+  const [pendingGroups, setPendingGroups] = useState([]);
+  const [completedGroups, setCompletedGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Function to fetch events
-  const fetchEvents = async () => {
+  // Function to fetch pending events
+  const fetchPending = async () => {
     if (!user) return false;
 
     setLoading(true);
     setError(null);
 
     try {
-      const eventsData = await fetchUpcomingEvents();
+      const eventsData = await fetchPendingEvents();
 
       // Log the received events data
-      console.log('Received events data:', eventsData);
+      console.log('Received pending events data:', eventsData);
 
-      // Process events to ensure they have valid date fields
+      // Process events to ensure they have valid date fields and IDs
       const processedEvents = eventsData.map((event) => {
         return {
           ...event,
+          // Ensure ID is accessible via both id and _id for compatibility
+          id: event._id || event.id,
+          _id: event._id || event.id,
           // Ensure dueDate is set for grouping
           dueDate: event.end || event.dueDate || new Date().toISOString(),
         };
       });
 
-      setEvents(processedEvents);
+      setPendingEvents(processedEvents);
       return true;
     } catch (err) {
-      setError('Failed to load events');
+      setError('Failed to load pending events');
       console.error(err);
       return false;
     } finally {
@@ -67,10 +78,112 @@ export const useEvents = () => {
     }
   };
 
-  // Group events by date whenever events change
+  // Function to fetch completed events
+  const fetchCompleted = async () => {
+    if (!user) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const eventsData = await fetchCompletedEvents();
+
+      // Log the received events data
+      console.log('Received completed events data:', eventsData);
+
+      // Process events to ensure they have valid date fields and IDs
+      const processedEvents = eventsData.map((event) => {
+        return {
+          ...event,
+          // Ensure ID is accessible via both id and _id for compatibility
+          id: event._id || event.id,
+          _id: event._id || event.id,
+          // Ensure dueDate is set for grouping
+          dueDate: event.end || event.dueDate || new Date().toISOString(),
+        };
+      });
+
+      setCompletedEvents(processedEvents);
+      return true;
+    } catch (err) {
+      setError('Failed to load completed events');
+      console.error(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to update an event's completion status
+  const toggleEventStatus = async (eventId, isCompleted) => {
+    try {
+      setLoading(true);
+
+      // Debug the event ID
+      console.log(
+        'Toggling event status with ID:',
+        eventId,
+        'Setting isCompleted to:',
+        isCompleted
+      );
+
+      // Call the API to update the event status
+      const updatedEvent = await updateEventStatus(eventId, isCompleted);
+
+      // Log the updated event
+      console.log('Updated event:', updatedEvent);
+
+      // If marking as completed, move from pending to completed
+      if (isCompleted) {
+        // Process updated event for local state
+        const updatedLocalEvent = {
+          ...updatedEvent,
+          id: updatedEvent._id,
+          dueDate: updatedEvent.end || updatedEvent.dueDate,
+        };
+
+        // Debug the pending events before filtering
+        console.log('Pending events before update:', pendingEvents);
+
+        // Remove from pending events
+        setPendingEvents(
+          pendingEvents.filter((event) => {
+            const result = event._id !== eventId && event.id !== eventId;
+            console.log(
+              `Comparing event._id=${event._id} and event.id=${event.id} with eventId=${eventId}. Keep?`,
+              result
+            );
+            return result;
+          })
+        );
+
+        // Refresh both pending and completed events to ensure UI is up to date
+        await Promise.all([fetchPending(), fetchCompleted()]);
+      } else {
+        // If marking as incomplete, move from completed to pending
+        // Refresh both pending and completed events
+        await Promise.all([fetchPending(), fetchCompleted()]);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Failed to update event status:', err);
+      setError(err.message || 'Failed to update event status');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group pending events by date whenever they change
   useEffect(() => {
-    setGroups(groupTasksByDate(events));
-  }, [events]);
+    setPendingGroups(groupTasksByDate(pendingEvents));
+  }, [pendingEvents]);
+
+  // Group completed events by date whenever they change
+  useEffect(() => {
+    setCompletedGroups(groupTasksByDate(completedEvents));
+  }, [completedEvents]);
 
   // Add a new event
   const addEvent = async (eventData) => {
@@ -123,8 +236,8 @@ export const useEvents = () => {
       // Log the local event to debug
       console.log('Created local event:', localEvent);
 
-      // Update local state
-      setGroups((prevGroups) => {
+      // Update local state - add to pending events
+      setPendingGroups((prevGroups) => {
         const groupIndex = prevGroups.findIndex((g) => g.date === dateKey);
         if (groupIndex > -1) {
           const updatedGroups = [...prevGroups];
@@ -145,12 +258,15 @@ export const useEvents = () => {
   };
 
   return {
-    events,
-    groups,
+    pendingEvents,
+    completedEvents,
+    pendingGroups,
+    completedGroups,
     loading,
     error,
-    setGroups,
+    fetchPending,
+    fetchCompleted,
     addEvent,
-    fetchEvents,
+    toggleEventStatus,
   };
 };

@@ -295,3 +295,257 @@ export const createEvent = async (eventData) => {
     throw error;
   }
 };
+
+/**
+ * Fetches pending events for the user
+ * @returns {Promise} Promise resolving to events data
+ */
+export const fetchPendingEvents = async () => {
+  try {
+    const headers = await getHeaders();
+
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('API Base URL:', API_BASE_URL);
+    console.log('Full request URL:', `${API_BASE_URL}/events/pending`);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
+
+    // Set up timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/pending`, {
+        method: 'GET',
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please log in again');
+        }
+
+        if (response.status === 404) {
+          throw new Error('API endpoint not found - Please check server configuration');
+        }
+
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Error response body:', errorText);
+
+          // Try to parse as JSON if possible
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(
+              errorData.errors?.join(', ') ||
+                errorData.message ||
+                `Server error: ${response.status} - ${response.statusText}`
+            );
+          } catch (parseError) {
+            // If not JSON, use text directly
+            throw new Error(
+              `Server error: ${response.status} - ${errorText || response.statusText}`
+            );
+          }
+        } catch (textError) {
+          if (textError !== errorText) throw textError;
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      return data.events || [];
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out - The server took too long to respond');
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('Failed to fetch pending events:', error);
+    return [];
+  }
+};
+
+/**
+ * Fetches completed events for the user
+ * @returns {Promise} Promise resolving to events data
+ */
+export const fetchCompletedEvents = async () => {
+  try {
+    const headers = await getHeaders();
+
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('API Base URL:', API_BASE_URL);
+    console.log('Full request URL:', `${API_BASE_URL}/events/completed`);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
+
+    // Set up timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/completed`, {
+        method: 'GET',
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please log in again');
+        }
+
+        if (response.status === 404) {
+          throw new Error('API endpoint not found - Please check server configuration');
+        }
+
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Error response body:', errorText);
+
+          // Try to parse as JSON if possible
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(
+              errorData.errors?.join(', ') ||
+                errorData.message ||
+                `Server error: ${response.status} - ${response.statusText}`
+            );
+          } catch (parseError) {
+            // If not JSON, use text directly
+            throw new Error(
+              `Server error: ${response.status} - ${errorText || response.statusText}`
+            );
+          }
+        } catch (textError) {
+          if (textError !== errorText) throw textError;
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      return data.events || [];
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out - The server took too long to respond');
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('Failed to fetch completed events:', error);
+    return [];
+  }
+};
+
+/**
+ * Updates an event's completion status
+ * @param {string} eventId - The ID of the event to update
+ * @param {boolean} isCompleted - The new completion status
+ * @returns {Promise} Promise resolving to updated event data
+ */
+export const updateEventStatus = async (eventId, isCompleted) => {
+  try {
+    // Validate eventId
+    if (!eventId) {
+      console.error('EventID is null or undefined');
+      throw new Error('Invalid event ID: Cannot be null or undefined');
+    }
+
+    console.log('updateEventStatus called with eventId:', eventId, 'type:', typeof eventId);
+
+    const headers = await getHeaders();
+
+    // Use the correct URL format based on the isCompleted value
+    const statusPath = isCompleted ? 'completed' : 'pending';
+    const requestUrl = `${API_BASE_URL}/events/${eventId}/status/${statusPath}`;
+
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('API Base URL:', API_BASE_URL);
+    console.log('Full request URL:', requestUrl);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
+
+    // Set up timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    try {
+      const response = await fetch(requestUrl, {
+        method: 'PATCH',
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please log in again');
+        }
+
+        if (response.status === 404) {
+          throw new Error('Event not found - Please check the event ID');
+        }
+
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Error response body:', errorText);
+
+          // Try to parse as JSON if possible
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(
+              errorData.errors?.join(', ') ||
+                errorData.message ||
+                `Server error: ${response.status} - ${response.statusText}`
+            );
+          } catch (parseError) {
+            // If not JSON, use text directly
+            throw new Error(
+              `Server error: ${response.status} - ${errorText || response.statusText}`
+            );
+          }
+        } catch (textError) {
+          if (textError !== errorText) throw textError;
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      return data.event || data;
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out - The server took too long to respond');
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('Failed to update event status:', error);
+    throw error;
+  }
+};
