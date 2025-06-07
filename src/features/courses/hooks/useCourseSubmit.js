@@ -13,22 +13,17 @@ export function useCourseSubmit() {
     setError(null);
 
     try {
-      let headers = {
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      if (!idToken) throw new Error('No ID token available');
+
+      const headers = {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
       };
 
-      // Use mock token in development mode
-      if (process.env.NODE_ENV === 'development') {
-        headers.Authorization = 'Bearer mock-id-token';
-      } else {
-        const session = await fetchAuthSession();
-        const idToken = session.tokens?.idToken?.toString();
-
-        if (!idToken) throw new Error('No ID token available');
-        headers.Authorization = `Bearer ${idToken}`;
-      }
-
-      console.log('📤 Submitting course to:', `${API_BASE_URL}/courses`);
+      console.log('📤 Submitting course to:', `${API_BASE_URL}/v1/courses`);
       console.log('🔐 Headers:', headers);
       console.log('📦 Data:', JSON.stringify(formattedData, null, 2));
 
@@ -39,8 +34,21 @@ export function useCourseSubmit() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData?.errors?.join(', ') || 'Unknown error');
+        let errorMessage = `Error ${response.status}`;
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData?.errors?.join(', ') || errorMessage;
+          } else {
+            const text = await response.text();
+            errorMessage = text || errorMessage;
+          }
+        } catch (e) {
+          console.warn('⚠️ Failed to parse error response:', e);
+        }
+
+        throw new Error(errorMessage);
       }
 
       setSuccess(true);
