@@ -36,7 +36,7 @@ export default function CoursesPage() {
         const headers = user.authorizationHeaders();
         console.log('🔐 Auth Headers:', headers);
         //  Fetch courses
-        const courseRes = await fetch(`${API_BASE_URL}/courses?active=true`, {
+        const courseRes = await fetch(`${API_BASE_URL}/v1/courses?active=true`, {
           headers,
         });
         if (!courseRes.ok) {
@@ -59,7 +59,7 @@ export default function CoursesPage() {
         setMyCourses(fetchedCourses);
 
         //  Fetch classes
-        const classRes = await fetch(`${API_BASE_URL}/classes`, {
+        const classRes = await fetch(`${API_BASE_URL}/v1/classes`, {
           headers,
         });
         if (!classRes.ok) {
