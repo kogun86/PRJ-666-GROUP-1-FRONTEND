@@ -125,6 +125,23 @@
   border-color: #52796f;
 }
 
+.fc .event-pending {
+  background-color: #f9c74f;
+  border-color: #f8961e;
+}
+
+.calendar-event.event-pending {
+  background-color: #f9c74f;
+  border-left: 3px solid #f8961e;
+  color: #000;
+}
+
+.week-event.event-pending {
+  background-color: #f9c74f;
+  border-left: 3px solid #f8961e;
+  color: #000;
+}
+
 /* Calendar Page Styles */
 
 .calendar-container {

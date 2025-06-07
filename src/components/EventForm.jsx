@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useCourses } from '../features/events/hooks/useCourses';
 
 export default function EventForm({ initialData, onSubmit, onCancel }) {
+  const { courses, loading: coursesLoading } = useCourses();
+  const [startDate, setStartDate] = useState(initialData?.start || '');
+
   const {
     register,
     handleSubmit,
@@ -9,16 +13,32 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
   } = useForm({
     defaultValues: initialData || {
       title: '',
-      date: '',
-      courseCode: '',
+      start: '',
+      end: '',
+      courseID: '',
       weight: '',
-      type: 'Homework',
+      type: 'assignment',
       description: '',
+      location: '',
+      color: '#E74C3C',
     },
   });
 
+  const processFormData = (data) => {
+    // Process form data before submitting
+    const formattedData = {
+      ...data,
+      // Ensure date fields are in ISO format
+      end: new Date(data.end).toISOString(),
+      // If start date is not provided, use the end date
+      start: data.start ? new Date(data.start).toISOString() : new Date(data.end).toISOString(),
+    };
+
+    onSubmit(formattedData);
+  };
+
   return (
-    <form className="event-form" onSubmit={handleSubmit(onSubmit)}>
+    <form className="event-form" onSubmit={handleSubmit(processFormData)}>
       {/* Title */}
       <div className="event-form-group">
         <label className="form-label" htmlFor="title">
@@ -32,39 +52,62 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
         {errors.title && <div className="error-message">{errors.title.message}</div>}
       </div>
 
-      {/* Date */}
+      {/* Course */}
       <div className="event-form-group">
-        <label className="form-label" htmlFor="date">
-          Date
+        <label className="form-label" htmlFor="courseID">
+          Course
+        </label>
+        <select
+          id="courseID"
+          {...register('courseID', { required: 'Course is required' })}
+          className="form-select"
+          disabled={coursesLoading}
+        >
+          <option value="">Select a course</option>
+          {courses.map((course) => (
+            <option key={course._id} value={course._id}>
+              {course.code} - {course.title} ({course.section})
+            </option>
+          ))}
+        </select>
+        {errors.courseID && <div className="error-message">{errors.courseID.message}</div>}
+      </div>
+
+      {/* Start Date */}
+      <div className="event-form-group">
+        <label className="form-label" htmlFor="start">
+          Start Date (optional)
         </label>
         <input
-          id="date"
-          type="date"
-          {...register('date', {
-            required: 'Date is required',
+          id="start"
+          type="datetime-local"
+          {...register('start')}
+          className="form-input"
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+      </div>
+
+      {/* End Date */}
+      <div className="event-form-group">
+        <label className="form-label" htmlFor="end">
+          Due Date
+        </label>
+        <input
+          id="end"
+          type="datetime-local"
+          {...register('end', {
+            required: 'Due date is required',
             validate: (value) => {
-              const selectedDate = new Date(value);
-              const today = new Date();
-              today.setHours(0, 0, 0, 0); // reset time to 00:00:00 to compare only the date
-              return selectedDate >= today || 'Date cannot be in the past';
+              // If start date is set, ensure end date is after start date
+              if (startDate && new Date(value) <= new Date(startDate)) {
+                return 'Due date must be after start date';
+              }
+              return true;
             },
           })}
           className="form-input"
         />
-        {errors.date && <div className="error-message">{errors.date.message}</div>}
-      </div>
-
-      {/* Course Code */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="courseCode">
-          Course Code
-        </label>
-        <input
-          id="courseCode"
-          {...register('courseCode', { required: 'Course code is required' })}
-          className="form-input"
-        />
-        {errors.courseCode && <div className="error-message">{errors.courseCode.message}</div>}
+        {errors.end && <div className="error-message">{errors.end.message}</div>}
       </div>
 
       {/* Weight */}
@@ -75,7 +118,11 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
         <input
           id="weight"
           type="number"
-          {...register('weight', { required: 'Weight is required', min: 0 })}
+          {...register('weight', {
+            required: 'Weight is required',
+            min: { value: 0, message: 'Weight must be positive' },
+            max: { value: 100, message: 'Weight cannot exceed 100%' },
+          })}
           className="form-input"
         />
         {errors.weight && <div className="error-message">{errors.weight.message}</div>}
@@ -87,9 +134,26 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
           Type
         </label>
         <select id="type" {...register('type')} className="form-select">
-          <option value="Homework">Homework</option>
-          <option value="Study Session">Study Session</option>
+          <option value="assignment">Assignment</option>
+          <option value="exam">Exam</option>
+          <option value="project">Project</option>
+          <option value="quiz">Quiz</option>
+          <option value="test">Test</option>
+          <option value="homework">Homework</option>
         </select>
+      </div>
+
+      {/* Location */}
+      <div className="event-form-group">
+        <label className="form-label" htmlFor="location">
+          Location
+        </label>
+        <input
+          id="location"
+          {...register('location')}
+          className="form-input"
+          placeholder="e.g., Room 123, Online, etc."
+        />
       </div>
 
       {/* Description */}
@@ -97,12 +161,21 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
         <label className="form-label" htmlFor="description">
           Description
         </label>
-        <textarea
-          id="description"
-          {...register('description', { required: 'Description is required' })}
+        <textarea id="description" {...register('description')} className="form-input" />
+      </div>
+
+      {/* Color */}
+      <div className="event-form-group">
+        <label className="form-label" htmlFor="color">
+          Color
+        </label>
+        <input
+          id="color"
+          type="color"
+          {...register('color')}
           className="form-input"
+          defaultValue="#E74C3C"
         />
-        {errors.description && <div className="error-message">{errors.description.message}</div>}
       </div>
 
       {/* Buttons */}

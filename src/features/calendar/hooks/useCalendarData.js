@@ -1,32 +1,51 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/features/auth';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/v1`;
+const API_BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8080/api/v1'
+    : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
 
 export function useCalendarData() {
   const [classes, setClasses] = useState([]);
-  const [events, setEvents] = useState([]);
+  const [completedEvents, setCompletedEvents] = useState([]);
+  const [pendingEvents, setPendingEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, isProduction } = useAuth();
 
   const getHeaders = async () => {
-    try {
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken?.toString();
+    if (isProduction) {
+      try {
+        // Get the current session
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
 
-      if (!idToken) throw new Error('No ID token available');
+        if (!idToken) {
+          throw new Error('No ID token available');
+        }
 
+        return {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        };
+      } catch (err) {
+        console.error('❌ Error getting ID token:', err);
+        throw new Error('Failed to get access token');
+      }
+    } else {
+      // Development headers
       return {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
+        Authorization: 'Bearer mock-id-token',
       };
-    } catch (err) {
-      console.error('❌ Error getting ID token:', err);
-      throw new Error('Failed to get access token');
     }
   };
 
   const fetchData = async (abortController) => {
+    if (!user) return;
+
     setIsLoading(true);
     setError(null);
 
@@ -50,68 +69,118 @@ export function useCalendarData() {
 
       const classesData = await classesResponse.json();
 
-      // ✅ Fetch events
-      const eventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
+      // ✅ Fetch completed events
+      const completedEventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
         method: 'GET',
         headers,
         signal: abortController.signal,
       });
 
-      if (!eventsResponse.ok) {
-        const errorText = await eventsResponse.text();
+      if (!completedEventsResponse.ok) {
+        const errorText = await completedEventsResponse.text();
         console.error('🔍 Backend event response:', errorText);
         throw new Error(
-          `Failed to fetch events: ${eventsResponse.status} ${eventsResponse.statusText}`
+          `Failed to fetch completed events: ${completedEventsResponse.status} ${completedEventsResponse.statusText}`
         );
       }
+      const completedEventsData = await completedEventsResponse.json();
 
-      const eventsData = await eventsResponse.json();
-
-      // ✅ Transform classes
-      const transformedClasses = classesData.classes.map((cls) => {
-        const startDate = new Date(cls.startTime);
-        const endDate = new Date(cls.endTime);
-
-        const formatTime = (date) => {
-          const hours = date.getUTCHours().toString().padStart(2, '0');
-          const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-          return `${hours}:${minutes}`;
-        };
-
-        return {
-          id: cls._id,
-          title: cls.classType.toUpperCase(),
-          type: cls.classType,
-          startTime: cls.startTime,
-          endTime: cls.endTime,
-          formattedStartTime: formatTime(startDate),
-          formattedEndTime: formatTime(endDate),
-          date: startDate,
-          isUTC: true,
-          courseCode: cls.courseCode || '',
-          description: cls.description || '',
-        };
+      // Fetch pending events
+      const pendingEventsResponse = await fetch(`${API_BASE_URL}/events/pending`, {
+        method: 'GET',
+        headers,
+        signal: abortController.signal,
       });
+      if (!pendingEventsResponse.ok) {
+        const errorText = await pendingEventsResponse.text();
+        console.error('🔍 Backend event response:', errorText);
+        throw new Error(
+          `Failed to fetch pending events: ${pendingEventsResponse.status} ${pendingEventsResponse.statusText}`
+        );
+      }
+      const pendingEventsData = await pendingEventsResponse.json();
 
-      const transformedEvents = eventsData.events.map((event) => {
-        const eventDate = new Date(event.date);
-        return {
-          id: event._id,
-          title: 'Completed',
-          type: 'completed',
-          date: eventDate,
-          startTime: '00:00',
-          endTime: '23:59',
-          description: event.description || '',
-        };
-      });
-
+      // Only update state if the component is still mounted
       if (!abortController.signal.aborted) {
+        // Transform classes data to calendar format
+        const transformedClasses = classesData.classes.map((cls) => {
+          // Create Date objects from the API ISO strings
+          const startDate = new Date(cls.startTime);
+          const endDate = new Date(cls.endTime);
+
+          // Format time helper function
+          const formatTime = (date) => {
+            const hours = date.getUTCHours().toString().padStart(2, '0');
+            const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+          };
+
+          return {
+            id: cls._id,
+            title: cls.classType.toUpperCase(),
+            type: cls.classType,
+            // For weekly view, provide the full ISO strings
+            startTime: cls.startTime,
+            endTime: cls.endTime,
+            // For the event modal and other UI components, use UTC time
+            formattedStartTime: formatTime(startDate),
+            formattedEndTime: formatTime(endDate),
+            // Include date for back-compatibility with existing code
+            date: startDate,
+            // Flag to indicate this is a UTC time event
+            isUTC: true,
+            // Additional fields
+            courseCode: cls.courseCode || '',
+            description: cls.description || '',
+          };
+        });
+
+        // Transform completed events data to calendar format
+        const transformedCompletedEvents = completedEventsData.events.map((event) => {
+          const eventDate = new Date(event.dueDate);
+
+          return {
+            id: event._id,
+            title: `${event.title} (Completed)`,
+            type: 'completed',
+            date: eventDate,
+            startTime: '00:00',
+            endTime: '23:59',
+            // Additional fields
+            courseCode: event.courseCode || '',
+            weight: event.weight,
+            description: event.description || '',
+            grade: event.grade,
+            isCompleted: true,
+          };
+        });
+
+        // Transform pending events data to calendar format
+        const transformedPendingEvents = pendingEventsData.events.map((event) => {
+          const eventDate = new Date(event.dueDate);
+
+          return {
+            id: event._id,
+            title: event.title,
+            type: 'pending',
+            date: eventDate,
+            startTime: '00:00',
+            endTime: '23:59',
+            // Additional fields
+            courseCode: event.courseCode || '',
+            weight: event.weight,
+            description: event.description || '',
+            isCompleted: false,
+          };
+        });
+
         setClasses(transformedClasses);
-        setEvents(transformedEvents);
+        setCompletedEvents(transformedCompletedEvents);
+        setPendingEvents(transformedPendingEvents);
         setIsLoading(false);
       }
     } catch (err) {
+      // Only update error state if the error is not due to abort
       if (err.name !== 'AbortError' && !abortController.signal.aborted) {
         setError(err.message);
         console.error('❌ Error fetching calendar data:', err);
@@ -122,12 +191,32 @@ export function useCalendarData() {
 
   useEffect(() => {
     const abortController = new AbortController();
+
+    if (!user) {
+      // Reset state when user is not available
+      setClasses([]);
+      setCompletedEvents([]);
+      setPendingEvents([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     fetchData(abortController);
-    return () => abortController.abort();
-  }, []);
+
+    return () => {
+      abortController.abort();
+    };
+  }, [user]);
+
+  // Combine classes and events for the calendar
+  const calendarEvents = [...classes, ...completedEvents, ...pendingEvents];
 
   return {
-    calendarEvents: [...classes, ...events],
+    calendarEvents,
+    classes,
+    completedEvents,
+    pendingEvents,
     isLoading,
     error,
     refetch: () => fetchData(new AbortController()),
