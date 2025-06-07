@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/v1`;
 
 export function useCalendarData() {
   const [classes, setClasses] = useState([]);
@@ -14,16 +14,14 @@ export function useCalendarData() {
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
 
-      if (!idToken) {
-        throw new Error('No ID token available');
-      }
+      if (!idToken) throw new Error('No ID token available');
 
       return {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${idToken}`,
       };
     } catch (err) {
-      console.error(' Error getting ID token:', err);
+      console.error('❌ Error getting ID token:', err);
       throw new Error('Failed to get access token');
     }
   };
@@ -35,7 +33,7 @@ export function useCalendarData() {
     try {
       const headers = await getHeaders();
 
-      //  Fetch classes
+      // ✅ Fetch classes
       const classesResponse = await fetch(`${API_BASE_URL}/classes`, {
         method: 'GET',
         headers,
@@ -43,6 +41,8 @@ export function useCalendarData() {
       });
 
       if (!classesResponse.ok) {
+        const errorText = await classesResponse.text(); // 🔍 Log actual backend error
+        console.error('🔍 Backend 404 response:', errorText);
         throw new Error(
           `Failed to fetch classes: ${classesResponse.status} ${classesResponse.statusText}`
         );
@@ -50,7 +50,7 @@ export function useCalendarData() {
 
       const classesData = await classesResponse.json();
 
-      //  Fetch events
+      // ✅ Fetch events
       const eventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
         method: 'GET',
         headers,
@@ -58,6 +58,8 @@ export function useCalendarData() {
       });
 
       if (!eventsResponse.ok) {
+        const errorText = await eventsResponse.text();
+        console.error('🔍 Backend event response:', errorText);
         throw new Error(
           `Failed to fetch events: ${eventsResponse.status} ${eventsResponse.statusText}`
         );
@@ -65,7 +67,7 @@ export function useCalendarData() {
 
       const eventsData = await eventsResponse.json();
 
-      //  Transform both
+      // ✅ Transform classes
       const transformedClasses = classesData.classes.map((cls) => {
         const startDate = new Date(cls.startTime);
         const endDate = new Date(cls.endTime);
@@ -112,7 +114,7 @@ export function useCalendarData() {
     } catch (err) {
       if (err.name !== 'AbortError' && !abortController.signal.aborted) {
         setError(err.message);
-        console.error(' Error fetching calendar data:', err);
+        console.error('❌ Error fetching calendar data:', err);
         setIsLoading(false);
       }
     }

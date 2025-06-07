@@ -27,7 +27,7 @@ export function useCourseSubmit() {
       console.log('🔐 Headers:', headers);
       console.log('📦 Data:', JSON.stringify(formattedData, null, 2));
 
-      const response = await fetch(`${API_BASE_URL}/courses`, {
+      const response = await fetch(`${API_BASE_URL}/v1/courses`, {
         method: 'POST',
         headers,
         body: JSON.stringify(formattedData),
