@@ -31,7 +31,7 @@ export function useCalendarData() {
           Authorization: `Bearer ${idToken}`,
         };
       } catch (err) {
-        console.error('Error getting ID token:', err);
+        console.error('❌ Error getting ID token:', err);
         throw new Error('Failed to get access token');
       }
     } else {
@@ -52,24 +52,33 @@ export function useCalendarData() {
     try {
       const headers = await getHeaders();
 
-      // Fetch classes
+      // ✅ Fetch classes
       const classesResponse = await fetch(`${API_BASE_URL}/classes`, {
+        method: 'GET',
         headers,
         signal: abortController.signal,
       });
+
       if (!classesResponse.ok) {
+        const errorText = await classesResponse.text(); // 🔍 Log actual backend error
+        console.error('🔍 Backend 404 response:', errorText);
         throw new Error(
           `Failed to fetch classes: ${classesResponse.status} ${classesResponse.statusText}`
         );
       }
+
       const classesData = await classesResponse.json();
 
-      // Fetch completed events
+      // ✅ Fetch completed events
       const completedEventsResponse = await fetch(`${API_BASE_URL}/events/completed`, {
+        method: 'GET',
         headers,
         signal: abortController.signal,
       });
+
       if (!completedEventsResponse.ok) {
+        const errorText = await completedEventsResponse.text();
+        console.error('🔍 Backend event response:', errorText);
         throw new Error(
           `Failed to fetch completed events: ${completedEventsResponse.status} ${completedEventsResponse.statusText}`
         );
@@ -78,10 +87,13 @@ export function useCalendarData() {
 
       // Fetch pending events
       const pendingEventsResponse = await fetch(`${API_BASE_URL}/events/pending`, {
+        method: 'GET',
         headers,
         signal: abortController.signal,
       });
       if (!pendingEventsResponse.ok) {
+        const errorText = await pendingEventsResponse.text();
+        console.error('🔍 Backend event response:', errorText);
         throw new Error(
           `Failed to fetch pending events: ${pendingEventsResponse.status} ${pendingEventsResponse.statusText}`
         );
@@ -96,15 +108,11 @@ export function useCalendarData() {
           const startDate = new Date(cls.startTime);
           const endDate = new Date(cls.endTime);
 
-          // Get the UTC time components rather than local time
-          const startHoursUTC = startDate.getUTCHours();
-          const startMinutesUTC = startDate.getUTCMinutes();
-          const endHoursUTC = endDate.getUTCHours();
-          const endMinutesUTC = endDate.getUTCMinutes();
-
-          // Format UTC times for display
-          const formatUTCTime = (hours, minutes) => {
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          // Format time helper function
+          const formatTime = (date) => {
+            const hours = date.getUTCHours().toString().padStart(2, '0');
+            const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
           };
 
           return {
@@ -115,8 +123,8 @@ export function useCalendarData() {
             startTime: cls.startTime,
             endTime: cls.endTime,
             // For the event modal and other UI components, use UTC time
-            formattedStartTime: formatUTCTime(startHoursUTC, startMinutesUTC),
-            formattedEndTime: formatUTCTime(endHoursUTC, endMinutesUTC),
+            formattedStartTime: formatTime(startDate),
+            formattedEndTime: formatTime(endDate),
             // Include date for back-compatibility with existing code
             date: startDate,
             // Flag to indicate this is a UTC time event
@@ -175,7 +183,7 @@ export function useCalendarData() {
       // Only update error state if the error is not due to abort
       if (err.name !== 'AbortError' && !abortController.signal.aborted) {
         setError(err.message);
-        console.error('Error fetching calendar data:', err);
+        console.error('❌ Error fetching calendar data:', err);
         setIsLoading(false);
       }
     }
