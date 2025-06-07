@@ -5,11 +5,12 @@ import EventGradeInput from './EventGradeInput';
 import { useEvents } from '../features/events';
 
 function EventCompleted({ groups }) {
-  const { toggleEventStatus } = useEvents();
+  const { toggleEventStatus, deleteEventById } = useEvents();
   const [editing, setEditing] = useState({ groupDate: null, taskId: null });
   const [pageNumbers, setPageNumbers] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
   const [updatingEventId, setUpdatingEventId] = useState(null);
+  const [deletingEventId, setDeletingEventId] = useState(null);
 
   useEffect(() => {
     const onResize = () => setWidth(window.innerWidth);
@@ -55,6 +56,24 @@ function EventCompleted({ groups }) {
     }
   };
 
+  const deleteEvent = async (eventId) => {
+    if (!eventId) {
+      console.error('Cannot delete: Missing event ID');
+      return;
+    }
+
+    console.log('Deleting event with ID:', eventId);
+
+    setDeletingEventId(eventId);
+    try {
+      await deleteEventById(eventId);
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
+
   const saveGrade = (grade) => {
     const { groupDate, taskId } = editing;
     if (!groupDate || !taskId) return;
@@ -93,72 +112,51 @@ function EventCompleted({ groups }) {
 
             <div className="events-tasks-grid">
               {visibleTasks.map((task) => {
-                // Use the event's color or default to the theme color
-                const eventColor = task.color || '#52796f';
+                const taskId = task._id || task.id;
 
-                return editing.groupDate === group.date &&
-                  editing.taskId === (task.id || task._id) ? (
-                  <div
-                    key={task.id || task._id}
-                    className="event-card event-completed"
-                    style={{ '--event-color': eventColor }}
-                  >
-                    <h3 className="event-title">{task.title}</h3>
-                    <EventGradeInput
-                      initialGrade={task.grade}
-                      onSave={saveGrade}
-                      onCancel={cancelEditing}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    key={task.id || task._id}
-                    className="event-card event-completed"
-                    style={{ '--event-color': eventColor }}
-                  >
-                    <div className="event-title-row">
+                if (editing.groupDate === group.date && editing.taskId === taskId) {
+                  // Use the event's color or default to the theme color
+                  const eventColor = task.color || '#52796f';
+
+                  return (
+                    <div
+                      key={taskId}
+                      className="event-card event-completed"
+                      style={{ '--event-color': eventColor }}
+                    >
                       <h3 className="event-title">{task.title}</h3>
-                      <div className="event-type-badge">{task.type}</div>
+                      <EventGradeInput
+                        initialGrade={task.grade}
+                        onSave={saveGrade}
+                        onCancel={cancelEditing}
+                      />
                     </div>
+                  );
+                }
 
-                    <div className="event-metadata">
-                      <div className="event-due">
-                        <span className="event-label">Due:</span>{' '}
-                        {new Date(task.dueDate).toLocaleTimeString()}
-                      </div>
-                      <div className="event-weight">
-                        <span className="event-label">Weight:</span> {task.weight}%
-                      </div>
-                    </div>
-
-                    {task.description && (
-                      <div className="event-description">
-                        <p>{task.description}</p>
+                return (
+                  <div key={taskId} className="event-card-wrapper">
+                    <EventCard
+                      task={task}
+                      onToggle={() => markIncomplete(task)}
+                      onSetGrade={() => startEditing(group.date, taskId)}
+                      onDelete={deleteEvent}
+                      isUpdating={updatingEventId === taskId}
+                      isDeleting={deletingEventId === taskId}
+                    />
+                    {process.env.NODE_ENV === 'development' && (
+                      <div
+                        className="debug-info"
+                        style={{
+                          fontSize: '10px',
+                          color: '#999',
+                          marginTop: '-12px',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        ID: {task.id}, _ID: {task._id}
                       </div>
                     )}
-
-                    <div className="event-grade-display">
-                      <span className="event-label">Grade:</span>{' '}
-                      {task.grade !== null ? `${task.grade}%` : 'Not graded'}
-                    </div>
-
-                    <div className="event-actions">
-                      <button
-                        className="event-action-button event-action-secondary"
-                        onClick={() => markIncomplete(task)}
-                        disabled={updatingEventId === task._id}
-                      >
-                        {updatingEventId === task._id ? 'Updating...' : 'Mark as Incomplete'}
-                      </button>
-
-                      <button
-                        className="event-action-button"
-                        onClick={() => startEditing(group.date, task.id || task._id)}
-                        disabled={updatingEventId === task._id}
-                      >
-                        {task.grade !== null ? 'Edit Grade' : 'Set Grade'}
-                      </button>
-                    </div>
                   </div>
                 );
               })}

@@ -110,6 +110,7 @@ export function transformEvents(calendarEvents) {
       allDay: event.allDay || false,
       backgroundColor,
       borderColor,
+      display: 'block',
       className: `event-${event.type || 'default'}`,
       extendedProps: {
         type: event.type || 'default',

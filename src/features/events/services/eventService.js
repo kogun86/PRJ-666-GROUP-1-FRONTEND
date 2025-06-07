@@ -564,3 +564,93 @@ export const updateEventStatus = async (eventId, isCompleted) => {
     throw error;
   }
 };
+
+/**
+ * Deletes an event by ID
+ * @param {string} eventId - ID of the event to delete
+ * @returns {Promise<Object>} Promise resolving to success response
+ */
+export const deleteEvent = async (eventId) => {
+  try {
+    // Validate eventId
+    if (!eventId) {
+      console.error('EventID is null or undefined');
+      throw new Error('Invalid event ID: Cannot be null or undefined');
+    }
+
+    console.log('deleteEvent called with eventId:', eventId, 'type:', typeof eventId);
+
+    const headers = await getHeaders();
+
+    // Add debugging information
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('API Base URL:', API_BASE_URL);
+    console.log('Full request URL:', `${API_BASE_URL}/events/${eventId}`);
+    console.log('Headers:', JSON.stringify(headers, null, 2));
+
+    // Make the API request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/${eventId}`, {
+        method: 'DELETE',
+        headers,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please log in again');
+        }
+
+        if (response.status === 404) {
+          throw new Error('Event not found or already deleted');
+        }
+
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Error response body:', errorText);
+
+          // Try to parse as JSON if possible
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(
+              errorData.errors?.join(', ') ||
+                errorData.message ||
+                `Server error: ${response.status} - ${response.statusText}`
+            );
+          } catch (parseError) {
+            // If not JSON, use text directly
+            throw new Error(
+              `Server error: ${response.status} - ${errorText || response.statusText}`
+            );
+          }
+        } catch (textError) {
+          if (textError !== errorText) throw textError;
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('Success response:', data);
+      return data;
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out - The server took too long to respond');
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('Failed to delete event:', error);
+    throw error;
+  }
+};

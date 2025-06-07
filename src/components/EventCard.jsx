@@ -1,8 +1,17 @@
 import React from 'react';
+import { Trash2 } from 'lucide-react';
 
-function EventCard({ task, onToggle, onSetGrade, isUpdating = false }) {
+function EventCard({
+  task,
+  onToggle,
+  onSetGrade,
+  onDelete,
+  isUpdating = false,
+  isDeleting = false,
+}) {
   const isCompletable = !task.isCompleted && typeof onToggle === 'function';
   const isGradable = task.isCompleted && typeof onSetGrade === 'function';
+  const isDeletable = typeof onDelete === 'function';
 
   // Format the due date
   const formatDate = (dateString) => {
@@ -44,7 +53,11 @@ function EventCard({ task, onToggle, onSetGrade, isUpdating = false }) {
 
       <div className="event-actions">
         {isCompletable && (
-          <button className="event-action-button" onClick={onToggle} disabled={isUpdating}>
+          <button
+            className="event-action-button"
+            onClick={onToggle}
+            disabled={isUpdating || isDeleting}
+          >
             {isUpdating ? 'Updating...' : 'Mark as Done'}
           </button>
         )}
@@ -62,9 +75,20 @@ function EventCard({ task, onToggle, onSetGrade, isUpdating = false }) {
               value={task.grade || ''}
               onChange={(e) => onSetGrade(task.id || task._id, e.target.value)}
               className="event-grade-input"
-              disabled={isUpdating}
+              disabled={isUpdating || isDeleting}
             />
           </div>
+        )}
+
+        {isDeletable && (
+          <button
+            className="event-delete-button"
+            onClick={() => onDelete(task.id || task._id)}
+            disabled={isUpdating || isDeleting}
+            title="Delete event"
+          >
+            {isDeleting ? 'Deleting...' : <Trash2 size={16} />}
+          </button>
         )}
       </div>
     </div>
