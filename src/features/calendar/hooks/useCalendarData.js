@@ -19,6 +19,7 @@ const getDateRangeForFetch = (date, monthsToFetch = 2) => {
 
 export function useCalendarData() {
   const [events, setEvents] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -29,12 +30,13 @@ export function useCalendarData() {
   useEffect(() => {
     console.log('Current calendar state:', {
       events,
+      classes,
       isLoading,
       error,
       currentDate: currentDate.toISOString(),
       fetchedRanges: fetchedDateRanges,
     });
-  }, [events, isLoading, error, currentDate, fetchedDateRanges]);
+  }, [events, classes, isLoading, error, currentDate, fetchedDateRanges]);
 
   const getHeaders = async () => {
     if (isProduction) {
@@ -178,41 +180,184 @@ export function useCalendarData() {
     [user, fetchedDateRanges]
   );
 
-  // Fetch events when the component mounts or when the user changes
+  const fetchClasses = useCallback(
+    async (date, abortController) => {
+      if (!user) return;
+
+      try {
+        const { from, to } = getDateRangeForFetch(date);
+        console.log('Fetching classes for date range:', { from, to });
+
+        const headers = await getHeaders();
+        console.log('Using headers for classes fetch:', headers);
+
+        // Fetch classes with course expansion
+        const url = `${API_BASE_URL}/classes?expand=course&from=${from}&to=${to}`;
+        console.log('Fetching classes from URL:', url);
+
+        const classesResponse = await fetch(url, {
+          method: 'GET',
+          headers,
+          signal: abortController.signal,
+        });
+
+        if (!classesResponse.ok) {
+          const errorText = await classesResponse.text();
+          console.error('🔍 Backend classes response:', errorText);
+          throw new Error(
+            `Failed to fetch classes: ${classesResponse.status} ${classesResponse.statusText}`
+          );
+        }
+
+        const classesData = await classesResponse.json();
+        console.log('Classes API Response:', classesData);
+
+        // Only update state if the component is still mounted
+        if (!abortController.signal.aborted) {
+          // Extract classes from the response, handling different possible structures
+          let newClasses = [];
+
+          if (classesData.classes && Array.isArray(classesData.classes)) {
+            // Standard format: { success: true, classes: [...] }
+            newClasses = classesData.classes;
+          } else if (Array.isArray(classesData)) {
+            // Direct array format: [...]
+            newClasses = classesData;
+          } else if (classesData.data && Array.isArray(classesData.data)) {
+            // Alternative format: { success: true, data: [...] }
+            newClasses = classesData.data;
+          } else {
+            console.warn('Unexpected API response format for classes:', classesData);
+            // Try to extract any array from the response
+            const possibleArrays = Object.values(classesData).filter((val) => Array.isArray(val));
+            if (possibleArrays.length > 0) {
+              // Use the first array found
+              newClasses = possibleArrays[0];
+              console.log('Extracted classes from response:', newClasses);
+            }
+          }
+
+          console.log('Extracted classes:', newClasses);
+
+          // Add new classes to the existing ones, avoiding duplicates
+          setClasses((prevClasses) => {
+            if (!Array.isArray(newClasses) || newClasses.length === 0) {
+              console.log('No new classes to add');
+              return prevClasses;
+            }
+
+            const existingClassIds = new Set(prevClasses.map((cls) => cls._id));
+            const uniqueNewClasses = newClasses.filter((cls) => {
+              const classId = cls._id || cls.id;
+              return classId && !existingClassIds.has(classId);
+            });
+
+            console.log('Unique new classes to add:', uniqueNewClasses);
+            return [...prevClasses, ...uniqueNewClasses];
+          });
+        }
+      } catch (err) {
+        // Only update error state if the error is not due to abort
+        if (err.name !== 'AbortError' && !abortController.signal.aborted) {
+          setError(err.message);
+          console.error('❌ Error fetching classes data:', err);
+        }
+      }
+    },
+    [user]
+  );
+
+  const fetchCalendarData = useCallback(
+    async (date) => {
+      if (!user) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      const { from, to } = getDateRangeForFetch(date);
+
+      // Check if we already have data for this range
+      if (isDateRangeAlreadyFetched(from, to)) {
+        console.log('Date range already fetched, skipping API calls');
+        setIsLoading(false);
+        return;
+      }
+
+      const abortController = new AbortController();
+
+      try {
+        // Fetch both events and classes concurrently
+        await Promise.all([
+          fetchEvents(date, abortController),
+          fetchClasses(date, abortController),
+        ]);
+
+        // Add this date range to our tracked ranges if not already done by fetchEvents
+        setFetchedDateRanges((prevRanges) => {
+          if (!prevRanges.some((range) => range.from === from && range.to === to)) {
+            return [...prevRanges, { from, to }];
+          }
+          return prevRanges;
+        });
+
+        setIsLoading(false);
+      } catch (err) {
+        if (err.name !== 'AbortError' && !abortController.signal.aborted) {
+          setError(err.message);
+          console.error('❌ Error fetching calendar data:', err);
+          setIsLoading(false);
+        }
+      }
+
+      // Return the cleanup function directly, not inside another function
+      return () => {
+        abortController.abort();
+      };
+    },
+    [user, fetchEvents, fetchClasses, fetchedDateRanges]
+  );
+
+  // Fetch events and classes when the component mounts or when the user changes
   useEffect(() => {
-    const abortController = new AbortController();
+    let cleanupFunction = () => {};
 
     if (!user) {
       // Reset state when user is not available
       setEvents([]);
+      setClasses([]);
       setError(null);
       setIsLoading(false);
-      return;
+      return cleanupFunction;
     }
 
-    fetchEvents(currentDate, abortController);
+    // Execute fetchCalendarData and store its cleanup function
+    fetchCalendarData(currentDate).then((cleanup) => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanupFunction = cleanup;
+      }
+    });
 
+    // Return cleanup function that will be called on unmount
     return () => {
-      abortController.abort();
+      if (typeof cleanupFunction === 'function') {
+        cleanupFunction();
+      }
     };
-  }, [user, currentDate, fetchEvents]);
+  }, [user, currentDate, fetchCalendarData]);
 
   // Function to update the current date and fetch events for new date range if needed
   const updateCurrentDate = (newDate) => {
     console.log('Updating current date:', newDate);
     setCurrentDate(newDate);
-    const abortController = new AbortController();
-    fetchEvents(newDate, abortController);
+    fetchCalendarData(newDate);
   };
 
   return {
     calendarEvents: events,
+    calendarClasses: classes,
     isLoading,
     error,
     updateCurrentDate,
-    refetch: () => {
-      const abortController = new AbortController();
-      fetchEvents(currentDate, abortController);
-    },
+    refetch: () => fetchCalendarData(currentDate),
   };
 }
