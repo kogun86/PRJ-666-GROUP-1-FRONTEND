@@ -2,24 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  User,
-  CalendarDays,
-  BookText,
-  ListTodo,
-  MoreHorizontal,
-  Target,
-  Calendar,
-  LogOut,
-} from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '../../events/utils/utils';
-import { Button } from '../../profile/components/button';
+import { User, CalendarDays, BookText, ListTodo, Target, Calendar, LogOut } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
+import { cn } from '../../events/utils/utils';
 
 export default function MobileNav() {
   const pathname = usePathname();
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const { logout } = useAuth();
 
   const navLinks = [
@@ -27,17 +15,9 @@ export default function MobileNav() {
     { name: 'Courses', path: '/courses', icon: BookText },
     { name: 'Events', path: '/events', icon: CalendarDays },
     { name: 'Todo', path: '/todo', icon: ListTodo },
-  ];
-
-  const moreLinks = [
     { name: 'Goals', path: '/goals', icon: Target },
     { name: 'Calendar', path: '/calendar', icon: Calendar },
-    { name: 'Logout', action: logout, icon: LogOut, className: 'more-menu-logout' },
   ];
-
-  const toggleMoreMenu = () => {
-    setMoreMenuOpen(!moreMenuOpen);
-  };
 
   return (
     <div className="mobile-nav">
@@ -55,37 +35,13 @@ export default function MobileNav() {
             </Link>
           );
         })}
-        <Button onClick={toggleMoreMenu} variant="ghost" className="mobile-nav-link">
-          <MoreHorizontal className="mobile-nav-icon" />
-          <span className="mobile-nav-text">More</span>
-        </Button>
+        <button onClick={logout} className={cn('mobile-nav-link')}>
+          <LogOut className="mobile-nav-icon" />
+          <span className="mobile-nav-text" style={{ color: '#a72f38' }}>
+            Logout
+          </span>
+        </button>
       </nav>
-
-      {moreMenuOpen && (
-        <div className="mobile-nav-more-menu">
-          {moreLinks.map((link) => {
-            const Icon = link.icon;
-            if (link.action) {
-              return (
-                <button key={link.name} onClick={link.action} className="w-full text-left">
-                  <div className={cn('more-menu-item', link.className)}>
-                    <Icon className="more-menu-icon" />
-                    <span>{link.name}</span>
-                  </div>
-                </button>
-              );
-            }
-            return (
-              <Link key={link.path} href={link.path}>
-                <div className={cn('more-menu-item', link.className)}>
-                  <Icon className="more-menu-icon" />
-                  <span>{link.name}</span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
