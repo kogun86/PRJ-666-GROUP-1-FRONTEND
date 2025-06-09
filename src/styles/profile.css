@@ -6,11 +6,16 @@
   padding: 1.5rem;
 }
 
-.profile-card {
-  background-color: #cad2c5;
+.profile-container .profile-card {
+  background-color: #cad2c5 !important;
   border-radius: 0.5rem;
   padding: 2rem;
   margin-bottom: 2rem;
+}
+
+/* Specific style for user profile card */
+.profile-user-card {
+  background-color: #cad2c5 !important;
 }
 
 .profile-title {

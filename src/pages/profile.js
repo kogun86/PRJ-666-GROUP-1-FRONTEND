@@ -184,7 +184,7 @@ function ProfileContent() {
   return (
     <div className="profile-container">
       {/* User Profile Card */}
-      <div className="profile-card">
+      <div className="profile-card profile-user-card">
         <div className="profile-header">
           <h1 className="profile-title">User Profile</h1>
         </div>
