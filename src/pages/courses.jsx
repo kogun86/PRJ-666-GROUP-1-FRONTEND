@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import CourseForm from '../components/CourseForm';
-import { useCourseSubmit, useClassDelete } from '@/features/courses';
+import { useCourseSubmit, useClassDelete, useCourseDeletion } from '@/features/courses';
 import { Auth } from '../features/auth/lib/amplifyClient';
 
 export default function CoursesPage() {
@@ -21,7 +21,18 @@ export default function CoursesPage() {
     resetState,
   } = useCourseSubmit();
 
-  const { deleteClass, isDeleting, error: deleteError, success: deleteSuccess } = useClassDelete();
+  const {
+    deleteClass,
+    isDeleting: isDeletingClass,
+    error: deleteClassError,
+    success: deleteClassSuccess,
+  } = useClassDelete();
+  const {
+    deleteCourse,
+    isDeleting: isDeletingCourse,
+    error: deleteCourseError,
+    success: deleteCourseSuccess,
+  } = useCourseDeletion();
 
   // Fetch courses and classes from the backend
   useEffect(() => {
@@ -48,10 +59,11 @@ export default function CoursesPage() {
         const courses = courseData.courses || [];
 
         const fetchedCourses = courses.map((course) => ({
+          _id: course._id, // Store the course ID for delete operations
           title: course.title,
           code: course.code,
           professor: course.instructor?.name,
-          color: '#cad2c5',
+          color: course.color || '#cad2c5',
           grade: 0,
           schedule: course.schedule.map((s) => ({
             time: `${secondsToTime(s.startTime)}–${secondsToTime(s.endTime)}`,
@@ -97,7 +109,7 @@ export default function CoursesPage() {
 
   // Refresh class data when a class is deleted successfully
   useEffect(() => {
-    if (deleteSuccess) {
+    if (deleteClassSuccess) {
       // Fetch classes again or just update local state
       const fetchCoursesAndClasses = async () => {
         try {
@@ -131,7 +143,51 @@ export default function CoursesPage() {
 
       fetchCoursesAndClasses();
     }
-  }, [deleteSuccess, myCourses]);
+  }, [deleteClassSuccess, myCourses]);
+
+  // Refresh course data when a course is deleted successfully
+  useEffect(() => {
+    if (deleteCourseSuccess) {
+      // Fetch courses again
+      const fetchCourses = async () => {
+        try {
+          const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+          const user = await Auth.getCurrentUser();
+          if (!user || !user.authorizationHeaders) {
+            throw new Error('You must be logged in to view courses.');
+          }
+
+          const headers = user.authorizationHeaders();
+          const courseRes = await fetch(`${API_BASE_URL}/v1/courses?active=true`, {
+            headers,
+          });
+          if (!courseRes.ok) {
+            throw new Error(`HTTP error! status: ${courseRes.status}`);
+          }
+          const courseData = await courseRes.json();
+          const courses = courseData.courses || [];
+
+          const fetchedCourses = courses.map((course) => ({
+            _id: course._id,
+            title: course.title,
+            code: course.code,
+            professor: course.instructor?.name,
+            color: course.color || '#cad2c5',
+            grade: 0,
+            schedule: course.schedule.map((s) => ({
+              time: `${secondsToTime(s.startTime)}–${secondsToTime(s.endTime)}`,
+              weekDay: getWeekday(s.weekday),
+            })),
+          }));
+          setMyCourses(fetchedCourses);
+        } catch (err) {
+          console.error('Failed to refresh courses after delete:', err.message);
+        }
+      };
+
+      fetchCourses();
+    }
+  }, [deleteCourseSuccess]);
 
   function transformClasses(classes, courses) {
     const courseMap = {};
@@ -214,6 +270,25 @@ export default function CoursesPage() {
         await deleteClass(classId);
       } catch (err) {
         console.error('Error deleting class:', err);
+      }
+    }
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    if (!courseId) {
+      console.error('No course ID provided for deletion');
+      return;
+    }
+
+    if (
+      window.confirm(
+        'Are you sure you want to delete this course? This will also delete all associated classes.'
+      )
+    ) {
+      try {
+        await deleteCourse(courseId);
+      } catch (err) {
+        console.error('Error deleting course:', err);
       }
     }
   };
@@ -342,9 +417,9 @@ export default function CoursesPage() {
                                 <button
                                   className="delete-class-button"
                                   onClick={() => handleDeleteClass(s.id)}
-                                  disabled={isDeleting}
+                                  disabled={isDeletingClass}
                                 >
-                                  {isDeleting ? '...' : '×'}
+                                  {isDeletingClass ? '...' : '×'}
                                 </button>
                               </div>
                               <h5 className="session-title">{s.title || s.code}</h5>
@@ -414,9 +489,10 @@ export default function CoursesPage() {
                               </button>
                               <button
                                 className="delete-course-button"
-                                onClick={() => setMyCourses((cs) => cs.filter((_, i) => i !== idx))}
+                                onClick={() => handleDeleteCourse(c._id)}
+                                disabled={isDeletingCourse}
                               >
-                                Delete
+                                {isDeletingCourse ? '...' : 'Delete'}
                               </button>
                             </div>
                             <div className="course-title-row">
