@@ -6,6 +6,7 @@ import { Settings, Plus, RefreshCw } from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
 import EventsLoading from './EventsLoading';
 import EventsError from './EventsError';
+import AIChatWindow from '../../../components/AIChatWindow';
 
 export default function Events() {
   const [activeTab, setActiveTab] = useState('home');
@@ -112,6 +113,8 @@ export default function Events() {
             )}
           </div>
         </div>
+        {/* AI Chat Window */}
+        <AIChatWindow />
       </div>
 
       {showForm && (

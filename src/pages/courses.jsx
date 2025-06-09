@@ -4,6 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import CourseForm from '../features/courses/components/CourseForm';
 import { useCourseSubmit, useClassDelete, useCourseDeletion } from '@/features/courses';
 import { Auth } from '../features/auth/lib/amplifyClient';
+import AIChatWindow from '../components/AIChatWindow';
 
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState('My Classes');
@@ -294,6 +295,12 @@ export default function CoursesPage() {
   function handleAdd() {
     setEditData(null);
     setEditIndex(null);
+
+    // If on Classes tab, switch to Courses tab before showing the form
+    if (activeTab === 'My Classes') {
+      setActiveTab('My Courses');
+    }
+
     setShowForm(true);
   }
 
@@ -583,6 +590,8 @@ export default function CoursesPage() {
             )}
           </div>
         </div>
+        {/* AI Chat Window */}
+        <AIChatWindow />
       </Layout>
     </ProtectedRoute>
   );
