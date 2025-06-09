@@ -189,6 +189,7 @@
   box-sizing: border-box;
   margin: 0 auto;
   align-items: center;
+  animation: slideInFromBottom 0.7s ease-out;
 }
 
 /* Tab styles moved to tabs.css */
