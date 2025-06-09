@@ -202,7 +202,7 @@
   position: relative;
   background-color: #fff;
   border-radius: 17px;
-  box-shadow: 0 10px 4px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 10px 4px rgba(0, 0, 0, 0.1); */
   padding: 1.25rem;
   margin-bottom: 16px;
   transition: all 0.2s ease;
@@ -210,17 +210,11 @@
   overflow: hidden;
   color: #333;
   min-height: 220px;
+  display: flex;
+  flex-direction: column;
 }
 
-.course-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5px;
-  height: 100%;
-  background-color: #52796f;
-}
+/* Removed default green left border as courses have their own color */
 
 .course-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -282,7 +276,7 @@
 
 /* Course grade styling */
 .course-grade {
-  margin-top: 1rem;
+  margin-top: auto !important; /* Use !important to ensure it stays at bottom */
   font-size: 0.9rem;
   padding: 8px;
   background-color: #f8f8f8;
@@ -827,6 +821,7 @@
 /* Course schedule */
 .course-schedule {
   margin-bottom: 1rem;
+  flex-grow: 1;
 }
 
 /* Schedule item */
