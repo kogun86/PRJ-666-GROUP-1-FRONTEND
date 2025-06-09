@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { convertToSeconds } from '../utils/timeUtils';
+import { convertToSeconds, convertToUTCSeconds } from '../utils/timeUtils';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -31,7 +31,7 @@ export function useCourseSubmit() {
         headers.Authorization = `Bearer ${idToken}`;
       }
 
-      // Ensure time fields are properly converted to seconds
+      // Ensure time fields are properly converted to UTC seconds
       const dataToSubmit = {
         ...formattedData,
         instructor: {
@@ -40,23 +40,53 @@ export function useCourseSubmit() {
             ...slot,
             startTime:
               typeof slot.startTime === 'string'
-                ? convertToSeconds(slot.startTime)
+                ? convertToUTCSeconds(slot.startTime, slot.weekday)
                 : slot.startTime,
             endTime:
-              typeof slot.endTime === 'string' ? convertToSeconds(slot.endTime) : slot.endTime,
+              typeof slot.endTime === 'string'
+                ? convertToUTCSeconds(slot.endTime, slot.weekday)
+                : slot.endTime,
           })),
         },
         schedule: formattedData.schedule.map((item) => ({
           ...item,
           startTime:
-            typeof item.startTime === 'string' ? convertToSeconds(item.startTime) : item.startTime,
-          endTime: typeof item.endTime === 'string' ? convertToSeconds(item.endTime) : item.endTime,
+            typeof item.startTime === 'string'
+              ? convertToUTCSeconds(item.startTime, item.weekday)
+              : item.startTime,
+          endTime:
+            typeof item.endTime === 'string'
+              ? convertToUTCSeconds(item.endTime, item.weekday)
+              : item.endTime,
         })),
       };
 
       console.log('📤 Submitting course to:', `${API_BASE_URL}/v1/courses`);
       console.log('🔐 Headers:', headers);
       console.log('📦 Data:', JSON.stringify(dataToSubmit, null, 2));
+
+      // Log the time conversion for debugging
+      if (formattedData.schedule && formattedData.schedule.length > 0) {
+        const firstSchedule = formattedData.schedule[0];
+        console.log('🕒 Time conversion example:', {
+          local: {
+            weekday: firstSchedule.weekday,
+            startTime: firstSchedule.startTime,
+            endTime: firstSchedule.endTime,
+          },
+          utc: {
+            weekday: firstSchedule.weekday,
+            startTime:
+              typeof firstSchedule.startTime === 'string'
+                ? convertToUTCSeconds(firstSchedule.startTime, firstSchedule.weekday)
+                : firstSchedule.startTime,
+            endTime:
+              typeof firstSchedule.endTime === 'string'
+                ? convertToUTCSeconds(firstSchedule.endTime, firstSchedule.weekday)
+                : firstSchedule.endTime,
+          },
+        });
+      }
 
       const response = await fetch(`${API_BASE_URL}/v1/courses`, {
         method: 'POST',

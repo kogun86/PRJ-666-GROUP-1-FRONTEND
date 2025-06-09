@@ -13,6 +13,41 @@ export function convertToSeconds(timeStr) {
 }
 
 /**
+ * Convert local time string in format "HH:MM" to UTC seconds
+ * @param {string} timeStr - Time string in format "HH:MM"
+ * @param {number} weekday - Day of the week (1-7, where 1 is Monday)
+ * @returns {number} - Time in seconds adjusted to UTC
+ */
+export function convertToUTCSeconds(timeStr, weekday) {
+  if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) {
+    console.error('❌ Invalid time format:', timeStr);
+    return 0;
+  }
+
+  // Parse the time string
+  const [hours, minutes] = timeStr.split(':').map(Number);
+
+  // Create a Date object for the current date with the specified time
+  const now = new Date();
+
+  // Calculate the date for the given weekday (0 = Sunday, 1 = Monday, etc.)
+  // Adjust weekday from 1-7 (Monday-Sunday) to 0-6 (Sunday-Saturday)
+  const targetWeekday = weekday % 7; // Convert 7 (Sunday in our system) to 0 (Sunday in JS)
+  const currentWeekday = now.getDay(); // 0-6 (Sunday-Saturday)
+  const daysToAdd = (targetWeekday - currentWeekday + 7) % 7;
+
+  const targetDate = new Date(now);
+  targetDate.setDate(now.getDate() + daysToAdd);
+  targetDate.setHours(hours, minutes, 0, 0);
+
+  // Get the UTC time in seconds since midnight
+  const utcHours = targetDate.getUTCHours();
+  const utcMinutes = targetDate.getUTCMinutes();
+
+  return utcHours * 3600 + utcMinutes * 60;
+}
+
+/**
  * Convert seconds to time string in format "HH:MM"
  * @param {number} seconds - Time in seconds
  * @returns {string} - Time string in format "HH:MM"

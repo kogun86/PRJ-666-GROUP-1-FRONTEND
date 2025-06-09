@@ -16,5 +16,11 @@ export { default as CoursesList } from './components/CoursesList';
 export { default as ClassesList } from './components/ClassesList';
 
 // Utilities
-export { convertToSeconds, secondsToTime, getWeekday, weekdayToIndex } from './utils/timeUtils';
+export {
+  convertToSeconds,
+  convertToUTCSeconds,
+  secondsToTime,
+  getWeekday,
+  weekdayToIndex,
+} from './utils/timeUtils';
 export { transformClasses } from './utils/classUtils';
