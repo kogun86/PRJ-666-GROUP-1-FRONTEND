@@ -7,10 +7,12 @@ export function useEventDelete() {
   const [success, setSuccess] = useState(false);
 
   const deleteEventById = async (eventId) => {
-    try {
-      setIsDeleting(true);
-      setError(null);
+    console.log('🗑️ Starting event deletion for ID:', eventId);
+    setIsDeleting(true);
+    setError(null);
+    setSuccess(false); // Reset success state at the beginning
 
+    try {
       // Validate eventId
       if (!eventId) {
         console.error('EventID is null or undefined');
@@ -22,15 +24,19 @@ export function useEventDelete() {
       // Call the API to delete the event
       await deleteEvent(eventId);
 
-      console.log('Event deleted successfully:', eventId);
+      console.log('🗑️ Event deleted successfully:', eventId);
       setSuccess(true);
       return { success: true };
     } catch (err) {
       console.error('Failed to delete event:', err);
       setError(err.message || 'Failed to delete event');
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'Failed to delete event' };
     } finally {
       setIsDeleting(false);
+      console.log(
+        '🗑️ Event deletion process complete, isDeleting set to false, success state:',
+        success
+      );
     }
   };
 
@@ -52,6 +58,7 @@ export function useEventDelete() {
     error,
     success,
     resetState: () => {
+      console.log('🔄 Resetting event deletion state');
       setError(null);
       setSuccess(false);
     },

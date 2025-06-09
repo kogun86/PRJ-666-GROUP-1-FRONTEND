@@ -269,6 +269,8 @@ export const useEvents = () => {
       // Call the API to delete the event
       await deleteEvent(eventId);
 
+      console.log('Event deleted successfully, updating UI');
+
       // Remove the event from both pending and completed events
       setPendingEvents(
         pendingEvents.filter((event) => event._id !== eventId && event.id !== eventId)
@@ -277,6 +279,9 @@ export const useEvents = () => {
       setCompletedEvents(
         completedEvents.filter((event) => event._id !== eventId && event.id !== eventId)
       );
+
+      // Force refresh of both pending and completed events to ensure UI is up to date
+      await Promise.all([fetchPending(), fetchCompleted()]);
 
       return true;
     } catch (err) {

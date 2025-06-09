@@ -29,12 +29,14 @@ export default function CoursesContainer() {
     deleteClass,
     isDeleting: isDeletingClass,
     success: deleteClassSuccess,
+    resetState: resetClassDeleteState,
   } = useClassDelete();
 
   const {
     deleteCourse,
     isDeleting: isDeletingCourse,
     success: deleteCourseSuccess,
+    resetState: resetCourseDeletionState,
   } = useCourseDeletion();
 
   // Reset the submit state when the form is closed
@@ -55,15 +57,19 @@ export default function CoursesContainer() {
   useEffect(() => {
     if (deleteClassSuccess) {
       refreshClasses();
+      // Reset the success state after refreshing to prevent multiple refreshes
+      resetClassDeleteState();
     }
-  }, [deleteClassSuccess, refreshClasses]);
+  }, [deleteClassSuccess, refreshClasses, resetClassDeleteState]);
 
   // Refresh course data when a course is deleted successfully
   useEffect(() => {
     if (deleteCourseSuccess) {
       refreshCourses();
+      // Reset the success state after refreshing to prevent multiple refreshes
+      resetCourseDeletionState();
     }
-  }, [deleteCourseSuccess, refreshCourses]);
+  }, [deleteCourseSuccess, refreshCourses, resetCourseDeletionState]);
 
   function handleAdd() {
     setEditData(null);
@@ -83,12 +89,20 @@ export default function CoursesContainer() {
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete this class?')) {
-      try {
-        await deleteClass(classId);
-      } catch (err) {
-        console.error('Error deleting class:', err);
+    try {
+      const result = await deleteClass(classId);
+
+      if (!result.success && result.error) {
+        // Show error message to user
+        console.error('Error deleting class:', result.error);
+        alert(`Failed to delete class: ${result.error}`);
+      } else if (result.success) {
+        console.log('Class deleted successfully');
+        // The success state is already set in the hook, which will trigger the useEffect to refresh
       }
+    } catch (err) {
+      console.error('Exception during class deletion:', err);
+      alert(`An error occurred: ${err.message}`);
     }
   };
 
@@ -98,16 +112,20 @@ export default function CoursesContainer() {
       return;
     }
 
-    if (
-      window.confirm(
-        'Are you sure you want to delete this course? This will also delete all associated classes.'
-      )
-    ) {
-      try {
-        await deleteCourse(courseId);
-      } catch (err) {
-        console.error('Error deleting course:', err);
+    try {
+      const result = await deleteCourse(courseId);
+
+      if (!result.success && result.error) {
+        // Show error message to user
+        console.error('Error deleting course:', result.error);
+        alert(`Failed to delete course: ${result.error}`);
+      } else if (result.success) {
+        console.log('Course deleted successfully');
+        // The success state is already set in the hook, which will trigger the useEffect to refresh
       }
+    } catch (err) {
+      console.error('Exception during course deletion:', err);
+      alert(`An error occurred: ${err.message}`);
     }
   };
 

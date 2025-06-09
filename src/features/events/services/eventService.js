@@ -605,12 +605,40 @@ export const deleteEvent = async (eventId) => {
       console.log('Response status text:', response.statusText);
 
       if (!response.ok) {
+        // Special handling for 500 errors
+        if (response.status === 500) {
+          console.error('Server returned 500 error');
+
+          try {
+            // Try to parse the error response
+            const errorText = await response.text();
+            console.error('Error response body:', errorText);
+
+            try {
+              // Try to parse as JSON
+              const errorData = JSON.parse(errorText);
+              throw new Error(
+                errorData.errors?.join(', ') ||
+                  errorData.message ||
+                  'Internal server error occurred. The server team has been notified.'
+              );
+            } catch (jsonError) {
+              // If not valid JSON
+              throw new Error('Internal server error occurred. The server team has been notified.');
+            }
+          } catch (textError) {
+            // If we can't even get the response text
+            throw new Error('Internal server error occurred. The server team has been notified.');
+          }
+        }
+
         if (response.status === 401) {
           throw new Error('Unauthorized - Please log in again');
         }
 
         if (response.status === 404) {
-          throw new Error('Event not found or already deleted');
+          console.log('Event not found or already deleted - treating as success');
+          return { success: true, message: 'Event not found or already deleted' };
         }
 
         let errorText = '';
@@ -640,7 +668,7 @@ export const deleteEvent = async (eventId) => {
 
       const data = await response.json();
       console.log('Success response:', data);
-      return data;
+      return { success: true, data };
     } catch (fetchError) {
       if (fetchError.name === 'AbortError') {
         throw new Error('Request timed out - The server took too long to respond');

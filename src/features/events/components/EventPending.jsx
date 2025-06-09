@@ -52,9 +52,16 @@ function EventsPending({ groups }) {
 
     setDeletingEventId(eventId);
     try {
-      await deleteEventById(eventId);
+      const result = await deleteEventById(eventId);
+      if (!result) {
+        console.error('Failed to delete event');
+        alert('Failed to delete event. Please try again.');
+      } else {
+        console.log('Event deleted successfully');
+      }
     } catch (error) {
-      console.error('Failed to delete event:', error);
+      console.error('Error during event deletion:', error);
+      alert(`An error occurred: ${error.message}`);
     } finally {
       setDeletingEventId(null);
     }

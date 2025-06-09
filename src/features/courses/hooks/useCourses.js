@@ -134,6 +134,7 @@ export function useCourses() {
   // Refresh course data after a course is deleted or added
   const refreshCourses = async () => {
     try {
+      console.log('🔄 Starting course refresh');
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
       let headers;
@@ -163,6 +164,14 @@ export function useCourses() {
       console.log('🔄 Refreshed courses data:', courseData);
       const courses = courseData.courses || [];
 
+      // Check if the courses array is the same as the current state to prevent unnecessary updates
+      if (
+        JSON.stringify(courses.map((c) => c._id)) === JSON.stringify(myCourses.map((c) => c._id))
+      ) {
+        console.log('🔄 Course IDs unchanged, skipping update');
+        return;
+      }
+
       const fetchedCourses = courses.map((course) => ({
         _id: course._id,
         title: course.title,
@@ -176,7 +185,9 @@ export function useCourses() {
           weekDay: getWeekday(s.weekday),
         })),
       }));
+      console.log('🔄 Setting myCourses with new data:', fetchedCourses);
       setMyCourses(fetchedCourses);
+      console.log('🔄 Course refresh complete');
     } catch (err) {
       console.error('Failed to refresh courses after delete:', err.message);
     }
