@@ -1,8 +1,16 @@
 /*  White thing in the background removed! */
+.courses-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
+}
+
 .courses-container .profile-card {
   background-color: #84a98c !important; /* Match profile-card from profile.css */
   box-shadow: none !important;
-  border-radius: 2rem; /* Match profile-card from profile.css */
+  /* Match profile-card from profile.css */
 }
 
 .courses-title {
@@ -17,10 +25,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 1.5rem auto;
+  margin: 0 auto 1.5rem;
   background-color: #2f3e46;
   padding: 0.5rem;
-  border-radius: 50px;
+  border-radius: 0.75rem;
   gap: 1rem;
   width: 100%;
 }
@@ -29,7 +37,7 @@
   flex: 1;
   text-align: center;
   padding: 0.75rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -52,7 +60,7 @@
 .add-course-row {
   display: flex;
   justify-content: center;
-  margin: 1rem 0 1.5rem;
+  margin: 0 0 1rem;
 }
 
 .add-course-button {
@@ -73,9 +81,11 @@
 
 /*  content wrapping into two columns  */
 .courses-container .profile-content {
+  margin-top: 1rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.25rem;
+  width: 100%;
 }
 
 /*  MY CLASSES styles  */
@@ -85,6 +95,7 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
 }
 
 .class-group-title {
@@ -98,50 +109,44 @@
 
 .session-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Multiple cards in a row */
   gap: 1.25rem;
   padding: 1rem;
+  width: 100%;
 }
 
 .session-card {
-  opacity: 0.85;
-  background: #f8f8f8;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 1.5rem;
+  opacity: 0.95;
+  background: #fff;
+  border-radius: 17px;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: all 0.2s ease;
   min-height: 220px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
-  color: #2c3e50;
+  color: #333;
+  margin-bottom: 16px;
 }
 
-.session-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 5px;
-  background-color: #52796f;
-}
+/* Removed top border in favor of left border */
 
 .session-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-7px);
 }
 
 .session-title {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-  font-size: clamp(1.1rem, 1.5vw, 1.25rem);
+  margin: 0;
+  font-size: 1.1rem;
   font-weight: 600;
-  line-height: 1.3;
+  color: #333;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 70%;
+  margin-bottom: 0.75rem;
 }
 
 .session-card--light-text {
@@ -568,9 +573,12 @@
   }
 
   .courses-container .profile-content,
-  .session-container,
   .courses-list {
     grid-template-columns: 1fr;
+  }
+
+  .session-container {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 1-2 cards per row on mobile */
   }
 
   .tabs-bar .profile-button {
@@ -579,23 +587,37 @@
   }
 }
 
-/* Medium screens: 2 columns */
+/* Medium screens: 2 columns for courses only */
 @media (min-width: 769px) and (max-width: 1199px) {
-  .session-container,
   .courses-list {
     grid-template-columns: repeat(2, 1fr);
   }
-}
 
-/* Large screens: 3 columns */
-@media (min-width: 1200px) {
-  .session-container,
-  .courses-list {
-    grid-template-columns: repeat(3, 1fr);
+  .class-group {
+    grid-column: 1 / -1; /* Make class group span full width */
+  }
+
+  .session-container {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* 3-4 cards per row */
   }
 }
 
-/* DISTINCT BACKGROUNDS FOR VISUAL SEPARATION */
+/* Large screens: 3 columns for courses only */
+@media (min-width: 1200px) {
+  .courses-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .class-group {
+    grid-column: 1 / -1; /* Make class group span full width */
+  }
+
+  .session-container {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* 5+ cards per row */
+  }
+}
+
+/* CONSISTENT STYLING FOR CARDS */
 
 /* Courses (yellow-ish background) */
 .course-card {
@@ -603,10 +625,11 @@
   color: #212529 !important; /* dark readable text */
 }
 
-/* Classes (blue-ish background) */
+/* Classes (same yellow background as courses) */
 .session-card {
-  background-color: #d1ecf1 !important; /* pastel cyan */
-  color: #0c5460 !important; /* deep blue text */
+  background-color: #fff3cd !important; /* pastel yellow */
+  color: #212529 !important; /* dark readable text */
+  border-left: 5px solid #52796f; /* Left border for session cards */
 }
 
 .form-input,
@@ -718,13 +741,7 @@
   display: inline-block;
 }
 
-/* Session title styling */
-.session-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: #cad2c5;
-}
+/* Session title styling - already defined above */
 
 /* Loading indicator */
 .courses-container .loading-indicator {
@@ -787,6 +804,7 @@
   color: #555;
   line-height: 1.5;
   margin: 0.5rem 0;
+  flex-grow: 1;
 }
 
 .session-details div {

@@ -432,7 +432,7 @@ export default function CoursesPage() {
               ))}
             </div>
 
-            {activeTab === 'My Courses' && !showForm && (
+            {!showForm && (
               <div className="add-course-row">
                 <button className="button button-primary add-course-button" onClick={handleAdd}>
                   + Add Course

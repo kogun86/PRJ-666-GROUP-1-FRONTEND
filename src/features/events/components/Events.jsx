@@ -69,55 +69,50 @@ export default function Events() {
   return (
     <>
       <div className="events-tabs-container">
-        <div className="events-tabs-header">
-          <button
-            onClick={() => handleTabChange('home')}
-            className={`events-tab-button ${activeTab === 'home' ? 'events-tab-active' : 'events-tab-inactive'}`}
-          >
-            My Events
-          </button>
-          <button
-            onClick={() => handleTabChange('completed')}
-            className={`events-tab-button ${activeTab === 'completed' ? 'events-tab-active' : 'events-tab-inactive'}`}
-          >
-            Completed Events
-          </button>
-        </div>
+        <div className="profile-card">
+          <div className="events-tabs-header">
+            <button
+              onClick={() => handleTabChange('home')}
+              className={`events-tab-button ${activeTab === 'home' ? 'events-tab-active' : 'events-tab-inactive'}`}
+            >
+              My Events
+            </button>
+            <button
+              onClick={() => handleTabChange('completed')}
+              className={`events-tab-button ${activeTab === 'completed' ? 'events-tab-active' : 'events-tab-inactive'}`}
+            >
+              Completed Events
+            </button>
+          </div>
 
-        <div className="events-tab-content" hidden={activeTab !== 'home'}>
-          {refreshing ? (
-            <div className="loading-indicator">Refreshing events...</div>
-          ) : (
-            <EventPending groups={pendingGroups} />
+          {!showForm && (
+            <div className="add-course-row">
+              <button
+                className="button button-primary add-course-button"
+                onClick={() => setShowForm(true)}
+              >
+                + Add Event
+              </button>
+            </div>
           )}
-        </div>
 
-        <div className="events-tab-content" hidden={activeTab !== 'completed'}>
-          {refreshing ? (
-            <div className="loading-indicator">Refreshing events...</div>
-          ) : (
-            <EventCompleted groups={completedGroups} />
-          )}
+          <div className="events-tab-content" hidden={activeTab !== 'home'}>
+            {refreshing ? (
+              <div className="loading-indicator">Refreshing events...</div>
+            ) : (
+              <EventPending groups={pendingGroups} />
+            )}
+          </div>
+
+          <div className="events-tab-content" hidden={activeTab !== 'completed'}>
+            {refreshing ? (
+              <div className="loading-indicator">Refreshing events...</div>
+            ) : (
+              <EventCompleted groups={completedGroups} />
+            )}
+          </div>
         </div>
       </div>
-
-      {activeTab === 'home' && (
-        <div className="events-icon-bar">
-          <button onClick={() => setShowForm(true)} title="Add new event">
-            <Plus size={20} />
-          </button>
-          <button
-            onClick={activeTab === 'home' ? handleFetchPending : handleFetchCompleted}
-            title="Refresh events"
-            disabled={refreshing}
-          >
-            <RefreshCw size={20} className={refreshing ? 'icon-spin' : ''} />
-          </button>
-          <button title="Settings">
-            <Settings size={20} />
-          </button>
-        </div>
-      )}
 
       {showForm && (
         <div className="modal-overlay">
