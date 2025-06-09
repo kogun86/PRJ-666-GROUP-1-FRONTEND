@@ -17,7 +17,7 @@ import CalendarDebug from './CalendarDebug';
 import EventModal from './EventModal';
 
 // Import utilities
-import { transformEvents } from '../utils/eventUtils';
+import { transformEvents, transformClasses, combineCalendarItems } from '../utils/eventUtils';
 
 export default function Calendar() {
   const mounted = useRef(true);
@@ -27,12 +27,14 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { calendarEvents, isLoading, error, updateCurrentDate } = useCalendarData();
+  const { calendarEvents, calendarClasses, isLoading, error, updateCurrentDate } =
+    useCalendarData();
 
   // Debug logging
   useEffect(() => {
     console.log('Raw calendar events from API:', calendarEvents);
-  }, [calendarEvents]);
+    console.log('Raw calendar classes from API:', calendarClasses);
+  }, [calendarEvents, calendarClasses]);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -81,13 +83,17 @@ export default function Calendar() {
     };
   }, []);
 
-  // Transform events for FullCalendar format
+  // Transform events and classes for FullCalendar format
   const transformedEvents = transformEvents(calendarEvents);
+  const transformedClasses = transformClasses(calendarClasses);
+  const combinedCalendarItems = combineCalendarItems(transformedEvents, transformedClasses);
 
   // Debug logging
   useEffect(() => {
     console.log('Transformed events for FullCalendar:', transformedEvents);
-  }, [transformedEvents]);
+    console.log('Transformed classes for FullCalendar:', transformedClasses);
+    console.log('Combined calendar items:', combinedCalendarItems);
+  }, [transformedEvents, transformedClasses, combinedCalendarItems]);
 
   // Switch view mode
   const switchToMonthly = () => {
@@ -171,27 +177,41 @@ export default function Calendar() {
   // Handle event click
   const handleEventClick = (info) => {
     if (mounted.current) {
-      console.log('Event clicked:', info.event);
+      console.log('Calendar item clicked:', info.event);
 
-      // Get the original event from extendedProps
-      const originalEvent = info.event.extendedProps.originalEvent;
+      // Check if this is a class or an event
+      const isClass = info.event.extendedProps.type === 'class';
 
-      if (originalEvent) {
-        console.log('Setting selected event:', originalEvent);
-        setSelectedEvent(originalEvent);
-      } else {
-        // Fallback to searching by ID
-        const eventId = info.event.id;
-        const foundEvent = calendarEvents.find((event) => {
-          const id = event._id || event.id;
-          return id === eventId;
+      if (isClass) {
+        const originalClass = info.event.extendedProps.originalClass;
+        console.log('Setting selected class:', originalClass);
+        setSelectedEvent({
+          ...originalClass,
+          isClass: true, // Flag to identify this as a class for the modal
+          title: info.event.title,
+          color: info.event.backgroundColor,
         });
+      } else {
+        // Get the original event from extendedProps
+        const originalEvent = info.event.extendedProps.originalEvent;
 
-        if (foundEvent) {
-          console.log('Found event by ID search:', foundEvent);
-          setSelectedEvent(foundEvent);
+        if (originalEvent) {
+          console.log('Setting selected event:', originalEvent);
+          setSelectedEvent(originalEvent);
         } else {
-          console.warn('Could not find original event for:', info.event);
+          // Fallback to searching by ID
+          const eventId = info.event.id;
+          const foundEvent = calendarEvents.find((event) => {
+            const id = event._id || event.id;
+            return id === eventId;
+          });
+
+          if (foundEvent) {
+            console.log('Found event by ID search:', foundEvent);
+            setSelectedEvent(foundEvent);
+          } else {
+            console.warn('Could not find original event for:', info.event);
+          }
         }
       }
     }
@@ -224,54 +244,71 @@ export default function Calendar() {
 
   // Setup tooltips for events
   const handleEventMount = (info) => {
-    console.log('Event mounted:', info.event);
-
     const { event } = info;
-    const { type, courseID, description, weight, grade, isCompleted, location } =
-      event.extendedProps;
 
-    let tooltipContent = `
-      <div class="event-tooltip">
-        <h4>${event.title}</h4>
-    `;
+    // Get the type of the calendar item (event or class)
+    const itemType = event.extendedProps.type;
 
-    if (event.start && event.end && !event.allDay) {
-      tooltipContent += `
-        <p><strong>Time:</strong> ${event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-        ${event.end ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
+    // Create tooltip content based on the type
+    let tooltipContent = '';
+
+    if (itemType === 'class') {
+      // Class tooltip
+      const courseTitle = event.extendedProps.courseTitle || '';
+      const location = event.extendedProps.location || 'Location not specified';
+      const classType = event.extendedProps.classType || 'Class';
+      const topics =
+        event.extendedProps.topics && event.extendedProps.topics.length > 0
+          ? `<br><strong>Topics:</strong> ${event.extendedProps.topics.join(', ')}`
+          : '';
+
+      tooltipContent = `
+        <div class="event-tooltip">
+          <h4>${event.title}</h4>
+          ${courseTitle ? `<p>${courseTitle}</p>` : ''}
+          <p><strong>${classType}</strong></p>
+          <p><strong>Location:</strong> ${location}</p>
+          <p><strong>Time:</strong> ${formatTime(event.start)} - ${formatTime(event.end)}</p>
+          ${topics}
+        </div>
+      `;
+    } else {
+      // Regular event tooltip
+      const description = event.extendedProps.description || 'No description';
+      const location = event.extendedProps.location || 'Location not specified';
+
+      tooltipContent = `
+        <div class="event-tooltip">
+          <h4>${event.title}</h4>
+          <p>${description}</p>
+          <p><strong>Location:</strong> ${location}</p>
+          <p><strong>Time:</strong> ${formatTime(event.start)} - ${formatTime(event.end)}</p>
+        </div>
       `;
     }
 
-    tooltipContent += `
-      <p><strong>Type:</strong> ${type ? type.charAt(0).toUpperCase() + type.slice(1) : 'N/A'}</p>
-      ${courseID ? `<p><strong>Course ID:</strong> ${courseID}</p>` : ''}
-    `;
-
-    if (weight !== undefined) {
-      tooltipContent += `<p><strong>Weight:</strong> ${weight}%</p>`;
+    // Create the tooltip
+    if (info.el) {
+      tippy(info.el, {
+        content: tooltipContent,
+        allowHTML: true,
+        theme: 'light',
+        placement: 'top',
+        arrow: true,
+        interactive: true,
+        appendTo: document.body,
+      });
     }
+  };
 
-    if (isCompleted && grade !== undefined) {
-      tooltipContent += `<p><strong>Grade:</strong> ${grade}%</p>`;
-    }
+  // Helper function to format time for tooltips
+  const formatTime = (date) => {
+    if (!date) return 'N/A';
 
-    if (location) {
-      tooltipContent += `<p><strong>Location:</strong> ${location}</p>`;
-    }
-
-    tooltipContent += `
-      ${description ? `<p><strong>Description:</strong> ${description}</p>` : ''}
-      </div>
-    `;
-
-    tippy(info.el, {
-      content: tooltipContent,
-      allowHTML: true,
-      theme: 'light',
-      placement: 'top',
-      arrow: true,
-      interactive: true,
-      appendTo: document.body,
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
     });
   };
 
@@ -299,7 +336,11 @@ export default function Calendar() {
         {error && <CalendarError error={error} />}
 
         {/* Debug Info */}
-        <CalendarDebug events={calendarEvents} transformedEvents={transformedEvents} />
+        <CalendarDebug
+          events={calendarEvents}
+          classes={calendarClasses}
+          transformedEvents={combinedCalendarItems}
+        />
 
         {/* FullCalendar Component */}
         {!isLoading && !error && (
@@ -309,7 +350,7 @@ export default function Calendar() {
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
               initialView={isMobile ? 'listMonth' : viewMode}
               headerToolbar={false} // We're using our custom header
-              events={transformedEvents}
+              events={combinedCalendarItems}
               eventClick={handleEventClick}
               dateClick={handleDateClick}
               eventDidMount={handleEventMount}
@@ -317,11 +358,11 @@ export default function Calendar() {
               height="auto"
               dayMaxEvents={true} // Allow "more" link when too many events
               slotMinTime="08:00:00" // Start time for week view - adjusted to show early classes
-              slotMaxTime="16:00:00" // End time for week view - expanded to show later classes
+              slotMaxTime="22:00:00" // End time for week view - expanded to show later classes
               allDaySlot={false} // Hide all-day slot in week view
               weekends={true} // Show weekends
               firstDay={0} // Start week on Sunday (0) to match your current implementation
-              timeZone="UTC" // CRITICAL: Use UTC timezone for display
+              timeZone="local" // Changed from "UTC" to "local" to correctly display times
               views={{
                 dayGridMonth: {
                   dayMaxEventRows: 3, // Limit number of events per day in month view

@@ -73,6 +73,16 @@ export function transformEvents(calendarEvents) {
       start = new Date(startDate);
       end = new Date(endDate);
 
+      // Convert UTC dates to local time zone
+      if (!isNaN(start.getTime())) {
+        // The date is already in the user's local timezone by default when creating a new Date
+        // We don't need to do additional conversion as the browser handles this automatically
+        console.log(`Event ${index} converted to local time:`, {
+          startUTC: startDate,
+          startLocal: start.toLocaleString(),
+        });
+      }
+
       console.log(`Event ${index} parsed dates:`, {
         startInput: startDate,
         endInput: endDate,
@@ -132,6 +142,160 @@ export function transformEvents(calendarEvents) {
 
   console.log('Final transformed events:', transformed);
   return transformed;
+}
+
+/**
+ * Transform classes for FullCalendar format
+ * @param {Array} calendarClasses - Raw calendar classes from API
+ * @returns {Array} - Transformed classes for FullCalendar
+ */
+export function transformClasses(calendarClasses) {
+  console.log('transformClasses input:', calendarClasses);
+
+  if (!calendarClasses || !Array.isArray(calendarClasses)) {
+    console.warn('Invalid calendarClasses provided:', calendarClasses);
+    return [];
+  }
+
+  if (calendarClasses.length === 0) {
+    console.log('No classes to transform');
+    return [];
+  }
+
+  const transformed = calendarClasses.map((classObj, index) => {
+    console.log(`Processing class ${index}:`, classObj);
+
+    // Extract ID - use _id or id, whichever is available
+    const classId = classObj._id || classObj.id;
+    if (!classId) {
+      console.warn('Class missing ID:', classObj);
+    }
+
+    // Extract dates
+    let startDate = classObj.startTime;
+    let endDate = classObj.endTime;
+
+    if (!startDate) {
+      console.warn('Class missing start date:', classObj);
+    }
+
+    // Extract course info and color
+    let title = `${classObj.classType || 'Class'}`;
+    let backgroundColor = '#52796f'; // Default color for classes
+    let courseInfo = null;
+
+    // Extract course information if available (from expanded course)
+    if (classObj.courseId && typeof classObj.courseId === 'object') {
+      courseInfo = classObj.courseId;
+
+      // Update title with course info if available
+      if (courseInfo.code) {
+        title = `${courseInfo.code} - ${title}`;
+      }
+
+      // Use course color if available
+      if (courseInfo.color) {
+        backgroundColor = courseInfo.color;
+      }
+
+      // If there are topics for this class, add the first one to the title
+      if (classObj.topics && classObj.topics.length > 0) {
+        title += `: ${classObj.topics[0]}`;
+      }
+    }
+
+    const borderColor = darkenColor(backgroundColor, 10);
+
+    // Parse dates from the API response
+    let start, end;
+
+    try {
+      // Parse the start and end dates from ISO strings
+      start = new Date(startDate);
+      end = new Date(endDate);
+
+      // Convert UTC dates to local time zone
+      if (!isNaN(start.getTime())) {
+        // The date is already in the user's local timezone by default when creating a new Date
+        // We don't need to do additional conversion as the browser handles this automatically
+        console.log(`Class ${index} converted to local time:`, {
+          startUTC: startDate,
+          startLocal: start.toLocaleString(),
+        });
+      }
+
+      console.log(`Class ${index} parsed dates:`, {
+        startInput: startDate,
+        endInput: endDate,
+        startParsed: start,
+        endParsed: end,
+      });
+
+      // Validate that we have valid dates
+      if (isNaN(start.getTime())) {
+        console.error(`Class ${index} has invalid start date:`, startDate);
+        throw new Error('Invalid start date');
+      }
+
+      if (isNaN(end.getTime())) {
+        console.warn(`Class ${index} has invalid end date, using start + 1 hour:`, endDate);
+        // If end date is invalid, set it to start + 1 hour
+        end = new Date(start);
+        end.setHours(end.getHours() + 1);
+      }
+    } catch (error) {
+      console.error('Error parsing class dates:', error, classObj);
+      // Provide fallback dates if parsing fails
+      start = new Date();
+      end = new Date();
+      end.setHours(end.getHours() + 1);
+      console.log(`Using fallback dates for class ${index}:`, { start, end });
+    }
+
+    // Final class object for FullCalendar
+    const transformedClass = {
+      id: `class-${classId}`, // Prefix with 'class-' to distinguish from events
+      title: title || 'Class',
+      start: start,
+      end: end,
+      allDay: false, // Classes are never all-day events
+      backgroundColor,
+      borderColor,
+      display: 'block',
+      className: `class-${classObj.classType || 'default'}`,
+      extendedProps: {
+        type: 'class', // Mark as class type
+        classType: classObj.classType,
+        courseID: courseInfo ? courseInfo._id || courseInfo.id : null,
+        courseCode: courseInfo ? courseInfo.code : null,
+        courseTitle: courseInfo ? courseInfo.title : null,
+        topics: classObj.topics,
+        location:
+          courseInfo && courseInfo.schedule
+            ? courseInfo.schedule.find((s) => s.classType === classObj.classType)?.location
+            : null,
+        // Store original class for reference
+        originalClass: classObj,
+      },
+    };
+
+    console.log(`Transformed class ${index}:`, transformedClass);
+    return transformedClass;
+  });
+
+  console.log('Final transformed classes:', transformed);
+  return transformed;
+}
+
+/**
+ * Combine transformed events and classes for display
+ * @param {Array} events - Transformed events
+ * @param {Array} classes - Transformed classes
+ * @returns {Array} - Combined array for calendar display
+ */
+export function combineCalendarItems(events = [], classes = []) {
+  console.log(`Combining ${events.length} events and ${classes.length} classes`);
+  return [...events, ...classes];
 }
 
 /**
