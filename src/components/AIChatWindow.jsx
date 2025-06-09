@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from '../styles/AIChatWindow.module.css';
 import { useAuth } from '@/features/auth';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import Lottie from 'lottie-react';
+import chatAnimation from '../assets/animations/chat.json';
 
 // Define API base URL based on environment
 const API_BASE_URL =
@@ -179,9 +181,21 @@ const AIChatWindow = () => {
   return (
     <div className={styles.container}>
       {!isOpen && (
-        <button className={styles.button} onClick={() => setIsOpen(true)}>
-          <span className={styles.icon}>💬</span>
-        </button>
+        <div className={styles.animationButton} onClick={() => setIsOpen(true)}>
+          <Lottie
+            animationData={chatAnimation}
+            loop={true}
+            style={{
+              transform: 'scaleX(-1)',
+              width: 80,
+              height: 80,
+            }}
+            rendererSettings={{
+              preserveAspectRatio: 'xMidYMid slice',
+              clearCanvas: true,
+            }}
+          />
+        </div>
       )}
 
       {isOpen && (
@@ -217,10 +231,20 @@ const AIChatWindow = () => {
                 {isLoading && (
                   <div className={`${styles.message} ${styles.aiMessage}`}>
                     <div className={styles.messageContent}>
-                      <div className={styles.loadingDots}>
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                      <div className={styles.loadingAnimation}>
+                        <Lottie
+                          animationData={chatAnimation}
+                          loop={true}
+                          style={{
+                            transform: 'scaleX(-1)',
+                            width: 90,
+                            height: 90,
+                          }}
+                          rendererSettings={{
+                            preserveAspectRatio: 'xMidYMid slice',
+                            clearCanvas: true,
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
