@@ -8,6 +8,7 @@ import '../styles/events.css';
 import '../styles/auth.css';
 import '../styles/notfound.css';
 import '../styles/calendar.css';
+import '../styles/modal.css';
 import '../features/auth/lib/amplifyClient';
 import { AuthProvider } from '../features/auth';
 

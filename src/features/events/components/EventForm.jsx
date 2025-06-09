@@ -40,27 +40,27 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
   return (
     <form className="event-form" onSubmit={handleSubmit(processFormData)}>
       {/* Title */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="title">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="title">
           Title
         </label>
         <input
           id="title"
           {...register('title', { required: 'Title is required' })}
-          className="form-input"
+          className="modal-input"
         />
         {errors.title && <div className="error-message">{errors.title.message}</div>}
       </div>
 
       {/* Course */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="courseID">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="courseID">
           Course
         </label>
         <select
           id="courseID"
           {...register('courseID', { required: 'Course is required' })}
-          className="form-select"
+          className="modal-input"
           disabled={coursesLoading}
         >
           <option value="">Select a course</option>
@@ -74,22 +74,22 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Start Date */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="start">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="start">
           Start Date (optional)
         </label>
         <input
           id="start"
           type="datetime-local"
           {...register('start')}
-          className="form-input"
+          className="modal-input"
           onChange={(e) => setStartDate(e.target.value)}
         />
       </div>
 
       {/* End Date */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="end">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="end">
           Due Date
         </label>
         <input
@@ -105,14 +105,14 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
               return true;
             },
           })}
-          className="form-input"
+          className="modal-input"
         />
         {errors.end && <div className="error-message">{errors.end.message}</div>}
       </div>
 
       {/* Weight */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="weight">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="weight">
           Weight (%)
         </label>
         <input
@@ -123,17 +123,17 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
             min: { value: 0, message: 'Weight must be positive' },
             max: { value: 100, message: 'Weight cannot exceed 100%' },
           })}
-          className="form-input"
+          className="modal-input"
         />
         {errors.weight && <div className="error-message">{errors.weight.message}</div>}
       </div>
 
       {/* Type */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="type">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="type">
           Type
         </label>
-        <select id="type" {...register('type')} className="form-select">
+        <select id="type" {...register('type')} className="modal-input">
           <option value="assignment">Assignment</option>
           <option value="exam">Exam</option>
           <option value="project">Project</option>
@@ -144,49 +144,70 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* Location */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="location">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="location">
           Location
         </label>
         <input
           id="location"
           {...register('location')}
-          className="form-input"
+          className="modal-input"
           placeholder="e.g., Room 123, Online, etc."
         />
       </div>
 
       {/* Description */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="description">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="description">
           Description
         </label>
-        <textarea id="description" {...register('description')} className="form-input" />
+        <textarea id="description" {...register('description')} className="modal-input" />
       </div>
 
       {/* Color */}
-      <div className="event-form-group">
-        <label className="form-label" htmlFor="color">
+      <div className="modal-form-group">
+        <label className="modal-label" htmlFor="color">
           Color
         </label>
         <input
           id="color"
           type="color"
           {...register('color')}
-          className="form-input"
+          className="modal-input color-picker"
           defaultValue="#E74C3C"
         />
       </div>
 
       {/* Buttons */}
-      <div className="event-form-group form-actions">
-        <button type="submit" className="button button-primary">
-          Save
-        </button>
-        <button type="button" className="button button-secondary" onClick={onCancel}>
+      <div className="modal-actions">
+        <button type="button" className="modal-button modal-cancel-button" onClick={onCancel}>
           Cancel
         </button>
+        <button type="submit" className="modal-button modal-submit-button">
+          Save
+        </button>
       </div>
+
+      <style jsx>{`
+        .event-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          background-color: #cad2c5;
+        }
+
+        .error-message {
+          color: #a72f38;
+          font-size: 0.875rem;
+          margin-top: 0.25rem;
+        }
+
+        .color-picker {
+          height: 40px;
+          padding: 0.25rem;
+          cursor: pointer;
+        }
+      `}</style>
     </form>
   );
 }

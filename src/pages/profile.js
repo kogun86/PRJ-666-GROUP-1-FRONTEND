@@ -5,6 +5,7 @@ import { useAuth } from '../features/auth';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { ChangePasswordForm } from '../components/ChangePasswordForm';
 import AIChatWindow from '../components/AIChatWindow';
+import Modal from '../components/Modal';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
@@ -66,19 +67,6 @@ const CheckCircle2 = () => {
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
       <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
-  );
-};
-
-// Modal component for password change and edit profile
-const Modal = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
-    </div>
   );
 };
 
@@ -320,7 +308,7 @@ function ProfileContent() {
       <AIChatWindow />
 
       {/* Password Change Modal - Use new component */}
-      <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal}>
+      <Modal isOpen={passwordModalOpen} onClose={handleClosePasswordModal} title="Change Password">
         <ChangePasswordForm
           onSuccess={handleClosePasswordModal}
           onCancel={handleClosePasswordModal}
@@ -328,70 +316,69 @@ function ProfileContent() {
       </Modal>
 
       {/* Edit Profile Modal */}
-      <Modal isOpen={editProfileModalOpen} onClose={handleCloseEditProfileModal}>
-        <div className="password-modal">
-          {/* Reusing the same modal styles */}
-          <h2 className="password-modal-title">Edit Profile</h2>
+      <Modal
+        isOpen={editProfileModalOpen}
+        onClose={handleCloseEditProfileModal}
+        title="Edit Profile"
+      >
+        {error && <div className="modal-error">{error}</div>}
 
-          {error && <div className="password-error">{error}</div>}
+        <form onSubmit={handleProfileUpdate}>
+          <div className="modal-form-group">
+            <label htmlFor="name" className="modal-label">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={profileData.name}
+              onChange={handleProfileInputChange}
+              className="modal-input"
+            />
+          </div>
 
-          <form onSubmit={handleProfileUpdate}>
-            <div className="password-form-group">
-              <label htmlFor="name" className="password-label">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={profileData.name}
-                onChange={handleProfileInputChange}
-                className="password-input"
-              />
-            </div>
+          <div className="modal-form-group">
+            <label htmlFor="email" className="modal-label">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={profileData.email}
+              onChange={handleProfileInputChange}
+              className="modal-input"
+            />
+          </div>
 
-            <div className="password-form-group">
-              <label htmlFor="email" className="password-label">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={profileData.email}
-                onChange={handleProfileInputChange}
-                className="password-input"
-              />
-            </div>
+          <div className="modal-form-group">
+            <label htmlFor="dateOfBirth" className="modal-label">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              name="dateOfBirth"
+              value={profileData.dateOfBirth}
+              onChange={handleProfileInputChange}
+              className="modal-input"
+            />
+          </div>
 
-            <div className="password-form-group">
-              <label htmlFor="dateOfBirth" className="password-label">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                id="dateOfBirth"
-                name="dateOfBirth"
-                value={profileData.dateOfBirth}
-                onChange={handleProfileInputChange}
-                className="password-input"
-              />
-            </div>
-
-            <div className="password-actions">
-              <button
-                type="button"
-                onClick={handleCloseEditProfileModal}
-                className="password-cancel-button"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="password-submit-button">
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="modal-actions">
+            <button
+              type="button"
+              onClick={handleCloseEditProfileModal}
+              className="modal-button modal-cancel-button"
+            >
+              Cancel
+            </button>
+            <button type="submit" className="modal-button modal-submit-button">
+              Save Changes
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );
@@ -409,17 +396,6 @@ export default function Profile() {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 1rem;
-          }
-        `}</style>
-        <style jsx global>{`
-          .password-success {
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            background-color: #d1e7dd;
-            color: #0f5132;
-            border-radius: 0.25rem;
-            text-align: center;
-            font-weight: 500;
           }
         `}</style>
       </Layout>

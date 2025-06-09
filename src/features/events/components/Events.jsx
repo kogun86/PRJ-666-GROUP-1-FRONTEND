@@ -7,6 +7,7 @@ import { useEvents } from '../hooks/useEvents';
 import EventsLoading from './EventsLoading';
 import EventsError from './EventsError';
 import AIChatWindow from '../../../components/AIChatWindow';
+import Modal from '../../../components/Modal';
 
 export default function Events() {
   const [activeTab, setActiveTab] = useState('home');
@@ -117,22 +118,26 @@ export default function Events() {
         <AIChatWindow />
       </div>
 
-      {showForm && (
-        <div className="modal-overlay">
-          <div className="modal">
-            {formError && <div className="form-error-message">{formError}</div>}
-            <EventForm
-              initialData={formData}
-              onSubmit={handleFormSubmit}
-              onCancel={() => {
-                setShowForm(false);
-                setFormData(null);
-                setFormError(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setFormData(null);
+          setFormError(null);
+        }}
+        title="Add Event"
+      >
+        {formError && <div className="modal-error">{formError}</div>}
+        <EventForm
+          initialData={formData}
+          onSubmit={handleFormSubmit}
+          onCancel={() => {
+            setShowForm(false);
+            setFormData(null);
+            setFormError(null);
+          }}
+        />
+      </Modal>
     </>
   );
 }

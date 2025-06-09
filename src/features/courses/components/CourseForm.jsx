@@ -72,32 +72,32 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
   return (
     <form className="course-form" onSubmit={handleSubmit(onSubmit)}>
       {/* Display any API errors */}
-      {error && <div className="error-message api-error">{error}</div>}
+      {error && <div className="modal-error">{error}</div>}
 
       {/* Title */}
-      <div className="form-group">
-        <label>Course Title</label>
-        <input {...register('title', { required: 'Required' })} className="form-input" />
+      <div className="modal-form-group">
+        <label className="modal-label">Course Title</label>
+        <input {...register('title', { required: 'Required' })} className="modal-input" />
         {errors.title && <span className="error-message">{errors.title.message}</span>}
       </div>
 
       {/* Code */}
-      <div className="form-group">
-        <label>Course Code</label>
-        <input {...register('code', { required: 'Required' })} className="form-input" />
+      <div className="modal-form-group">
+        <label className="modal-label">Course Code</label>
+        <input {...register('code', { required: 'Required' })} className="modal-input" />
         {errors.code && <span className="error-message">{errors.code.message}</span>}
       </div>
 
       {/* Section */}
-      <div className="form-group">
-        <label>Section</label>
-        <input {...register('section', { required: 'Required' })} className="form-input" />
+      <div className="modal-form-group">
+        <label className="modal-label">Section</label>
+        <input {...register('section', { required: 'Required' })} className="modal-input" />
         {errors.section && <span className="error-message">{errors.section.message}</span>}
       </div>
 
       {/* Color Picker */}
-      <div className="form-group">
-        <label>Course Color</label>
+      <div className="modal-form-group">
+        <label className="modal-label">Course Color</label>
         <div className="color-picker-container">
           <input
             type="color"
@@ -125,10 +125,10 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
       </div>
 
       {/* Instructor */}
-      <div className="form-group">
-        <label>Instructor Name</label>
-        <input {...register('instructor.name', { required: 'Required' })} className="form-input" />
-        <label>Instructor Email</label>
+      <div className="modal-form-group">
+        <label className="modal-label">Instructor Name</label>
+        <input {...register('instructor.name', { required: 'Required' })} className="modal-input" />
+        <label className="modal-label">Instructor Email</label>
         <input
           {...register('instructor.email', {
             required: 'Required',
@@ -137,7 +137,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
               message: 'Invalid email address',
             },
           })}
-          className="form-input"
+          className="modal-input"
           type="email"
         />
         {errors.instructor?.email && (
@@ -146,12 +146,13 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
       </div>
 
       {/* Instructor Time Slots */}
-      <div className="form-group">
-        <label>Instructor Available Time Slots</label>
+      <div className="modal-form-group">
+        <label className="modal-label">Instructor Available Time Slots</label>
         {slotFields.map((field, idx) => (
-          <div key={field.id} className="form-row schedule-item">
+          <div key={field.id} className="course-schedule-item">
             <select
               {...register(`instructor.availableTimeSlots.${idx}.weekday`, { valueAsNumber: true })}
+              className="modal-input"
             >
               {DAYS.map((d, i) => (
                 <option key={i} value={i + 1}>
@@ -159,9 +160,21 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
                 </option>
               ))}
             </select>
-            <input type="time" {...register(`instructor.availableTimeSlots.${idx}.startTime`)} />
-            <input type="time" {...register(`instructor.availableTimeSlots.${idx}.endTime`)} />
-            <button type="button" onClick={() => removeSlot(idx)}>
+            <input
+              type="time"
+              {...register(`instructor.availableTimeSlots.${idx}.startTime`)}
+              className="modal-input"
+            />
+            <input
+              type="time"
+              {...register(`instructor.availableTimeSlots.${idx}.endTime`)}
+              className="modal-input"
+            />
+            <button
+              type="button"
+              onClick={() => removeSlot(idx)}
+              className="modal-button modal-cancel-button"
+            >
               Remove
             </button>
           </div>
@@ -169,48 +182,64 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
         <button
           type="button"
           onClick={() => appendSlot({ weekday: 1, startTime: '09:00', endTime: '10:00' })}
+          className="modal-button modal-cancel-button"
         >
           + Add Slot
         </button>
       </div>
 
       {/* Start / End Date */}
-      <div className="form-row">
-        <div className="form-group">
-          <label>Start Date</label>
-          <input type="date" {...register('startDate', { required: 'Required' })} />
+      <div className="course-form-row">
+        <div className="modal-form-group">
+          <label className="modal-label">Start Date</label>
+          <input
+            type="date"
+            {...register('startDate', { required: 'Required' })}
+            className="modal-input"
+          />
         </div>
-        <div className="form-group">
-          <label>End Date</label>
-          <input type="date" {...register('endDate', { required: 'Required' })} />
+        <div className="modal-form-group">
+          <label className="modal-label">End Date</label>
+          <input
+            type="date"
+            {...register('endDate', { required: 'Required' })}
+            className="modal-input"
+          />
         </div>
       </div>
 
       {/* Schedule */}
-      <div className="form-group">
-        <label>Schedule</label>
+      <div className="modal-form-group">
+        <label className="modal-label">Schedule</label>
         {scheduleFields.map((field, idx) => (
-          <div key={field.id} className="form-row schedule-item">
-            <select {...register(`schedule.${idx}.classType`)}>
+          <div key={field.id} className="course-schedule-item">
+            <select {...register(`schedule.${idx}.classType`)} className="modal-input">
               <option value="lecture">Lecture</option>
               <option value="lab">Lab</option>
             </select>
-            <select {...register(`schedule.${idx}.weekday`, { valueAsNumber: true })}>
+            <select
+              {...register(`schedule.${idx}.weekday`, { valueAsNumber: true })}
+              className="modal-input"
+            >
               {DAYS.map((d, i) => (
                 <option key={i} value={i + 1}>
                   {d}
                 </option>
               ))}
             </select>
-            <input type="time" {...register(`schedule.${idx}.startTime`)} />
-            <input type="time" {...register(`schedule.${idx}.endTime`)} />
+            <input type="time" {...register(`schedule.${idx}.startTime`)} className="modal-input" />
+            <input type="time" {...register(`schedule.${idx}.endTime`)} className="modal-input" />
             <input
               type="text"
               placeholder="Location"
               {...register(`schedule.${idx}.location`)}
-              className="form-input"
+              className="modal-input"
             />
-            <button type="button" onClick={() => removeSchedule(idx)}>
+            <button
+              type="button"
+              onClick={() => removeSchedule(idx)}
+              className="modal-button modal-cancel-button"
+            >
               Remove
             </button>
           </div>
@@ -226,22 +255,37 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
               location: 'TBD',
             })
           }
+          className="modal-button modal-cancel-button"
         >
           + Add Class
         </button>
       </div>
 
       {/* Submit */}
-      <div className="form-group">
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save'}
-        </button>
-        <button type="button" onClick={onCancel} disabled={isSubmitting}>
+      <div className="modal-actions">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="modal-button modal-cancel-button"
+        >
           Cancel
+        </button>
+        <button type="submit" disabled={isSubmitting} className="modal-button modal-submit-button">
+          {isSubmitting ? 'Saving...' : 'Save'}
         </button>
       </div>
 
       <style jsx>{`
+        .course-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+          color: #2f3e46;
+          padding-right: 5px;
+          background-color: #cad2c5; /* Match the modal background color */
+        }
+
         .color-picker-container {
           display: flex;
           align-items: center;
@@ -254,6 +298,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
           padding: 0;
           border: none;
           cursor: pointer;
+          border-radius: 4px;
         }
 
         .color-value {
@@ -286,6 +331,49 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
         .color-preset.active {
           border-color: #333;
           transform: scale(1.1);
+        }
+
+        .course-form-row {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 10px;
+        }
+
+        .course-form-row .modal-form-group {
+          flex: 1;
+        }
+
+        .course-schedule-item {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 15px;
+          align-items: center;
+          background-color: rgba(255, 255, 255, 0.3);
+          padding: 10px;
+          border-radius: 8px;
+        }
+
+        .error-message {
+          color: #a72f38;
+          font-size: 0.875rem;
+          margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+          .course-form-row {
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .course-schedule-item {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .course-schedule-item .modal-input {
+            margin-bottom: 5px;
+          }
         }
       `}</style>
     </form>

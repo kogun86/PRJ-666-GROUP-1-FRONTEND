@@ -5,6 +5,7 @@ import CourseForm from '../features/courses/components/CourseForm';
 import { useCourseSubmit, useClassDelete, useCourseDeletion } from '@/features/courses';
 import { Auth } from '../features/auth/lib/amplifyClient';
 import AIChatWindow from '../components/AIChatWindow';
+import Modal from '../components/Modal';
 
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState('My Classes');
@@ -506,19 +507,19 @@ export default function CoursesPage() {
 
                 {activeTab === 'My Courses' && (
                   <>
-                    {showForm && (
-                      <div className="modal-overlay">
-                        <div className="modal">
-                          <CourseForm
-                            initialData={editData}
-                            onSubmit={handleSubmit}
-                            onCancel={() => setShowForm(false)}
-                            isSubmitting={isSubmitting}
-                            error={submitError}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    <Modal
+                      isOpen={showForm}
+                      onClose={() => setShowForm(false)}
+                      title={editData ? 'Edit Course' : 'Add New Course'}
+                    >
+                      <CourseForm
+                        initialData={editData}
+                        onSubmit={handleSubmit}
+                        onCancel={() => setShowForm(false)}
+                        isSubmitting={isSubmitting}
+                        error={submitError}
+                      />
+                    </Modal>
 
                     <div className="courses-list">
                       {myCourses.length > 0 ? (

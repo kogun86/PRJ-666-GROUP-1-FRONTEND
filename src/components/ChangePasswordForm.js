@@ -97,15 +97,13 @@ export function ChangePasswordForm({ onSuccess, onCancel }) {
   };
 
   return (
-    <div className="password-modal">
-      <h2 className="password-modal-title">Change Password</h2>
-
-      {error && <div className="password-error">{error}</div>}
-      {success && <div className="password-success">Password changed successfully!</div>}
+    <div>
+      {error && <div className="modal-error">{error}</div>}
+      {success && <div className="modal-success">Password changed successfully!</div>}
 
       <form onSubmit={handleSubmit}>
-        <div className="password-form-group">
-          <label htmlFor="currentPassword" className="password-label">
+        <div className="modal-form-group">
+          <label htmlFor="currentPassword" className="modal-label">
             Current Password
           </label>
           <input
@@ -114,13 +112,13 @@ export function ChangePasswordForm({ onSuccess, onCancel }) {
             name="currentPassword"
             value={formData.currentPassword}
             onChange={handleInputChange}
-            className="password-input"
+            className="modal-input"
             disabled={isLoading}
           />
         </div>
 
-        <div className="password-form-group">
-          <label htmlFor="newPassword" className="password-label">
+        <div className="modal-form-group">
+          <label htmlFor="newPassword" className="modal-label">
             New Password
           </label>
           <input
@@ -129,13 +127,13 @@ export function ChangePasswordForm({ onSuccess, onCancel }) {
             name="newPassword"
             value={formData.newPassword}
             onChange={handleInputChange}
-            className="password-input"
+            className="modal-input"
             disabled={isLoading}
           />
         </div>
 
-        <div className="password-form-group">
-          <label htmlFor="confirmPassword" className="password-label">
+        <div className="modal-form-group">
+          <label htmlFor="confirmPassword" className="modal-label">
             Confirm New Password
           </label>
           <input
@@ -144,21 +142,21 @@ export function ChangePasswordForm({ onSuccess, onCancel }) {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleInputChange}
-            className="password-input"
+            className="modal-input"
             disabled={isLoading}
           />
         </div>
 
-        <div className="password-actions">
+        <div className="modal-actions">
           <button
             type="button"
             onClick={onCancel}
-            className="password-cancel-button"
+            className="modal-button modal-cancel-button"
             disabled={isLoading}
           >
             Cancel
           </button>
-          <button type="submit" className="password-submit-button" disabled={isLoading}>
+          <button type="submit" className="modal-button modal-submit-button" disabled={isLoading}>
             {isLoading ? 'Changing...' : 'Change Password'}
           </button>
         </div>

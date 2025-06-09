@@ -6,6 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import tippy from 'tippy.js';
+import AIChatWindow from '../../../components/AIChatWindow';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
 
@@ -385,6 +386,8 @@ export default function Calendar() {
           <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
         )}
       </div>
+      {/* AI Chat Window */}
+      <AIChatWindow />
     </div>
   );
 }
