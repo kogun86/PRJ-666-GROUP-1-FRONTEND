@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { convertToSeconds } from '../utils/timeUtils';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,14 +31,37 @@ export function useCourseSubmit() {
         headers.Authorization = `Bearer ${idToken}`;
       }
 
+      // Ensure time fields are properly converted to seconds
+      const dataToSubmit = {
+        ...formattedData,
+        instructor: {
+          ...formattedData.instructor,
+          availableTimeSlots: formattedData.instructor.availableTimeSlots.map((slot) => ({
+            ...slot,
+            startTime:
+              typeof slot.startTime === 'string'
+                ? convertToSeconds(slot.startTime)
+                : slot.startTime,
+            endTime:
+              typeof slot.endTime === 'string' ? convertToSeconds(slot.endTime) : slot.endTime,
+          })),
+        },
+        schedule: formattedData.schedule.map((item) => ({
+          ...item,
+          startTime:
+            typeof item.startTime === 'string' ? convertToSeconds(item.startTime) : item.startTime,
+          endTime: typeof item.endTime === 'string' ? convertToSeconds(item.endTime) : item.endTime,
+        })),
+      };
+
       console.log('📤 Submitting course to:', `${API_BASE_URL}/v1/courses`);
       console.log('🔐 Headers:', headers);
-      console.log('📦 Data:', JSON.stringify(formattedData, null, 2));
+      console.log('📦 Data:', JSON.stringify(dataToSubmit, null, 2));
 
       const response = await fetch(`${API_BASE_URL}/v1/courses`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(formattedData),
+        body: JSON.stringify(dataToSubmit),
       });
 
       if (!response.ok) {
@@ -58,10 +82,17 @@ export function useCourseSubmit() {
         throw new Error(errorMessage);
       }
 
+      const responseData = await response.json();
+      console.log('📥 Course created response:', responseData);
+
       setSuccess(true);
-      return { success: true };
+      return {
+        success: true,
+        courseId: responseData.course?._id || responseData._id,
+        course: responseData.course || responseData,
+      };
     } catch (err) {
-      console.error(' Error submitting course:', err);
+      console.error('❌ Error submitting course:', err);
       setError(err.message);
       return { success: false, errors: [err.message] };
     } finally {
