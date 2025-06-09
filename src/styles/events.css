@@ -365,7 +365,7 @@
 
 /* Event Card */
 .event-card {
-  background-color: #fff;
+  background-color: #fff3cd;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 16px;
@@ -382,7 +382,6 @@
   left: 0;
   width: 5px;
   height: 100%;
-  background-color: var(--event-color, #52796f);
 }
 
 .event-card:hover {
@@ -391,8 +390,8 @@
 }
 
 .event-completed {
-  opacity: 0.85;
-  background-color: #f8f8f8;
+  /* opacity: 0.85; */
+  background-color: #cad2c5;
 }
 
 .event-pending {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useCourses } from '../features/events/hooks/useCourses';
+import { useCourses } from '../hooks/useCourses';
 
 export default function EventForm({ initialData, onSubmit, onCancel }) {
   const { courses, loading: coursesLoading } = useCourses();

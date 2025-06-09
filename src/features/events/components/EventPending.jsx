@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactPaginate from 'react-paginate';
 import EventCard from './EventCard';
-import { useEvents } from '../features/events';
+import { useEvents } from '..';
 
 function EventsPending({ groups }) {
   const { toggleEventStatus, deleteEventById } = useEvents();

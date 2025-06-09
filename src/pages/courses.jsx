@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
-import CourseForm from '../components/CourseForm';
+import CourseForm from '../features/courses/components/CourseForm';
 import { useCourseSubmit, useClassDelete, useCourseDeletion } from '@/features/courses';
 import { Auth } from '../features/auth/lib/amplifyClient';
 

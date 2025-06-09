@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import EventForm from '@/components/EventForm';
-import EventCompleted from '@/components/EventCompleted';
-import EventPending from '@/components/EventPending';
+import EventForm from '@/features/events/components/EventForm';
+import EventCompleted from '@/features/events/components/EventCompleted';
+import EventPending from '@/features/events/components/EventPending';
 import { Settings, Plus, RefreshCw } from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
 import EventsLoading from './EventsLoading';
