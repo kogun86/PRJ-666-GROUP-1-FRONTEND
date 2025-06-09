@@ -36,7 +36,9 @@ export default function MobileNav() {
           );
         })}
         <button onClick={logout} className={cn('mobile-nav-link')}>
-          <LogOut className="mobile-nav-icon" />
+          <div className="logout-icon-container">
+            <LogOut className="mobile-nav-icon logout-icon" />
+          </div>
           <span className="mobile-nav-text" style={{ color: '#a72f38' }}>
             Logout
           </span>
