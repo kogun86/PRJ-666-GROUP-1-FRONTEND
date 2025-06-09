@@ -23,26 +23,22 @@
   padding: 1.5rem;
 }
 
-.events-task-card {
-  opacity: 0.85;
-  background: #f8f8f8;
-  border: 1px solid #e0e0e0;
+.events-task-card,
+.event-card {
   border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  min-height: 220px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.events-task-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.events-task-card:hover,
+.event-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-7px);
 }
 
 /* Color indicator for event cards */
@@ -111,10 +107,9 @@
   line-height: 1.4;
 }
 
-.events-complete-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background: #52796f;
+.events-complete-btn,
+.add-event-button {
+  background-color: #52796f;
   color: #cad2c5;
   border: none;
   border-radius: 8px;
@@ -122,11 +117,11 @@
   font-size: 1rem;
   font-weight: 500;
   transition: all 0.2s ease;
-  margin-top: auto;
 }
 
-.events-complete-btn:hover {
-  background: #3a5a40;
+.events-complete-btn:hover,
+.add-event-button:hover {
+  background-color: #3a5a40;
 }
 
 .events-complete-btn.completed {
@@ -137,6 +132,14 @@
 @media (max-width: 768px) {
   .events-tasks-grid {
     grid-template-columns: 1fr;
+  }
+
+  .events-pagination-link {
+    padding: 6px 10px;
+  }
+
+  .events-pagination-arrow {
+    padding: 6px 8px;
   }
 }
 
@@ -172,21 +175,9 @@
 }
 
 .add-event-button {
-  background-color: #52796f;
-  color: #cad2c5;
   padding: 0.75rem 1.25rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
   width: 100%;
   max-width: 300px;
-}
-
-.add-event-button:hover {
-  background-color: #3a5a40;
 }
 
 /* Practice Tabs Styles */
@@ -195,8 +186,9 @@
   flex-direction: column;
   width: 100%;
   max-width: 1200px;
-
   box-sizing: border-box;
+  margin: 0 auto;
+  align-items: center;
 }
 
 .events-tabs-header {
@@ -274,26 +266,30 @@
   color: #2f3e46;
 }
 
-.events-form-group {
-  /* These styles are now handled by modal-form-group */
-  display: none;
-}
-
-.events-form-group label {
-  /* These styles are now handled by modal-label */
-  display: none;
-}
-
+/* Remove redundant form styles that are now handled by modal.css */
+.events-form-group,
+.events-form-group label,
 .events-form-group input,
 .events-form-group select,
-.events-form-group textarea {
-  /* These styles are now handled by modal-input */
+.events-form-group textarea,
+.events-submit-button {
+  /* These styles are now handled by modal.css */
   display: none;
 }
 
-.events-submit-button {
-  /* These styles are now handled by modal-submit-button */
-  display: none;
+/* Update event form styles to match our modal styles */
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Remove background color as it's handled by modal.css */
+}
+
+/* Specific styles for complete button */
+.events-complete-btn {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: auto;
 }
 
 .events-pagination-container {
@@ -352,16 +348,6 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
-  .events-pagination-link {
-    padding: 6px 10px;
-  }
-
-  .events-pagination-arrow {
-    padding: 6px 8px;
-  }
-}
-
 /* Loading indicator */
 .loading-indicator {
   display: flex;
@@ -386,28 +372,19 @@
   }
 }
 
-/* Event Card */
+/* Specific styles for task cards */
+.events-task-card {
+  opacity: 0.85;
+  background: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  min-height: 220px;
+}
+
+/* Specific styles for event cards */
 .event-card {
   background-color: #fff3cd;
-  border-radius: 17px;
-  padding: 1.25rem;
-  margin-bottom: 16px;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
   color: #212529;
   border-left: 5px solid var(--event-color, #52796f);
-  box-shadow: none;
-}
-
-.event-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-7px);
-}
-
-.event-completed {
-  /* opacity: 0.85; */
-  background-color: #fff3cd;
 }
 
 /* Removed event-pending border-left override */
@@ -567,14 +544,6 @@
 .event-delete-button:disabled {
   background-color: #ffcdd2;
   cursor: not-allowed;
-}
-
-/* Update event form styles to match our modal styles */
-.event-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  background-color: #cad2c5;
 }
 
 /* Color picker specific styles */
