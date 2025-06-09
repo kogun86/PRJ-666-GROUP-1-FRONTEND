@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '../../../components/Modal';
+import Modal from '../../../componentShared/Modal';
 
 export default function EventModal({ event, onClose }) {
   if (!event) return null;

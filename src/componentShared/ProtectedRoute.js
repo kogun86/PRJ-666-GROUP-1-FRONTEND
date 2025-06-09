@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth, useAuthProtection } from '../features/auth';
 import Layout from './Layout';
-import IntroAnimation from './ui/IntroAnimation';
+import IntroAnimation from '../features/animations/IntroAnimation';
 
 export default function ProtectedRoute({ children }) {
   // Use our authentication protection hook

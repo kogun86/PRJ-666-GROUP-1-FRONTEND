@@ -1,4 +1,4 @@
-import Layout from '../components/Layout';
+import Layout from '../componentShared/Layout';
 import Link from 'next/link';
 
 export default function NotFound() {

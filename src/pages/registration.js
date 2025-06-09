@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import AuthForm from '../components/AuthForm';
+import AuthForm from '../features/auth/components/AuthForm';
 import { Auth } from '../features/auth';
 
 export default function Registration() {
@@ -65,9 +65,9 @@ export default function Registration() {
 
           // Redirect to confirmation page or directly to login
           router.push({
-  pathname: '/confirmPage',
-  query: { email: values.email },
-});
+            pathname: '/confirmPage',
+            query: { email: values.email },
+          });
         } catch (cognitoError) {
           console.error('Cognito registration error:', cognitoError);
           throw new Error(cognitoError.message || 'Failed to register with Cognito');

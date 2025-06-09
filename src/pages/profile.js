@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import Layout from '../components/Layout';
+import Layout from '../componentShared/Layout';
 import Image from 'next/image';
 import { useAuth } from '../features/auth';
-import ProtectedRoute from '../components/ProtectedRoute';
-import { ChangePasswordForm } from '../components/ChangePasswordForm';
-import AIChatWindow from '../components/AIChatWindow';
-import Modal from '../components/Modal';
+import ProtectedRoute from '../componentShared/ProtectedRoute';
+import { ChangePasswordForm } from '../features/profile/components/ChangePasswordForm';
+import AIChatWindow from '../componentShared/AIChatWindow';
+import Modal from '../componentShared/Modal';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;

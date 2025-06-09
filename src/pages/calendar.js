@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
-import Layout from '@/components/Layout';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/componentShared/Layout';
+import ProtectedRoute from '@/componentShared/ProtectedRoute';
 
 // Dynamically import the Calendar component with no SSR
 const Calendar = dynamic(() => import('@/features/calendar/components/Calendar'), {

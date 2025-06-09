@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth, Auth } from '../features/auth';
-import AuthForm from '../components/AuthForm';
-import IntroAnimation from '../components/ui/IntroAnimation';
+import AuthForm from '../features/auth/components/AuthForm';
+import IntroAnimation from '../features/animations/IntroAnimation';
 
 export default function Login() {
   const [error, setError] = useState('');

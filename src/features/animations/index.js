@@ -4,4 +4,4 @@
  */
 
 export { default as LoadingAnimation } from './LoadingAnimation';
-export { default as TabsBar } from '../TabsBar';
+export { default as TabsBar } from '../../componentShared/TabsBar';

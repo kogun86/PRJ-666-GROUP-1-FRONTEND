@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import Layout from '../components/Layout';
-import TabsBar from '../components/TabsBar';
-import ProtectedRoute from '../components/ProtectedRoute';
-import AIChatWindow from '../components/AIChatWindow';
+import Layout from '../componentShared/Layout';
+import TabsBar from '../componentShared/TabsBar';
+import ProtectedRoute from '../componentShared/ProtectedRoute';
+import AIChatWindow from '../componentShared/AIChatWindow';
 
 // Define tab constants
 const TABS = {

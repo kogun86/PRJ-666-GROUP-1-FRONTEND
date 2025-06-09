@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useCourses } from '../hooks/useCourses';
-import { LoadingAnimation } from '../../../components/ui';
+import { LoadingAnimation } from '../../animations';
 
 export default function EventForm({ initialData, onSubmit, onCancel, isSubmitting }) {
   const { courses, loading: coursesLoading } = useCourses();

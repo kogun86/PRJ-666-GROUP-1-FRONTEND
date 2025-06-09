@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../features/auth';
+import { useAuth } from '../../auth';
 
 export function ChangePasswordForm({ onSuccess, onCancel }) {
   const { isProduction } = useAuth();

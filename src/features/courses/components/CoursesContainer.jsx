@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Modal from '../../../components/Modal';
-import { LoadingAnimation } from '../../../components/ui';
-import TabsBar from '../../../components/TabsBar';
+import Modal from '../../../componentShared/Modal';
+import { LoadingAnimation } from '../../animations';
+import TabsBar from '../../../componentShared/TabsBar';
 import CourseForm from './CourseForm';
 import ClassesList from './ClassesList';
 import CoursesList from './CoursesList';

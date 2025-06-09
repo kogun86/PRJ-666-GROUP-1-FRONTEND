@@ -1,8 +1,8 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
-import { LoadingAnimation } from '../../../components/ui';
-import ConfirmationModal from '../../../components/ConfirmationModal';
-import { useConfirmation } from '../../../hooks/useConfirmation';
+import { LoadingAnimation } from '../../animations';
+import ConfirmationModal from '../../../componentShared/ConfirmationModal';
+import { useConfirmation } from '../../../componentShared/useConfirmation';
 
 function EventCard({
   task,

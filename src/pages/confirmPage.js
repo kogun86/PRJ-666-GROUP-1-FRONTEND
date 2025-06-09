@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Auth } from '../features/auth';
 import Link from 'next/link';
-import AuthForm from '../components/AuthForm';
+import AuthForm from '../features/auth/components/AuthForm';
 
 export default function ConfirmPage() {
   const router = useRouter();
@@ -49,8 +49,8 @@ export default function ConfirmPage() {
         onSubmit={handleConfirm}
         loading={loading}
         error={error}
-        footerText={success ? "Account confirmed! You can now" : ""}
-        footerLinkText={success ? "log in" : ""}
+        footerText={success ? 'Account confirmed! You can now' : ''}
+        footerLinkText={success ? 'log in' : ''}
         footerLinkHref="/login"
       />
     </div>

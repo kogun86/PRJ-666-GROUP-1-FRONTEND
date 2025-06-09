@@ -6,10 +6,10 @@ import { Settings, Plus, RefreshCw } from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
 import EventsLoading from './EventsLoading';
 import EventsError from './EventsError';
-import AIChatWindow from '../../../components/AIChatWindow';
-import Modal from '../../../components/Modal';
-import { LoadingAnimation } from '../../../components/ui';
-import TabsBar from '../../../components/TabsBar';
+import AIChatWindow from '../../../componentShared/AIChatWindow';
+import Modal from '../../../componentShared/Modal';
+import { LoadingAnimation } from '../../animations';
+import TabsBar from '../../../componentShared/TabsBar';
 
 // Define tab constants for better readability
 const TABS = {

@@ -1,4 +1,4 @@
-import { LoadingAnimation } from '../../../components/ui';
+import { LoadingAnimation } from '../../animations';
 
 export default function EventsLoading() {
   return (

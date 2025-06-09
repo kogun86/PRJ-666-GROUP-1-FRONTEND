@@ -1,7 +1,7 @@
 import React from 'react';
-import { LoadingAnimation } from '../../../components/ui';
-import ConfirmationModal from '../../../components/ConfirmationModal';
-import { useConfirmation } from '../../../hooks/useConfirmation';
+import { LoadingAnimation } from '../../animations';
+import ConfirmationModal from '../../../componentShared/ConfirmationModal';
+import { useConfirmation } from '../../../componentShared/useConfirmation';
 
 export default function CoursesList({ courses, handleAdd, handleEdit, handleDelete, isDeleting }) {
   const { isConfirmationOpen, confirmationData, openConfirmation, closeConfirmation } =
