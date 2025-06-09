@@ -115,8 +115,20 @@ export function useCourseDeletion() {
     }
   };
 
+  // Helper function to delete course with confirmation
+  const confirmCourseDeletion = (courseId, courseInfo = {}) => {
+    return {
+      title: 'Delete Course',
+      message: `Are you sure you want to delete the course "${courseInfo.title || ''}" (${courseInfo.code || ''})? This will also delete all associated classes and assignments. This action cannot be undone.`,
+      onConfirm: () => deleteCourse(courseId),
+      confirmText: 'Delete Course',
+      cancelText: 'Cancel',
+    };
+  };
+
   return {
     deleteCourse,
+    confirmCourseDeletion,
     isDeleting,
     error,
     success,

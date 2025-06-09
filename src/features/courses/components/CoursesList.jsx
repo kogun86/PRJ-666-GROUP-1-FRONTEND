@@ -1,7 +1,22 @@
 import React from 'react';
 import { LoadingAnimation } from '../../../components/ui';
+import ConfirmationModal from '../../../components/ConfirmationModal';
+import { useConfirmation } from '../../../hooks/useConfirmation';
 
 export default function CoursesList({ courses, handleAdd, handleEdit, handleDelete, isDeleting }) {
+  const { isConfirmationOpen, confirmationData, openConfirmation, closeConfirmation } =
+    useConfirmation();
+
+  const handleDeleteClick = (course) => {
+    openConfirmation({
+      title: 'Delete Course',
+      message: `Are you sure you want to delete the course "${course.title}" (${course.code})? This will also delete all associated classes and assignments. This action cannot be undone.`,
+      onConfirm: () => handleDelete(course._id),
+      confirmText: 'Delete Course',
+      cancelText: 'Cancel',
+    });
+  };
+
   if (courses.length === 0) {
     return (
       <div className="empty-state">
@@ -27,7 +42,7 @@ export default function CoursesList({ courses, handleAdd, handleEdit, handleDele
             </button>
             <button
               className="delete-course-button"
-              onClick={() => handleDelete(course._id)}
+              onClick={() => handleDeleteClick(course)}
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -65,6 +80,17 @@ export default function CoursesList({ courses, handleAdd, handleEdit, handleDele
           </div>
         </div>
       ))}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isConfirmationOpen}
+        onClose={closeConfirmation}
+        title={confirmationData.title}
+        message={confirmationData.message}
+        confirmText={confirmationData.confirmText}
+        cancelText={confirmationData.cancelText}
+        onConfirm={confirmationData.onConfirm}
+      />
     </div>
   );
 }

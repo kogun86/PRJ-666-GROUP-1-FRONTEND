@@ -113,8 +113,20 @@ export function useClassDelete() {
     }
   };
 
+  // Helper function to delete class with confirmation
+  const confirmClassDelete = (classId, classInfo = {}) => {
+    return {
+      title: 'Delete Class',
+      message: `Are you sure you want to delete this class${classInfo.title ? ` (${classInfo.title})` : ''}? This action cannot be undone.`,
+      onConfirm: () => deleteClass(classId),
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+    };
+  };
+
   return {
     deleteClass,
+    confirmClassDelete,
     isDeleting,
     error,
     success,

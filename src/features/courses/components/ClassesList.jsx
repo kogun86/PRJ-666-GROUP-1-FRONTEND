@@ -1,7 +1,22 @@
 import React from 'react';
 import { LoadingAnimation } from '../../../components/ui';
+import ConfirmationModal from '../../../components/ConfirmationModal';
+import { useConfirmation } from '../../../hooks/useConfirmation';
 
 export default function ClassesList({ schedule, handleDeleteClass, isDeletingClass }) {
+  const { isConfirmationOpen, confirmationData, openConfirmation, closeConfirmation } =
+    useConfirmation();
+
+  const handleDeleteClick = (classId, classInfo) => {
+    openConfirmation({
+      title: 'Delete Class',
+      message: `Are you sure you want to delete this ${classInfo.type || ''} class${classInfo.code ? ` for ${classInfo.code}` : ''}? This action cannot be undone.`,
+      onConfirm: () => handleDeleteClass(classId),
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+    });
+  };
+
   if (schedule.length === 0) {
     return (
       <div className="empty-state">
@@ -21,7 +36,7 @@ export default function ClassesList({ schedule, handleDeleteClass, isDeletingCla
                 <div className="session-actions">
                   <button
                     className="delete-class-button"
-                    onClick={() => handleDeleteClass(s.id)}
+                    onClick={() => handleDeleteClick(s.id, s)}
                     disabled={isDeletingClass}
                   >
                     {isDeletingClass ? (
@@ -59,6 +74,17 @@ export default function ClassesList({ schedule, handleDeleteClass, isDeletingCla
           </div>
         </div>
       ))}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isConfirmationOpen}
+        onClose={closeConfirmation}
+        title={confirmationData.title}
+        message={confirmationData.message}
+        confirmText={confirmationData.confirmText}
+        cancelText={confirmationData.cancelText}
+        onConfirm={confirmationData.onConfirm}
+      />
     </>
   );
 }
