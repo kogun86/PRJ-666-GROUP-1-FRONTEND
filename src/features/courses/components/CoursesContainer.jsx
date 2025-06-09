@@ -71,6 +71,17 @@ export default function CoursesContainer() {
     }
   }, [deleteCourseSuccess, refreshCourses, resetCourseDeletionState]);
 
+  // Refresh data when tab changes to ensure we have the latest data
+  useEffect(() => {
+    if (activeTab === 'My Classes') {
+      console.log('🔄 Tab changed to Classes, refreshing data');
+      refreshClasses();
+    } else if (activeTab === 'My Courses') {
+      console.log('🔄 Tab changed to Courses, refreshing data');
+      refreshCourses();
+    }
+  }, [activeTab]);
+
   function handleAdd() {
     setEditData(null);
     setEditIndex(null);
@@ -205,6 +216,14 @@ export default function CoursesContainer() {
             weekDay: getWeekday(s.weekday),
           })),
         });
+
+        // Refresh classes to show the newly created classes
+        console.log('🔄 Refreshing classes after course creation');
+        await refreshClasses();
+
+        // Switch to the Classes tab to show the newly created classes
+        setActiveTab('My Classes');
+        console.log('🔄 Switched to Classes tab to show new classes');
       } else {
         console.error('❌ Error creating course:', result.errors);
         alert(`Failed to create course: ${result.errors?.join(', ') || 'Unknown error'}`);

@@ -22,9 +22,9 @@ export function useEventDelete() {
       console.log('deleteEventById called with eventId:', eventId);
 
       // Call the API to delete the event
-      await deleteEvent(eventId);
+      const result = await deleteEvent(eventId);
 
-      console.log('🗑️ Event deleted successfully:', eventId);
+      console.log('🗑️ Event deleted successfully:', eventId, 'Result:', result);
       setSuccess(true);
       return { success: true };
     } catch (err) {

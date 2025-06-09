@@ -86,9 +86,10 @@ export function useCourses() {
     }
   };
 
-  // Refresh class data after a class is deleted
+  // Refresh class data after a class is deleted or a course is created
   const refreshClasses = async () => {
     try {
+      console.log('🔄 Starting classes refresh');
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
       let headers;
@@ -108,6 +109,33 @@ export function useCourses() {
         headers = user.authorizationHeaders();
       }
 
+      // First, refresh courses to ensure we have the latest course data
+      const courseRes = await fetch(`${API_BASE_URL}/v1/courses?active=true`, {
+        headers,
+      });
+      if (!courseRes.ok) {
+        throw new Error(`HTTP error! status: ${courseRes.status}`);
+      }
+      const courseData = await courseRes.json();
+      console.log('🔄 Refreshed courses data for classes view:', courseData);
+      const courses = courseData.courses || [];
+
+      const fetchedCourses = courses.map((course) => ({
+        _id: course._id,
+        title: course.title,
+        code: course.code,
+        section: course.section || 'A',
+        professor: course.instructor?.name,
+        color: course.color || '#cad2c5',
+        grade: 0,
+        schedule: course.schedule.map((s) => ({
+          time: `${secondsToTime(s.startTime)}–${secondsToTime(s.endTime)}`,
+          weekDay: getWeekday(s.weekday),
+        })),
+      }));
+      setMyCourses(fetchedCourses);
+
+      // Then fetch classes
       const classRes = await fetch(`${API_BASE_URL}/v1/classes`, {
         headers,
       });
@@ -117,17 +145,13 @@ export function useCourses() {
 
       const classData = await classRes.json();
       console.log('🔄 Refreshed classes data:', classData);
-      const courses = myCourses.map((course) => ({
-        _id: course._id,
-        title: course.title,
-        code: course.code,
-        instructor: { name: course.professor },
-        color: course.color,
-      }));
+
+      // Use the freshly fetched courses for transformation
       const transformedSchedule = transformClasses(classData.classes, courses);
       setSchedule(transformedSchedule);
+      console.log('🔄 Classes refresh complete');
     } catch (err) {
-      console.error('Failed to refresh classes after delete:', err.message);
+      console.error('Failed to refresh classes:', err.message);
     }
   };
 

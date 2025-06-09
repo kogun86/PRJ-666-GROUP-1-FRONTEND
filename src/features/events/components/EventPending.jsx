@@ -4,7 +4,7 @@ import EventCard from './EventCard';
 import { useEvents } from '..';
 
 function EventsPending({ groups }) {
-  const { toggleEventStatus, deleteEventById } = useEvents();
+  const { toggleEventStatus, deleteEventById, fetchPending } = useEvents();
   const [pages, setPages] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
   const [updatingEventId, setUpdatingEventId] = useState(null);
@@ -35,6 +35,9 @@ function EventsPending({ groups }) {
     setUpdatingEventId(eventId);
     try {
       await toggleEventStatus(eventId, true);
+      console.log('Event marked as done, refreshing list');
+      // Refresh the events list after updating
+      await fetchPending();
     } catch (error) {
       console.error('Failed to mark event as done:', error);
     } finally {
@@ -57,7 +60,9 @@ function EventsPending({ groups }) {
         console.error('Failed to delete event');
         alert('Failed to delete event. Please try again.');
       } else {
-        console.log('Event deleted successfully');
+        console.log('Event deleted successfully, refreshing list');
+        // Refresh the events list after deletion
+        await fetchPending();
       }
     } catch (error) {
       console.error('Error during event deletion:', error);

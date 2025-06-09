@@ -5,7 +5,7 @@ import EventGradeInput from './EventGradeInput';
 import { useEvents } from '..';
 
 function EventCompleted({ groups }) {
-  const { toggleEventStatus, deleteEventById } = useEvents();
+  const { toggleEventStatus, deleteEventById, fetchCompleted } = useEvents();
   const [editing, setEditing] = useState({ groupDate: null, taskId: null });
   const [pageNumbers, setPageNumbers] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
@@ -49,6 +49,9 @@ function EventCompleted({ groups }) {
     setUpdatingEventId(eventId);
     try {
       await toggleEventStatus(eventId, false);
+      console.log('Event marked as incomplete, refreshing list');
+      // Refresh the completed events list after updating
+      await fetchCompleted();
     } catch (error) {
       console.error('Failed to mark event as incomplete:', error);
     } finally {
@@ -71,7 +74,9 @@ function EventCompleted({ groups }) {
         console.error('Failed to delete event');
         alert('Failed to delete event. Please try again.');
       } else {
-        console.log('Event deleted successfully');
+        console.log('Event deleted successfully, refreshing list');
+        // Refresh the events list after deletion
+        await fetchCompleted();
       }
     } catch (error) {
       console.error('Error during event deletion:', error);

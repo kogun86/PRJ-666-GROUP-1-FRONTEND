@@ -129,24 +129,20 @@ export const useEvents = () => {
       );
 
       // Call the API to update the event status
-      const updatedEvent = await updateEventStatus(eventId, isCompleted);
+      const result = await updateEventStatus(eventId, isCompleted);
 
-      // Log the updated event
-      console.log('Updated event:', updatedEvent);
+      // Log the result
+      console.log('Update event status result:', result);
+
+      if (!result.success) {
+        console.error('Failed to update event status:', result.error);
+        setError(result.error || 'Failed to update event status');
+        return false;
+      }
 
       // If marking as completed, move from pending to completed
       if (isCompleted) {
-        // Process updated event for local state
-        const updatedLocalEvent = {
-          ...updatedEvent,
-          id: updatedEvent._id,
-          dueDate: updatedEvent.end || updatedEvent.dueDate,
-        };
-
-        // Debug the pending events before filtering
-        console.log('Pending events before update:', pendingEvents);
-
-        // Remove from pending events
+        // Remove from pending events immediately for better UI responsiveness
         setPendingEvents(
           pendingEvents.filter((event) => {
             const result = event._id !== eventId && event.id !== eventId;
@@ -161,14 +157,20 @@ export const useEvents = () => {
         // Refresh both pending and completed events to ensure UI is up to date
         await Promise.all([fetchPending(), fetchCompleted()]);
       } else {
-        // If marking as incomplete, move from completed to pending
+        // If marking as incomplete, remove from completed events immediately
+        setCompletedEvents(
+          completedEvents.filter((event) => {
+            return event._id !== eventId && event.id !== eventId;
+          })
+        );
+
         // Refresh both pending and completed events
         await Promise.all([fetchPending(), fetchCompleted()]);
       }
 
       return true;
     } catch (err) {
-      console.error('Failed to update event status:', err);
+      console.error('Exception during event status update:', err);
       setError(err.message || 'Failed to update event status');
       return false;
     } finally {
@@ -267,11 +269,19 @@ export const useEvents = () => {
       console.log('Deleting event with ID:', eventId);
 
       // Call the API to delete the event
-      await deleteEvent(eventId);
+      const result = await deleteEvent(eventId);
+
+      console.log('Delete event result:', result);
+
+      if (!result.success) {
+        console.error('Failed to delete event:', result.error);
+        setError(result.error || 'Failed to delete event');
+        return false;
+      }
 
       console.log('Event deleted successfully, updating UI');
 
-      // Remove the event from both pending and completed events
+      // Remove the event from both pending and completed events immediately for better UI responsiveness
       setPendingEvents(
         pendingEvents.filter((event) => event._id !== eventId && event.id !== eventId)
       );
@@ -285,7 +295,7 @@ export const useEvents = () => {
 
       return true;
     } catch (err) {
-      console.error('Failed to delete event:', err);
+      console.error('Exception during event deletion:', err);
       setError(err.message || 'Failed to delete event');
       return false;
     } finally {

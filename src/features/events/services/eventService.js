@@ -482,7 +482,7 @@ export const updateEventStatus = async (eventId, isCompleted) => {
     // Validate eventId
     if (!eventId) {
       console.error('EventID is null or undefined');
-      throw new Error('Invalid event ID: Cannot be null or undefined');
+      return { success: false, error: 'Invalid event ID: Cannot be null or undefined' };
     }
 
     console.log('updateEventStatus called with eventId:', eventId, 'type:', typeof eventId);
@@ -516,11 +516,19 @@ export const updateEventStatus = async (eventId, isCompleted) => {
 
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('Unauthorized - Please log in again');
+          return { success: false, error: 'Unauthorized - Please log in again' };
         }
 
         if (response.status === 404) {
-          throw new Error('Event not found - Please check the event ID');
+          return { success: true, message: 'Event not found - It may have been deleted' };
+        }
+
+        if (response.status === 500) {
+          console.error('Server returned 500 error');
+          return {
+            success: false,
+            error: 'Internal server error occurred. The server team has been notified.',
+          };
         }
 
         let errorText = '';
@@ -531,37 +539,46 @@ export const updateEventStatus = async (eventId, isCompleted) => {
           // Try to parse as JSON if possible
           try {
             const errorData = JSON.parse(errorText);
-            throw new Error(
-              errorData.errors?.join(', ') ||
+            return {
+              success: false,
+              error:
+                errorData.errors?.join(', ') ||
                 errorData.message ||
-                `Server error: ${response.status} - ${response.statusText}`
-            );
+                `Server error: ${response.status} - ${response.statusText}`,
+            };
           } catch (parseError) {
             // If not JSON, use text directly
-            throw new Error(
-              `Server error: ${response.status} - ${errorText || response.statusText}`
-            );
+            return {
+              success: false,
+              error: `Server error: ${response.status} - ${errorText || response.statusText}`,
+            };
           }
         } catch (textError) {
           if (textError !== errorText) throw textError;
-          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+          return {
+            success: false,
+            error: `Server error: ${response.status} - ${response.statusText}`,
+          };
         }
       }
 
       const data = await response.json();
       console.log('Success response:', data);
-      return data.event || data;
+      return { success: true, event: data.event || data };
     } catch (fetchError) {
       if (fetchError.name === 'AbortError') {
-        throw new Error('Request timed out - The server took too long to respond');
+        return {
+          success: false,
+          error: 'Request timed out - The server took too long to respond',
+        };
       }
-      throw fetchError;
+      return { success: false, error: fetchError.message || 'Unknown error occurred' };
     } finally {
       clearTimeout(timeoutId);
     }
   } catch (error) {
     console.error('Failed to update event status:', error);
-    throw error;
+    return { success: false, error: error.message || 'Failed to update event status' };
   }
 };
 
@@ -575,7 +592,7 @@ export const deleteEvent = async (eventId) => {
     // Validate eventId
     if (!eventId) {
       console.error('EventID is null or undefined');
-      throw new Error('Invalid event ID: Cannot be null or undefined');
+      return { success: false, error: 'Invalid event ID: Cannot be null or undefined' };
     }
 
     console.log('deleteEvent called with eventId:', eventId, 'type:', typeof eventId);
@@ -617,23 +634,31 @@ export const deleteEvent = async (eventId) => {
             try {
               // Try to parse as JSON
               const errorData = JSON.parse(errorText);
-              throw new Error(
-                errorData.errors?.join(', ') ||
+              return {
+                success: false,
+                error:
+                  errorData.errors?.join(', ') ||
                   errorData.message ||
-                  'Internal server error occurred. The server team has been notified.'
-              );
+                  'Internal server error occurred. The server team has been notified.',
+              };
             } catch (jsonError) {
               // If not valid JSON
-              throw new Error('Internal server error occurred. The server team has been notified.');
+              return {
+                success: false,
+                error: 'Internal server error occurred. The server team has been notified.',
+              };
             }
           } catch (textError) {
             // If we can't even get the response text
-            throw new Error('Internal server error occurred. The server team has been notified.');
+            return {
+              success: false,
+              error: 'Internal server error occurred. The server team has been notified.',
+            };
           }
         }
 
         if (response.status === 401) {
-          throw new Error('Unauthorized - Please log in again');
+          return { success: false, error: 'Unauthorized - Please log in again' };
         }
 
         if (response.status === 404) {
@@ -649,20 +674,26 @@ export const deleteEvent = async (eventId) => {
           // Try to parse as JSON if possible
           try {
             const errorData = JSON.parse(errorText);
-            throw new Error(
-              errorData.errors?.join(', ') ||
+            return {
+              success: false,
+              error:
+                errorData.errors?.join(', ') ||
                 errorData.message ||
-                `Server error: ${response.status} - ${response.statusText}`
-            );
+                `Server error: ${response.status} - ${response.statusText}`,
+            };
           } catch (parseError) {
             // If not JSON, use text directly
-            throw new Error(
-              `Server error: ${response.status} - ${errorText || response.statusText}`
-            );
+            return {
+              success: false,
+              error: `Server error: ${response.status} - ${errorText || response.statusText}`,
+            };
           }
         } catch (textError) {
           if (textError !== errorText) throw textError;
-          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+          return {
+            success: false,
+            error: `Server error: ${response.status} - ${response.statusText}`,
+          };
         }
       }
 
@@ -671,14 +702,17 @@ export const deleteEvent = async (eventId) => {
       return { success: true, data };
     } catch (fetchError) {
       if (fetchError.name === 'AbortError') {
-        throw new Error('Request timed out - The server took too long to respond');
+        return {
+          success: false,
+          error: 'Request timed out - The server took too long to respond',
+        };
       }
-      throw fetchError;
+      return { success: false, error: fetchError.message || 'Unknown error occurred' };
     } finally {
       clearTimeout(timeoutId);
     }
   } catch (error) {
     console.error('Failed to delete event:', error);
-    throw error;
+    return { success: false, error: error.message || 'Failed to delete event' };
   }
 };
