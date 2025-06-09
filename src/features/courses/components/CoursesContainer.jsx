@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal';
 import { LoadingAnimation } from '../../../components/ui';
+import TabsBar from '../../../components/TabsBar';
 import CourseForm from './CourseForm';
 import ClassesList from './ClassesList';
 import CoursesList from './CoursesList';
@@ -8,8 +9,20 @@ import { useCourseSubmit, useClassDelete, useCourseDeletion } from '../';
 import { useCourses } from '../hooks/useCourses';
 import { secondsToTime, getWeekday } from '../utils/timeUtils';
 
+// Define tab constants for better readability
+const TABS = {
+  CLASSES: 'classes',
+  COURSES: 'courses',
+};
+
+// Define tab display names
+const TAB_LABELS = {
+  [TABS.CLASSES]: 'My Classes',
+  [TABS.COURSES]: 'My Courses',
+};
+
 export default function CoursesContainer() {
-  const [activeTab, setActiveTab] = useState('My Classes');
+  const [activeTab, setActiveTab] = useState(TABS.CLASSES);
   const [showForm, setShowForm] = useState(false);
   const [editData, setEditData] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
@@ -73,22 +86,27 @@ export default function CoursesContainer() {
 
   // Refresh data when tab changes to ensure we have the latest data
   useEffect(() => {
-    if (activeTab === 'My Classes') {
+    if (activeTab === TABS.CLASSES) {
       console.log('🔄 Tab changed to Classes, refreshing data');
       refreshClasses();
-    } else if (activeTab === 'My Courses') {
+    } else if (activeTab === TABS.COURSES) {
       console.log('🔄 Tab changed to Courses, refreshing data');
       refreshCourses();
     }
   }, [activeTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setShowForm(false);
+  };
 
   function handleAdd() {
     setEditData(null);
     setEditIndex(null);
 
     // If on Classes tab, switch to Courses tab before showing the form
-    if (activeTab === 'My Classes') {
-      setActiveTab('My Courses');
+    if (activeTab === TABS.CLASSES) {
+      setActiveTab(TABS.COURSES);
     }
 
     setShowForm(true);
@@ -222,7 +240,7 @@ export default function CoursesContainer() {
         await refreshClasses();
 
         // Switch to the Classes tab to show the newly created classes
-        setActiveTab('My Classes');
+        setActiveTab(TABS.CLASSES);
         console.log('🔄 Switched to Classes tab to show new classes');
       } else {
         console.error('❌ Error creating course:', result.errors);
@@ -237,20 +255,14 @@ export default function CoursesContainer() {
   return (
     <div className="courses-container">
       <div className="profile-card">
-        <div className="profile-action-row tabs-bar">
-          {['My Classes', 'My Courses'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setShowForm(false);
-              }}
-              className={`profile-button ${activeTab === tab ? 'active' : ''}`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <TabsBar
+          tabs={[
+            { id: TABS.CLASSES, label: TAB_LABELS[TABS.CLASSES] },
+            { id: TABS.COURSES, label: TAB_LABELS[TABS.COURSES] },
+          ]}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
 
         {!showForm && (
           <div className="add-course-row">
@@ -267,7 +279,7 @@ export default function CoursesContainer() {
           </div>
         ) : (
           <div className="profile-content mt-4">
-            {activeTab === 'My Classes' && (
+            {activeTab === TABS.CLASSES && (
               <ClassesList
                 schedule={schedule}
                 handleDeleteClass={handleDeleteClass}
@@ -275,7 +287,7 @@ export default function CoursesContainer() {
               />
             )}
 
-            {activeTab === 'My Courses' && (
+            {activeTab === TABS.COURSES && (
               <>
                 <Modal
                   isOpen={showForm}

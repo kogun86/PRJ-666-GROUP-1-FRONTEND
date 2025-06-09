@@ -9,9 +9,22 @@ import EventsError from './EventsError';
 import AIChatWindow from '../../../components/AIChatWindow';
 import Modal from '../../../components/Modal';
 import { LoadingAnimation } from '../../../components/ui';
+import TabsBar from '../../../components/TabsBar';
+
+// Define tab constants for better readability
+const TABS = {
+  PENDING: 'pending',
+  COMPLETED: 'completed',
+};
+
+// Define tab display names
+const TAB_LABELS = {
+  [TABS.PENDING]: 'My Events',
+  [TABS.COMPLETED]: 'Completed Events',
+};
 
 export default function Events() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(TABS.PENDING);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState(null);
   const [formError, setFormError] = useState(null);
@@ -27,9 +40,9 @@ export default function Events() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    if (tab === 'home') {
+    if (tab === TABS.PENDING) {
       handleFetchPending();
-    } else if (tab === 'completed') {
+    } else if (tab === TABS.COMPLETED) {
       handleFetchCompleted();
     }
   };
@@ -77,26 +90,21 @@ export default function Events() {
     return <EventsError message={error} />;
   }
 
-  const currentGroups = activeTab === 'home' ? pendingGroups : completedGroups;
+  const currentGroups = activeTab === TABS.PENDING ? pendingGroups : completedGroups;
 
   return (
     <>
       <div className="events-tabs-container">
         <div className="profile-card">
-          <div className="events-tabs-header">
-            <button
-              onClick={() => handleTabChange('home')}
-              className={`events-tab-button ${activeTab === 'home' ? 'events-tab-active' : 'events-tab-inactive'}`}
-            >
-              My Events
-            </button>
-            <button
-              onClick={() => handleTabChange('completed')}
-              className={`events-tab-button ${activeTab === 'completed' ? 'events-tab-active' : 'events-tab-inactive'}`}
-            >
-              Completed Events
-            </button>
-          </div>
+          <TabsBar
+            tabs={[
+              { id: TABS.PENDING, label: TAB_LABELS[TABS.PENDING] },
+              { id: TABS.COMPLETED, label: TAB_LABELS[TABS.COMPLETED] },
+            ]}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            className="events-tabs-header"
+          />
 
           {!showForm && (
             <div className="add-course-row">
@@ -109,7 +117,7 @@ export default function Events() {
             </div>
           )}
 
-          <div className="events-tab-content" hidden={activeTab !== 'home'}>
+          <div className="events-tab-content" hidden={activeTab !== TABS.PENDING}>
             {refreshing ? (
               <div className="events-refreshing">
                 <LoadingAnimation size="large" />
@@ -120,7 +128,7 @@ export default function Events() {
             )}
           </div>
 
-          <div className="events-tab-content" hidden={activeTab !== 'completed'}>
+          <div className="events-tab-content" hidden={activeTab !== TABS.COMPLETED}>
             {refreshing ? (
               <div className="events-refreshing">
                 <LoadingAnimation size="large" />

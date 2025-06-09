@@ -191,36 +191,7 @@
   align-items: center;
 }
 
-.events-tabs-header {
-  display: flex;
-  background-color: #2f3e46;
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-  gap: 1rem;
-  width: 100%;
-  margin: 0 auto 1.5rem;
-}
-
-.events-tab-button {
-  flex: 1;
-  text-align: center;
-  padding: 0.75rem 0.5rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: clamp(0.875rem, 1.5vw, 1rem);
-}
-
-.events-tab-active {
-  background-color: #cad2c5;
-  color: #52796f;
-}
-
-.events-tab-inactive {
-  background-color: #52796f;
-  color: #cad2c5;
-}
+/* Tab styles moved to tabs.css */
 
 .events-tab-content {
   margin-top: 1.5rem;
