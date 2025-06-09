@@ -1,10 +1,29 @@
+import { useState, useEffect } from 'react';
 import { useAuth, useAuthProtection } from '../features/auth';
 import Layout from './Layout';
+import IntroAnimation from './ui/IntroAnimation';
 
 export default function ProtectedRoute({ children }) {
   // Use our authentication protection hook
   const { isLoading } = useAuthProtection();
   const { user } = useAuth();
+  const [showIntro, setShowIntro] = useState(false);
+
+  useEffect(() => {
+    // Check if we should show the intro animation
+    const shouldShowIntro = localStorage.getItem('showIntroAnimation') === 'true';
+    if (shouldShowIntro) {
+      setShowIntro(true);
+
+      // Clear the flag after 1 second
+      const timer = setTimeout(() => {
+        localStorage.removeItem('showIntroAnimation');
+        setShowIntro(false);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Show loading state while authentication is checked
   if (isLoading || !user) {
@@ -46,6 +65,11 @@ export default function ProtectedRoute({ children }) {
         `}</style>
       </Layout>
     );
+  }
+
+  // If authenticated and intro animation should be shown, display it
+  if (showIntro) {
+    return <IntroAnimation />;
   }
 
   // If authenticated, render the children

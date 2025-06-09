@@ -57,21 +57,16 @@ export default function Login() {
 
       console.log('Login successful, showing intro animation...');
 
-      // Show intro animation
-      setShowIntro(true);
+      // Set a flag in localStorage to show the intro animation
+      localStorage.setItem('showIntroAnimation', 'true');
 
-      // The IntroAnimation component will handle the redirect after 1 second
+      // Redirect immediately to profile page
+      router.replace('/profile');
     } catch (error) {
       console.error('Login error:', error.message, error);
       setError(error.message || 'Failed to login');
       setLoading(false);
     }
-  };
-
-  const handleIntroComplete = () => {
-    console.log('Intro animation complete, redirecting to profile...');
-    // Force redirect to profile page - using replace instead of push to prevent back-button issues
-    router.replace('/profile');
   };
 
   // Define form fields
@@ -100,20 +95,17 @@ export default function Login() {
   ) : null;
 
   return (
-    <>
-      {showIntro && <IntroAnimation onComplete={handleIntroComplete} />}
-      <AuthForm
-        title="Login"
-        fields={loginFields}
-        submitLabel="Login"
-        onSubmit={handleLogin}
-        loading={loading}
-        error={error}
-        footerText="Don't have an account?"
-        footerLinkText="Register"
-        footerLinkHref="/registration"
-        additionalFooter={devNote}
-      />
-    </>
+    <AuthForm
+      title="Login"
+      fields={loginFields}
+      submitLabel="Login"
+      onSubmit={handleLogin}
+      loading={loading}
+      error={error}
+      footerText="Don't have an account?"
+      footerLinkText="Register"
+      footerLinkHref="/registration"
+      additionalFooter={devNote}
+    />
   );
 }
