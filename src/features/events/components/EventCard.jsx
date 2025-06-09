@@ -1,5 +1,6 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
+import { LoadingAnimation } from '../../../components/ui';
 
 function EventCard({
   task,
@@ -58,7 +59,14 @@ function EventCard({
             onClick={onToggle}
             disabled={isUpdating || isDeleting}
           >
-            {isUpdating ? 'Updating...' : 'Mark as Done'}
+            {isUpdating ? (
+              <div className="button-loading">
+                <LoadingAnimation size="small" style={{ width: 24, height: 24 }} />
+                <span>Updating</span>
+              </div>
+            ) : (
+              'Mark as Done'
+            )}
           </button>
         )}
 
@@ -87,7 +95,11 @@ function EventCard({
             disabled={isUpdating || isDeleting}
             title="Delete event"
           >
-            {isDeleting ? 'Deleting...' : <Trash2 size={16} />}
+            {isDeleting ? (
+              <LoadingAnimation size="small" style={{ width: 24, height: 24 }} />
+            ) : (
+              <Trash2 size={16} />
+            )}
           </button>
         )}
       </div>

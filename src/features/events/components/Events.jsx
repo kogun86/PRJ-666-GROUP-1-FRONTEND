@@ -8,6 +8,7 @@ import EventsLoading from './EventsLoading';
 import EventsError from './EventsError';
 import AIChatWindow from '../../../components/AIChatWindow';
 import Modal from '../../../components/Modal';
+import { LoadingAnimation } from '../../../components/ui';
 
 export default function Events() {
   const [activeTab, setActiveTab] = useState('home');
@@ -15,6 +16,7 @@ export default function Events() {
   const [formData, setFormData] = useState(null);
   const [formError, setFormError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { pendingGroups, completedGroups, loading, error, addEvent, fetchPending, fetchCompleted } =
     useEvents();
 
@@ -46,15 +48,24 @@ export default function Events() {
 
   const handleFormSubmit = async (data) => {
     setFormError(null);
-    const success = await addEvent(data);
+    setIsSubmitting(true);
 
-    if (success) {
-      setShowForm(false);
-      setFormData(null);
-      // Refresh pending events after adding a new one
-      handleFetchPending();
-    } else {
-      setFormError('Failed to create event. Please try again.');
+    try {
+      const success = await addEvent(data);
+
+      if (success) {
+        setShowForm(false);
+        setFormData(null);
+        // Refresh pending events after adding a new one
+        handleFetchPending();
+      } else {
+        setFormError('Failed to create event. Please try again.');
+      }
+    } catch (err) {
+      setFormError('An error occurred. Please try again.');
+      console.error('Error submitting event:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -100,7 +111,10 @@ export default function Events() {
 
           <div className="events-tab-content" hidden={activeTab !== 'home'}>
             {refreshing ? (
-              <div className="loading-indicator">Refreshing events...</div>
+              <div className="events-refreshing">
+                <LoadingAnimation size="large" />
+                <p className="events-refreshing-text">Refreshing events...</p>
+              </div>
             ) : (
               <EventPending groups={pendingGroups} />
             )}
@@ -108,7 +122,10 @@ export default function Events() {
 
           <div className="events-tab-content" hidden={activeTab !== 'completed'}>
             {refreshing ? (
-              <div className="loading-indicator">Refreshing events...</div>
+              <div className="events-refreshing">
+                <LoadingAnimation size="large" />
+                <p className="events-refreshing-text">Refreshing events...</p>
+              </div>
             ) : (
               <EventCompleted groups={completedGroups} />
             )}
@@ -121,9 +138,11 @@ export default function Events() {
       <Modal
         isOpen={showForm}
         onClose={() => {
-          setShowForm(false);
-          setFormData(null);
-          setFormError(null);
+          if (!isSubmitting) {
+            setShowForm(false);
+            setFormData(null);
+            setFormError(null);
+          }
         }}
         title="Add Event"
       >
@@ -132,10 +151,13 @@ export default function Events() {
           initialData={formData}
           onSubmit={handleFormSubmit}
           onCancel={() => {
-            setShowForm(false);
-            setFormData(null);
-            setFormError(null);
+            if (!isSubmitting) {
+              setShowForm(false);
+              setFormData(null);
+              setFormError(null);
+            }
           }}
+          isSubmitting={isSubmitting}
         />
       </Modal>
     </>

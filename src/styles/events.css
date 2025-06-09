@@ -523,6 +523,19 @@
   cursor: not-allowed;
 }
 
+/* Button loading styles */
+.button-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button-loading span {
+  margin-left: 4px;
+}
+
+/* Update event delete button to properly display loading animation */
 .event-delete-button {
   display: flex;
   align-items: center;
@@ -535,6 +548,9 @@
   margin-left: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
 }
 
 .event-delete-button:hover {
@@ -558,4 +574,41 @@
   color: #a72f38;
   font-size: 0.875rem;
   margin-top: 0.25rem;
+}
+
+/* Loading styles for events page */
+.events-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1rem;
+  width: 100%;
+  text-align: center;
+  min-height: 400px;
+}
+
+.events-loading-text {
+  margin-top: 2rem;
+  font-size: 1.25rem;
+  color: #2f3e46;
+  font-weight: 500;
+}
+
+.events-refreshing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1rem;
+  width: 100%;
+  text-align: center;
+  min-height: 400px;
+}
+
+.events-refreshing-text {
+  margin-top: 2rem;
+  font-size: 1.25rem;
+  color: #2f3e46;
+  font-weight: 500;
 }

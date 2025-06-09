@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth, Auth } from '../features/auth';
 import AuthForm from '../components/AuthForm';
+import IntroAnimation from '../components/ui/IntroAnimation';
 
 export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isProduction, setIsProduction] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
 
@@ -53,16 +55,23 @@ export default function Login() {
         throw new Error(authResult.error);
       }
 
-      console.log('Login successful, redirecting to profile...');
+      console.log('Login successful, showing intro animation...');
 
-      // Force redirect to profile page - using replace instead of push to prevent back-button issues
-      router.replace('/profile');
+      // Show intro animation
+      setShowIntro(true);
+
+      // The IntroAnimation component will handle the redirect after 1 second
     } catch (error) {
       console.error('Login error:', error.message, error);
       setError(error.message || 'Failed to login');
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleIntroComplete = () => {
+    console.log('Intro animation complete, redirecting to profile...');
+    // Force redirect to profile page - using replace instead of push to prevent back-button issues
+    router.replace('/profile');
   };
 
   // Define form fields
@@ -91,17 +100,20 @@ export default function Login() {
   ) : null;
 
   return (
-    <AuthForm
-      title="Login"
-      fields={loginFields}
-      submitLabel="Login"
-      onSubmit={handleLogin}
-      loading={loading}
-      error={error}
-      footerText="Don't have an account?"
-      footerLinkText="Register"
-      footerLinkHref="/registration"
-      additionalFooter={devNote}
-    />
+    <>
+      {showIntro && <IntroAnimation onComplete={handleIntroComplete} />}
+      <AuthForm
+        title="Login"
+        fields={loginFields}
+        submitLabel="Login"
+        onSubmit={handleLogin}
+        loading={loading}
+        error={error}
+        footerText="Don't have an account?"
+        footerLinkText="Register"
+        footerLinkHref="/registration"
+        additionalFooter={devNote}
+      />
+    </>
   );
 }

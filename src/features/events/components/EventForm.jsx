@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useCourses } from '../hooks/useCourses';
+import { LoadingAnimation } from '../../../components/ui';
 
-export default function EventForm({ initialData, onSubmit, onCancel }) {
+export default function EventForm({ initialData, onSubmit, onCancel, isSubmitting }) {
   const { courses, loading: coursesLoading } = useCourses();
   const [startDate, setStartDate] = useState(initialData?.start || '');
 
@@ -180,11 +181,23 @@ export default function EventForm({ initialData, onSubmit, onCancel }) {
 
       {/* Buttons */}
       <div className="modal-actions">
-        <button type="button" className="modal-button modal-cancel-button" onClick={onCancel}>
+        <button
+          type="button"
+          className="modal-button modal-cancel-button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancel
         </button>
-        <button type="submit" className="modal-button modal-submit-button">
-          Save
+        <button type="submit" className="modal-button modal-submit-button" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <div className="button-loading">
+              <LoadingAnimation size="small" style={{ width: 24, height: 24 }} />
+              <span>Saving</span>
+            </div>
+          ) : (
+            'Save'
+          )}
         </button>
       </div>
 

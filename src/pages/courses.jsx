@@ -6,6 +6,7 @@ import { useCourseSubmit, useClassDelete, useCourseDeletion } from '@/features/c
 import { Auth } from '../features/auth/lib/amplifyClient';
 import AIChatWindow from '../components/AIChatWindow';
 import Modal from '../components/Modal';
+import { LoadingAnimation } from '../components/ui';
 
 export default function CoursesPage() {
   const [activeTab, setActiveTab] = useState('My Classes');
@@ -449,8 +450,9 @@ export default function CoursesPage() {
             )}
 
             {loading ? (
-              <div className="loading-indicator">
-                <span className="icon-spin">⟳</span> Loading courses...
+              <div className="loading-container">
+                <LoadingAnimation size="large" />
+                <p className="loading-text">Loading your courses...</p>
               </div>
             ) : (
               <div className="profile-content mt-4">
@@ -468,7 +470,14 @@ export default function CoursesPage() {
                                   onClick={() => handleDeleteClass(s.id)}
                                   disabled={isDeletingClass}
                                 >
-                                  {isDeletingClass ? '...' : '×'}
+                                  {isDeletingClass ? (
+                                    <LoadingAnimation
+                                      size="small"
+                                      style={{ width: 24, height: 24 }}
+                                    />
+                                  ) : (
+                                    '×'
+                                  )}
                                 </button>
                               </div>
                               <h5 className="session-title">{s.title || s.code}</h5>
@@ -545,7 +554,14 @@ export default function CoursesPage() {
                                 onClick={() => handleDeleteCourse(c._id)}
                                 disabled={isDeletingCourse}
                               >
-                                {isDeletingCourse ? '...' : 'Delete'}
+                                {isDeletingCourse ? (
+                                  <LoadingAnimation
+                                    size="small"
+                                    style={{ width: 24, height: 24 }}
+                                  />
+                                ) : (
+                                  'Delete'
+                                )}
                               </button>
                             </div>
                             <div className="course-title-row">
