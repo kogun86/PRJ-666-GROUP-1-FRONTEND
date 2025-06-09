@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
-import CourseForm from '../components/CourseForm';
+import CourseForm from '../features/courses/components/CourseForm';
 import { useCourseSubmit, useClassDelete, useCourseDeletion } from '@/features/courses';
 import { Auth } from '../features/auth/lib/amplifyClient';
 
@@ -41,13 +41,24 @@ export default function CoursesPage() {
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
         console.log('🔗 API_BASE_URL:', API_BASE_URL);
 
-        const user = await Auth.getCurrentUser();
-        if (!user || !user.authorizationHeaders) {
-          throw new Error('You must be logged in to view courses.');
+        let headers;
+        // In development mode, use mock headers
+        if (process.env.NODE_ENV === 'development') {
+          headers = {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer mock-id-token',
+          };
+          console.log('🔐 Using development mock headers');
+        } else {
+          // Production mode - use real auth
+          const user = await Auth.getCurrentUser();
+          if (!user || !user.authorizationHeaders) {
+            throw new Error('You must be logged in to view courses.');
+          }
+          headers = user.authorizationHeaders();
+          console.log('🔐 Auth Headers:', headers);
         }
 
-        const headers = user.authorizationHeaders();
-        console.log('🔐 Auth Headers:', headers);
         //  Fetch courses
         const courseRes = await fetch(`${API_BASE_URL}/v1/courses?active=true`, {
           headers,
@@ -56,6 +67,7 @@ export default function CoursesPage() {
           throw new Error(`HTTP error! status: ${courseRes.status}`);
         }
         const courseData = await courseRes.json();
+        console.log('📥 Courses response:', courseData);
         const courses = courseData.courses || [];
 
         const fetchedCourses = courses.map((course) => ({
@@ -114,12 +126,24 @@ export default function CoursesPage() {
       const fetchCoursesAndClasses = async () => {
         try {
           const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-          const user = await Auth.getCurrentUser();
-          if (!user || !user.authorizationHeaders) {
-            throw new Error('You must be logged in to view courses.');
+
+          let headers;
+          // In development mode, use mock headers
+          if (process.env.NODE_ENV === 'development') {
+            headers = {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer mock-id-token',
+            };
+            console.log('🔄 Using development mock headers for class refresh');
+          } else {
+            // Production mode - use real auth
+            const user = await Auth.getCurrentUser();
+            if (!user || !user.authorizationHeaders) {
+              throw new Error('You must be logged in to view courses.');
+            }
+            headers = user.authorizationHeaders();
           }
 
-          const headers = user.authorizationHeaders();
           const classRes = await fetch(`${API_BASE_URL}/v1/classes`, {
             headers,
           });
@@ -128,6 +152,7 @@ export default function CoursesPage() {
           }
 
           const classData = await classRes.json();
+          console.log('🔄 Refreshed classes data:', classData);
           const courses = myCourses.map((course) => ({
             _id: course._id,
             title: course.title,
@@ -152,12 +177,24 @@ export default function CoursesPage() {
       const fetchCourses = async () => {
         try {
           const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-          const user = await Auth.getCurrentUser();
-          if (!user || !user.authorizationHeaders) {
-            throw new Error('You must be logged in to view courses.');
+
+          let headers;
+          // In development mode, use mock headers
+          if (process.env.NODE_ENV === 'development') {
+            headers = {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer mock-id-token',
+            };
+            console.log('🔄 Using development mock headers for refresh');
+          } else {
+            // Production mode - use real auth
+            const user = await Auth.getCurrentUser();
+            if (!user || !user.authorizationHeaders) {
+              throw new Error('You must be logged in to view courses.');
+            }
+            headers = user.authorizationHeaders();
           }
 
-          const headers = user.authorizationHeaders();
           const courseRes = await fetch(`${API_BASE_URL}/v1/courses?active=true`, {
             headers,
           });
@@ -165,6 +202,7 @@ export default function CoursesPage() {
             throw new Error(`HTTP error! status: ${courseRes.status}`);
           }
           const courseData = await courseRes.json();
+          console.log('🔄 Refreshed courses data:', courseData);
           const courses = courseData.courses || [];
 
           const fetchedCourses = courses.map((course) => ({
@@ -325,6 +363,7 @@ export default function CoursesPage() {
         status: 'active',
         startDate: data.startDate,
         endDate: data.endDate,
+        color: data.color,
         instructor: {
           name: data.instructor.name,
           email: data.instructor.email,
@@ -351,9 +390,11 @@ export default function CoursesPage() {
         setMyCourses((prev) => [
           ...prev,
           {
+            _id: result.courseId || result._id || `temp-${Date.now()}`,
             title: newCourse.title,
             code: newCourse.code,
             professor: newCourse.instructor.name,
+            color: newCourse.color,
             grade: 0,
             schedule: newCourse.schedule.map((s) => ({
               time: `${secondsToTime(s.startTime)}–${secondsToTime(s.endTime)}`,
@@ -391,7 +432,7 @@ export default function CoursesPage() {
               ))}
             </div>
 
-            {activeTab === 'My Courses' && !showForm && (
+            {!showForm && (
               <div className="add-course-row">
                 <button className="button button-primary add-course-button" onClick={handleAdd}>
                   + Add Course
@@ -475,7 +516,11 @@ export default function CoursesPage() {
                     <div className="courses-list">
                       {myCourses.length > 0 ? (
                         myCourses.map((c, idx) => (
-                          <div key={`${c.code}-${idx}`} className="course-card">
+                          <div
+                            key={`${c.code}-${idx}`}
+                            className="course-card"
+                            style={{ borderLeft: `5px solid ${c.color || '#cad2c5'}` }}
+                          >
                             <div className="course-actions">
                               <button
                                 className="edit-course-button"
@@ -497,7 +542,12 @@ export default function CoursesPage() {
                             </div>
                             <div className="course-title-row">
                               <h3 className="course-name">{c.title}</h3>
-                              <div className="course-code-badge">{c.code}</div>
+                              <div
+                                className="course-code-badge"
+                                style={{ backgroundColor: c.color || '#cad2c5' }}
+                              >
+                                {c.code}
+                              </div>
                             </div>
                             <div className="course-metadata">
                               <div>

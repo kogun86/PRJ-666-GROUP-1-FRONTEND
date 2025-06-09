@@ -1,4 +1,4 @@
-import { apiRequest } from '../../../lib/api.js';
+import { apiRequest } from '../utils/api.js';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useAuth } from '@/features/auth';
 

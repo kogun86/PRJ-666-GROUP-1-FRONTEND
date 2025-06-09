@@ -1,7 +1,7 @@
 'use client';
 
-import Sidebar from './Sidebar';
-import MobileNav from './MobileNav';
+import Sidebar from '../features/sidebar/components/Sidebar';
+import MobileNav from '../features/sidebar/components/MobileNav';
 
 const Layout = ({ children }) => {
   return (

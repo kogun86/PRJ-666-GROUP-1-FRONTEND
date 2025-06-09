@@ -13,7 +13,9 @@ export default function EventsPage() {
   return (
     <ProtectedRoute>
       <Layout>
-        <Events />
+        <div className="courses-container">
+          <Events />
+        </div>
       </Layout>
     </ProtectedRoute>
   );

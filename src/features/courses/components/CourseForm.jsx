@@ -3,17 +3,33 @@ import { useForm, useFieldArray } from 'react-hook-form';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
+// Predefined color options for courses
+const COURSE_COLORS = [
+  '#4054e7', // Blue
+  '#f44336', // Red
+  '#4CAF50', // Green
+  '#FF9800', // Orange
+  '#9C27B0', // Purple
+  '#3F51B5', // Indigo
+  '#009688', // Teal
+  '#795548', // Brown
+  '#607D8B', // Blue Grey
+];
+
 export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitting, error }) {
   const {
     register,
     control,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm({
     defaultValues: initialData || {
       title: '',
       code: '',
       section: 'A',
+      color: '#4054e7', // Default color
       instructor: {
         name: '',
         email: '',
@@ -45,6 +61,14 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
     name: 'instructor.availableTimeSlots',
   });
 
+  // Watch the current color value
+  const currentColor = watch('color');
+
+  // Handle preset color selection
+  const handleColorPresetClick = (color) => {
+    setValue('color', color);
+  };
+
   return (
     <form className="course-form" onSubmit={handleSubmit(onSubmit)}>
       {/* Display any API errors */}
@@ -69,6 +93,35 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
         <label>Section</label>
         <input {...register('section', { required: 'Required' })} className="form-input" />
         {errors.section && <span className="error-message">{errors.section.message}</span>}
+      </div>
+
+      {/* Color Picker */}
+      <div className="form-group">
+        <label>Course Color</label>
+        <div className="color-picker-container">
+          <input
+            type="color"
+            {...register('color', { required: 'Required' })}
+            className="form-color-input"
+          />
+          <span className="color-value">{currentColor}</span>
+        </div>
+
+        {/* Color presets */}
+        <div className="color-presets">
+          {COURSE_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              className={`color-preset ${color === currentColor ? 'active' : ''}`}
+              style={{ backgroundColor: color }}
+              onClick={() => handleColorPresetClick(color)}
+              title={color}
+            />
+          ))}
+        </div>
+
+        {errors.color && <span className="error-message">{errors.color.message}</span>}
       </div>
 
       {/* Instructor */}
@@ -187,6 +240,54 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
           Cancel
         </button>
       </div>
+
+      <style jsx>{`
+        .color-picker-container {
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .form-color-input {
+          width: 50px;
+          height: 40px;
+          padding: 0;
+          border: none;
+          cursor: pointer;
+        }
+
+        .color-value {
+          margin-left: 10px;
+          font-family: monospace;
+        }
+
+        .color-presets {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 15px;
+        }
+
+        .color-preset {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          border: 2px solid #e0e0e0;
+          cursor: pointer;
+          transition:
+            transform 0.2s,
+            border-color 0.2s;
+        }
+
+        .color-preset:hover {
+          transform: scale(1.1);
+        }
+
+        .color-preset.active {
+          border-color: #333;
+          transform: scale(1.1);
+        }
+      `}</style>
     </form>
   );
 }

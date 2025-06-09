@@ -28,6 +28,8 @@ export function useCourseDeletion() {
       // Use mock token in development mode
       if (process.env.NODE_ENV === 'development') {
         headers.Authorization = 'Bearer mock-id-token';
+        // In development mode, we're using 'dev' as the userId
+        console.log('Using development mode authentication');
       } else {
         const session = await fetchAuthSession();
         const idToken = session.tokens?.idToken?.toString();

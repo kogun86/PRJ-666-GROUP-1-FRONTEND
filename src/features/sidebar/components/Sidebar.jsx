@@ -13,9 +13,9 @@ import {
   Calendar,
   LogOut,
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { cn } from '../lib/utils';
-import { useAuth } from '../features/auth/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '../../profile/components/avatar';
+import { cn } from '../../events/utils/utils';
+import { useAuth } from '../../auth/context/AuthContext';
 
 const Sidebar = () => {
   const pathname = usePathname();
