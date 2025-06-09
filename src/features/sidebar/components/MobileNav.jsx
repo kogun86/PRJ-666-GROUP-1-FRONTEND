@@ -24,8 +24,8 @@ export default function MobileNav() {
 
   const navLinks = [
     { name: 'Profile', path: '/profile', icon: User },
-    { name: 'Events', path: '/events', icon: CalendarDays },
     { name: 'Courses', path: '/courses', icon: BookText },
+    { name: 'Events', path: '/events', icon: CalendarDays },
     { name: 'Todo', path: '/todo', icon: ListTodo },
   ];
 

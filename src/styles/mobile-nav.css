@@ -4,8 +4,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: white;
-  border-top: 1px solid #e5e7eb;
+  background-color: #2f3e46;
+  border-top: 1px solid #52796f;
   z-index: 10;
 }
 
@@ -25,15 +25,15 @@
   flex-direction: column;
   align-items: center;
   padding: 0.75rem;
-  color: #4b5563;
+  color: #cad2c5;
 }
 
 .mobile-nav-link:hover {
-  color: #52796f;
+  color: #84a98c;
 }
 
 .mobile-nav-link.active {
-  color: #52796f;
+  color: #84a98c;
 }
 
 .mobile-nav-icon {
@@ -51,13 +51,13 @@
   position: absolute;
   bottom: 4rem;
   right: 0;
-  background-color: white;
+  background-color: #2f3e46;
   border-radius: 0.5rem;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
   padding: 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #52796f;
 }
 
 .more-menu-item {
@@ -65,10 +65,11 @@
   border-radius: 0.25rem;
   display: flex;
   align-items: center;
+  color: #cad2c5;
 }
 
 .more-menu-item:hover {
-  background-color: #f3f4f6;
+  background-color: #52796f;
 }
 
 .more-menu-icon {
