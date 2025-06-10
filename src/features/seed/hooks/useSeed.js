@@ -1,13 +1,52 @@
 import { useState } from 'react';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { courses, generateEvents } from '../data/seedData';
-import { createCourse } from '../services/seedService';
-import { createEvent } from '../../events/services/eventService';
+import { createCourse, createEvent } from '../services/seedService';
 
 export function useSeed() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [progress, setProgress] = useState({ total: 0, completed: 0 });
+
+  /**
+   * Get authorization headers for API requests
+   * @returns {Promise<Object>} Headers object with authorization
+   */
+  const getHeaders = async () => {
+    const baseHeaders = {
+      'Content-Type': 'application/json',
+    };
+
+    // Check if we're in development mode
+    if (process.env.NODE_ENV === 'development') {
+      // Development headers with mock token
+      console.log('Using development mock token');
+      return {
+        ...baseHeaders,
+        Authorization: 'Bearer mock-id-token',
+      };
+    }
+
+    // Production mode - get real token
+    try {
+      // Get the current session
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      if (!idToken) {
+        throw new Error('No ID token available');
+      }
+
+      return {
+        ...baseHeaders,
+        Authorization: `Bearer ${idToken}`,
+      };
+    } catch (err) {
+      console.error('Error getting ID token:', err);
+      throw new Error('Failed to get access token');
+    }
+  };
 
   /**
    * Fetch all courses from the backend to get their IDs
@@ -19,13 +58,13 @@ export function useSeed() {
           ? 'http://localhost:8080/api/v1'
           : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
 
-      // Use the same headers as other API calls
-      const headers =
-        process.env.NODE_ENV === 'development'
-          ? { 'Content-Type': 'application/json', Authorization: 'Bearer mock-id-token' }
-          : { 'Content-Type': 'application/json' }; // In production, real auth would be handled
+      // Get proper authorization headers
+      const headers = await getHeaders();
 
       console.log('🔍 Fetching all courses to get IDs');
+      console.log('🔍 API URL:', `${API_BASE_URL}/courses?active=true`);
+      console.log('🔍 Headers:', JSON.stringify(headers, null, 2));
+
       const response = await fetch(`${API_BASE_URL}/courses?active=true`, {
         method: 'GET',
         headers,
@@ -113,6 +152,9 @@ export function useSeed() {
         `🌱 Generated ${events.length} events:`,
         events.map((e) => e.title)
       );
+
+      // Get the auth headers before creating events
+      const headers = await getHeaders();
 
       for (let i = 0; i < events.length; i++) {
         try {
