@@ -32,11 +32,23 @@ export default function Events() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { pendingGroups, completedGroups, loading, error, addEvent, fetchPending, fetchCompleted } =
     useEvents();
+  const [localPendingGroups, setLocalPendingGroups] = useState([]);
+  const [localCompletedGroups, setLocalCompletedGroups] = useState([]);
 
   // Fetch pending events when component mounts
   useEffect(() => {
     handleFetchPending();
   }, []);
+
+  // Sync localPendingGroups with pendingGroups when they change
+  useEffect(() => {
+    setLocalPendingGroups(pendingGroups);
+  }, [pendingGroups]);
+
+  // Sync localCompletedGroups with completedGroups when they change
+  useEffect(() => {
+    setLocalCompletedGroups(completedGroups);
+  }, [completedGroups]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -124,7 +136,10 @@ export default function Events() {
                 <p className="events-refreshing-text">Refreshing events...</p>
               </div>
             ) : (
-              <EventPending groups={pendingGroups} />
+              <EventPending
+                groups={localPendingGroups}
+                onGroupsUpdate={(updatedGroups) => setLocalPendingGroups(updatedGroups)}
+              />
             )}
           </div>
 
@@ -135,7 +150,10 @@ export default function Events() {
                 <p className="events-refreshing-text">Refreshing events...</p>
               </div>
             ) : (
-              <EventCompleted groups={completedGroups} />
+              <EventCompleted
+                groups={localCompletedGroups}
+                onGroupsUpdate={(updatedGroups) => setLocalCompletedGroups(updatedGroups)}
+              />
             )}
           </div>
         </div>

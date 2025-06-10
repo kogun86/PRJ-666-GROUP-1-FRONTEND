@@ -3,7 +3,7 @@ import ReactPaginate from 'react-paginate';
 import EventCard from './EventCard';
 import { useEvents } from '..';
 
-function EventsPending({ groups }) {
+function EventsPending({ groups, onGroupsUpdate }) {
   const { toggleEventStatus, deleteEventById, fetchPending } = useEvents();
   const [pages, setPages] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
@@ -34,6 +34,19 @@ function EventsPending({ groups }) {
 
     setUpdatingEventId(eventId);
     try {
+      // Optimistically update UI by removing the event from the local state
+      const updatedGroups = groups
+        .map((group) => ({
+          ...group,
+          tasks: group.tasks.filter((t) => t._id !== eventId && t.id !== eventId),
+        }))
+        .filter((group) => group.tasks.length > 0);
+
+      // Update any parent component that uses this state
+      if (typeof onGroupsUpdate === 'function') {
+        onGroupsUpdate(updatedGroups);
+      }
+
       await toggleEventStatus(eventId, true);
       console.log('Event marked as done, refreshing list');
       // Refresh the events list after updating
@@ -55,6 +68,19 @@ function EventsPending({ groups }) {
 
     setDeletingEventId(eventId);
     try {
+      // Optimistically update UI by removing the event from the local state
+      const updatedGroups = groups
+        .map((group) => ({
+          ...group,
+          tasks: group.tasks.filter((t) => t._id !== eventId && t.id !== eventId),
+        }))
+        .filter((group) => group.tasks.length > 0);
+
+      // Update any parent component that uses this state
+      if (typeof onGroupsUpdate === 'function') {
+        onGroupsUpdate(updatedGroups);
+      }
+
       const result = await deleteEventById(eventId);
       if (!result) {
         console.error('Failed to delete event');

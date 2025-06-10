@@ -4,7 +4,7 @@ import EventCard from './EventCard';
 import EventGradeInput from './EventGradeInput';
 import { useEvents } from '..';
 
-function EventCompleted({ groups }) {
+function EventCompleted({ groups, onGroupsUpdate }) {
   const { toggleEventStatus, deleteEventById, fetchCompleted } = useEvents();
   const [editing, setEditing] = useState({ groupDate: null, taskId: null });
   const [pageNumbers, setPageNumbers] = useState({});
@@ -48,6 +48,19 @@ function EventCompleted({ groups }) {
 
     setUpdatingEventId(eventId);
     try {
+      // Optimistically update UI by removing the event from the local state
+      const updatedGroups = groups
+        .map((group) => ({
+          ...group,
+          tasks: group.tasks.filter((t) => t._id !== eventId && t.id !== eventId),
+        }))
+        .filter((group) => group.tasks.length > 0);
+
+      // Update parent component state
+      if (typeof onGroupsUpdate === 'function') {
+        onGroupsUpdate(updatedGroups);
+      }
+
       await toggleEventStatus(eventId, false);
       console.log('Event marked as incomplete, refreshing list');
       // Refresh the completed events list after updating
@@ -69,6 +82,19 @@ function EventCompleted({ groups }) {
 
     setDeletingEventId(eventId);
     try {
+      // Optimistically update UI by removing the event from the local state
+      const updatedGroups = groups
+        .map((group) => ({
+          ...group,
+          tasks: group.tasks.filter((t) => t._id !== eventId && t.id !== eventId),
+        }))
+        .filter((group) => group.tasks.length > 0);
+
+      // Update parent component state
+      if (typeof onGroupsUpdate === 'function') {
+        onGroupsUpdate(updatedGroups);
+      }
+
       const result = await deleteEventById(eventId);
       if (!result) {
         console.error('Failed to delete event');
