@@ -2,7 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, CalendarDays, BookText, ListTodo, Target, Calendar, LogOut } from 'lucide-react';
+import {
+  User,
+  CalendarDays,
+  BookText,
+  ListTodo,
+  Target,
+  Calendar,
+  LogOut,
+  HelpCircle,
+} from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { cn } from '../../events/utils/utils';
 
@@ -16,6 +25,7 @@ export default function MobileNav() {
     { name: 'Events', path: '/events', icon: CalendarDays },
     { name: 'Todo', path: '/todo', icon: ListTodo },
     { name: 'Goals', path: '/goals', icon: Target },
+    { name: 'Tips', path: '/tips', icon: HelpCircle },
     { name: 'Calendar', path: '/calendar', icon: Calendar },
   ];
 
