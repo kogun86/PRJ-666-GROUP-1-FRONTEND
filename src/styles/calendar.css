@@ -78,6 +78,17 @@
   text-overflow: ellipsis;
 }
 
+/* Event time display styling */
+.fc .fc-event-time {
+  font-weight: 900;
+  margin-right: 4px;
+  display: inline-block;
+  min-width: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 1em;
+}
+
 /* Week view specific styling */
 .fc .fc-timegrid-slot {
   height: 3rem;
