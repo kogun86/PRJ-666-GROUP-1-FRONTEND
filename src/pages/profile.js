@@ -6,6 +6,7 @@ import ProtectedRoute from '../componentShared/ProtectedRoute';
 import { ChangePasswordForm } from '../features/profile/components/ChangePasswordForm';
 import AIChatWindow from '../componentShared/AIChatWindow';
 import Modal from '../componentShared/Modal';
+import { SeedButton } from '../features/seed';
 
 const Avatar = ({ className, children }) => {
   return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
@@ -175,6 +176,7 @@ function ProfileContent() {
       <div className="profile-card profile-user-card">
         <div className="profile-header">
           <h1 className="profile-title">User Profile</h1>
+          <SeedButton />
         </div>
 
         <div className="profile-content">
@@ -217,7 +219,7 @@ function ProfileContent() {
 
             <div className="profile-action-row">
               <Button
-                className="profile-button profile-edit-button px-4 py-2 rounded-lg mr-3"
+                className="profile-button profile-edit-button px-4 py-2 rounded-lg ml-3 mr-3"
                 onClick={handleOpenEditProfileModal}
               >
                 Edit Profile
