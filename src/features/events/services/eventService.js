@@ -716,3 +716,87 @@ export const deleteEvent = async (eventId) => {
     return { success: false, error: error.message || 'Failed to delete event' };
   }
 };
+
+/**
+ * Updates an event's grade
+ * @param {string} eventId - ID of the event to update
+ * @param {number} grade - The grade value to set (0-100)
+ * @returns {Promise<Object>} Promise resolving to the updated event data
+ */
+export const updateEventGrade = async (eventId, grade) => {
+  try {
+    if (!eventId) {
+      throw new Error('Event ID is required');
+    }
+
+    // Validate grade value
+    const gradeValue = Number(grade);
+    if (isNaN(gradeValue) || gradeValue < 0 || gradeValue > 100) {
+      throw new Error('Grade must be a number between 0 and 100');
+    }
+
+    const headers = await getHeaders();
+    console.log(`Updating grade for event ${eventId} to ${grade}`);
+
+    // Set up timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/${eventId}/grade`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ grade: gradeValue }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errorText = '';
+        try {
+          errorText = await response.text();
+          console.error('Error response body:', errorText);
+
+          // Try to parse as JSON if possible
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(
+              errorData.errors?.join(', ') ||
+                errorData.message ||
+                `Server error: ${response.status} - ${response.statusText}`
+            );
+          } catch (parseError) {
+            // If not JSON, use text directly
+            throw new Error(
+              `Server error: ${response.status} - ${errorText || response.statusText}`
+            );
+          }
+        } catch (textError) {
+          if (textError !== errorText) throw textError;
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log('Grade update success response:', data);
+      return {
+        success: true,
+        event: data.event,
+      };
+    } catch (fetchError) {
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timed out - The server took too long to respond');
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('Failed to update event grade:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to update event grade',
+    };
+  }
+};

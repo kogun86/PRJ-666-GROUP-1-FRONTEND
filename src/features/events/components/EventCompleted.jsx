@@ -5,12 +5,13 @@ import EventGradeInput from './EventGradeInput';
 import { useEvents } from '..';
 
 function EventCompleted({ groups, onGroupsUpdate }) {
-  const { toggleEventStatus, deleteEventById, fetchCompleted } = useEvents();
+  const { toggleEventStatus, deleteEventById, fetchCompleted, setEventGrade } = useEvents();
   const [editing, setEditing] = useState({ groupDate: null, taskId: null });
   const [pageNumbers, setPageNumbers] = useState({});
   const [width, setWidth] = useState(window.innerWidth);
   const [updatingEventId, setUpdatingEventId] = useState(null);
   const [deletingEventId, setDeletingEventId] = useState(null);
+  const [savingGradeId, setSavingGradeId] = useState(null);
 
   useEffect(() => {
     const onResize = () => setWidth(window.innerWidth);
@@ -112,11 +113,57 @@ function EventCompleted({ groups, onGroupsUpdate }) {
     }
   };
 
-  const saveGrade = (grade) => {
+  const saveGrade = async (grade) => {
     const { groupDate, taskId } = editing;
     if (!groupDate || !taskId) return;
 
-    cancelEditing();
+    // Find the task in the groups
+    const group = groups.find((g) => g.date === groupDate);
+    if (!group) return cancelEditing();
+
+    const task = group.tasks.find((t) => t._id === taskId || t.id === taskId);
+    if (!task) return cancelEditing();
+
+    // Set loading state
+    setSavingGradeId(taskId);
+
+    try {
+      // Optimistically update UI with new grade
+      const updatedGroups = groups.map((g) => {
+        if (g.date === groupDate) {
+          return {
+            ...g,
+            tasks: g.tasks.map((t) => {
+              if (t._id === taskId || t.id === taskId) {
+                return { ...t, grade };
+              }
+              return t;
+            }),
+          };
+        }
+        return g;
+      });
+
+      // Update parent component state
+      if (typeof onGroupsUpdate === 'function') {
+        onGroupsUpdate(updatedGroups);
+      }
+
+      // Call the API to update the grade
+      const success = await setEventGrade(taskId, grade);
+
+      if (!success) {
+        console.error('Failed to save grade');
+        // Could revert the optimistic update here if needed
+      } else {
+        console.log('Grade saved successfully');
+      }
+    } catch (error) {
+      console.error('Error saving grade:', error);
+    } finally {
+      setSavingGradeId(null);
+      cancelEditing();
+    }
   };
 
   const onPageChange = (groupDate) => (data) => {
@@ -155,6 +202,7 @@ function EventCompleted({ groups, onGroupsUpdate }) {
                 if (editing.groupDate === group.date && editing.taskId === taskId) {
                   // Use the event's color or default to the theme color
                   const eventColor = task.color || '#52796f';
+                  const isSaving = savingGradeId === taskId;
 
                   return (
                     <div
@@ -167,6 +215,7 @@ function EventCompleted({ groups, onGroupsUpdate }) {
                         initialGrade={task.grade}
                         onSave={saveGrade}
                         onCancel={cancelEditing}
+                        isLoading={isSaving}
                       />
                     </div>
                   );

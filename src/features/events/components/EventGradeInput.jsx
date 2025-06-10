@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { LoadingAnimation } from '../../animations';
 
-function EventGradeInput({ initialGrade, onSave, onCancel }) {
+function EventGradeInput({ initialGrade, onSave, onCancel, isLoading = false }) {
   const [grade, setGrade] = useState(initialGrade || '');
   const [error, setError] = useState('');
 
@@ -37,19 +38,28 @@ function EventGradeInput({ initialGrade, onSave, onCancel }) {
           placeholder="0-100"
           autoFocus
           className="event-grade-input"
+          disabled={isLoading}
         />
       </div>
 
       {error && <div className="event-grade-error">{error}</div>}
 
       <div className="event-grade-actions">
-        <button type="submit" className="event-action-button">
-          Save
+        <button type="submit" className="event-action-button" disabled={isLoading}>
+          {isLoading ? (
+            <div className="button-loading">
+              <LoadingAnimation size="small" style={{ width: 16, height: 16 }} />
+              <span>Saving</span>
+            </div>
+          ) : (
+            'Save'
+          )}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="event-action-button event-action-secondary"
+          disabled={isLoading}
         >
           Cancel
         </button>

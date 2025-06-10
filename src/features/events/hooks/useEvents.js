@@ -7,6 +7,7 @@ import {
   fetchCompletedEvents,
   updateEventStatus,
   deleteEvent,
+  updateEventGrade,
 } from '../services/eventService';
 import { groupTasksByDate, getDateKey } from '../utils/dateUtils';
 
@@ -303,6 +304,52 @@ export const useEvents = () => {
     }
   };
 
+  /**
+   * Updates an event's grade
+   * @param {string} eventId - The ID of the event to update
+   * @param {number} grade - The grade value to set (0-100)
+   * @returns {Promise<boolean>} Success status
+   */
+  const setEventGrade = async (eventId, grade) => {
+    try {
+      setLoading(true);
+
+      // Debug the event ID and grade
+      console.log(`Setting grade for event ${eventId} to ${grade}`);
+
+      // Call the API to update the event's grade
+      const result = await updateEventGrade(eventId, grade);
+
+      console.log('Update grade result:', result);
+
+      if (!result.success) {
+        console.error('Failed to update grade:', result.error);
+        setError(result.error || 'Failed to update grade');
+        return false;
+      }
+
+      console.log('Grade updated successfully, updating UI');
+
+      // Update the completed events list with the new grade
+      setCompletedEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event._id === eventId || event.id === eventId ? { ...event, grade: Number(grade) } : event
+        )
+      );
+
+      // Refresh completed events to ensure UI is up to date
+      await fetchCompleted();
+
+      return true;
+    } catch (err) {
+      console.error('Exception during grade update:', err);
+      setError(err.message || 'Failed to update grade');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     pendingEvents,
     completedEvents,
@@ -315,5 +362,6 @@ export const useEvents = () => {
     addEvent,
     toggleEventStatus,
     deleteEventById,
+    setEventGrade,
   };
 };
