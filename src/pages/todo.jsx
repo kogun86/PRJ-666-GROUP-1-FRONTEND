@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import Layout from '../componentShared/Layout';
+import ProtectedRoute from '../componentShared/ProtectedRoute';
+import AIChatWindow from '../componentShared/AIChatWindow';
 
 const API_BASE_URL =
   process.env.NODE_ENV === 'development'
     ? 'http://localhost:8080/api/v1'
     : `${process.env.NEXT_PUBLIC_API_URL}/v1`;
 
-const SmartTodoPage = () => {
+const SmartTodoContent = () => {
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,7 +50,8 @@ const SmartTodoPage = () => {
   };
 
   useEffect(() => {
-    fetchSmartTodos();
+    // Temporarily commenting out this fetch call as it's causing the app to crash
+    // fetchSmartTodos();
   }, []);
 
   return (
@@ -71,6 +75,18 @@ const SmartTodoPage = () => {
         ))}
       </div>
     </div>
+  );
+};
+
+const SmartTodoPage = () => {
+  return (
+    <ProtectedRoute>
+      <Layout>
+        <SmartTodoContent />
+        {/* AI Chat Window */}
+        <AIChatWindow />
+      </Layout>
+    </ProtectedRoute>
   );
 };
 
