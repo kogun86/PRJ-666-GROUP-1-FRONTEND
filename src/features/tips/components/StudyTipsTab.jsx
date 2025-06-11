@@ -38,7 +38,7 @@ const StudyTipsTab = () => {
   const categories = [
     { id: 'all', label: 'All Tips' },
     { id: 'time', label: 'Time Management' },
-    { id: 'notes', label: 'Note-Taking' },
+    { id: 'note', label: 'Note-Taking' },
     { id: 'exam', label: 'Exam Strategies' },
     { id: 'urgent', label: 'Quick Tips' },
   ];
@@ -213,12 +213,20 @@ const StudyTipsTab = () => {
     },
   ];
 
+  // Helper function to match category
+  const matchesCategory = (tipCategory, filterCategory) => {
+    if (filterCategory === 'note') {
+      return tipCategory === 'Note-Taking';
+    }
+    return tipCategory.toLowerCase().includes(filterCategory);
+  };
+
   const filteredTips =
     activeCategory === 'all'
       ? studyTips
       : activeCategory === 'urgent'
         ? studyTips.filter((tip) => tip.isUrgent)
-        : studyTips.filter((tip) => tip.category.toLowerCase().includes(activeCategory));
+        : studyTips.filter((tip) => matchesCategory(tip.category, activeCategory));
 
   return (
     <div className="study-tips-container">
