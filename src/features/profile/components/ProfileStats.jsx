@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useProfile } from '../hooks/useProfile';
 import LoadingAnimation from '../../animations/LoadingAnimation';
@@ -14,6 +14,54 @@ const CardContent = ({ className, children }) => {
 export default function ProfileStats() {
   const { isLoading, upcomingEvent, completionPercentage, hasEvents, formatEventDate } =
     useProfile();
+
+  // Add state for animated percentage
+  const [animatedPercentage, setAnimatedPercentage] = useState(0);
+  const [animatedOffset, setAnimatedOffset] = useState(283); // Starting with full offset (empty circle)
+
+  // Animation effect
+  useEffect(() => {
+    if (!isLoading && completionPercentage > 0) {
+      // Reset to 0 when data loads
+      setAnimatedPercentage(0);
+      setAnimatedOffset(283);
+
+      const duration = 3000; // 3 seconds
+      const startTime = Date.now();
+      const initialOffset = 283; // Full circle offset
+      const targetOffset = 283 - (283 * completionPercentage) / 100;
+
+      const animateProgress = () => {
+        const currentTime = Date.now();
+        const elapsed = currentTime - startTime;
+
+        if (elapsed < duration) {
+          // Calculate current percentage based on elapsed time
+          const currentPercentage = Math.min(
+            Math.floor((elapsed / duration) * completionPercentage),
+            completionPercentage
+          );
+
+          // Calculate current circle offset
+          const currentOffset =
+            initialOffset - ((initialOffset - targetOffset) * elapsed) / duration;
+
+          setAnimatedPercentage(currentPercentage);
+          setAnimatedOffset(currentOffset);
+
+          // Continue animation
+          requestAnimationFrame(animateProgress);
+        } else {
+          // Ensure we end exactly at the target values
+          setAnimatedPercentage(completionPercentage);
+          setAnimatedOffset(targetOffset);
+        }
+      };
+
+      // Start animation
+      requestAnimationFrame(animateProgress);
+    }
+  }, [isLoading, completionPercentage]);
 
   return (
     <div className="profile-stats">
@@ -63,11 +111,11 @@ export default function ProfileStats() {
                     stroke="#52796F"
                     strokeWidth="10"
                     strokeDasharray="283"
-                    strokeDashoffset={283 - (283 * completionPercentage) / 100}
+                    strokeDashoffset={animatedOffset}
                     transform="rotate(-90 50 50)"
                   />
                 </svg>
-                <div className="profile-chart-percentage">{completionPercentage}%</div>
+                <div className="profile-chart-percentage">{animatedPercentage}%</div>
               </div>
             </div>
           )}
