@@ -263,10 +263,6 @@ const StudyTipsTab = () => {
             </div>
             <p className="study-tip-description">{tip.description}</p>
             <div className="tip-category-tag">{tip.category}</div>
-            <button className="bookmark-button">
-              <span className="bookmark-icon">🔖</span>
-              <span className="bookmark-text">Save</span>
-            </button>
           </div>
         ))}
       </div>
