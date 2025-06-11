@@ -239,7 +239,7 @@ const StudyTipsTab = () => {
             className="regenerate-advice-btn"
             disabled={advice.isLoading}
           >
-            {advice.isLoading ? 'Loading...' : 'New Advice'}
+            {advice.isLoading ? 'Loading...' : 'Generate New Advice'}
           </button>
         </div>
         <div className="tip-of-day-content">

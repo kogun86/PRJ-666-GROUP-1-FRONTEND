@@ -4,12 +4,13 @@ const ResourcesTab = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Define categories with their display names and corresponding resource category values
   const categories = [
-    { id: 'all', label: 'All Resources' },
-    { id: 'tools', label: 'Study Tools' },
-    { id: 'academic', label: 'Academic Resources' },
-    { id: 'mental', label: 'Mental Health' },
-    { id: 'templates', label: 'Templates' },
+    { id: 'all', label: 'All Resources', value: 'all' },
+    { id: 'tools', label: 'Study Tools', value: 'Study Tools' },
+    { id: 'academic', label: 'Academic Resources', value: 'Academic Resources' },
+    { id: 'mental', label: 'Mental Health', value: 'Mental Health' },
+    { id: 'templates', label: 'Templates', value: 'Templates' },
   ];
 
   const featuredResources = [
@@ -176,10 +177,16 @@ const ResourcesTab = () => {
     },
   ];
 
+  // Get the corresponding category value for the active category ID
+  const getActiveCategoryValue = () => {
+    const activeItem = categories.find((cat) => cat.id === activeCategory);
+    return activeItem ? activeItem.value : 'all';
+  };
+
   // Filter resources based on category and search query
   const filteredResources = resources.filter(
     (resource) =>
-      (activeCategory === 'all' || resource.category === activeCategory) &&
+      (activeCategory === 'all' || resource.category === getActiveCategoryValue()) &&
       (searchQuery === '' ||
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
