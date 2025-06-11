@@ -2,6 +2,7 @@ import React from 'react';
 import { Avatar, AvatarFallback } from './avatar';
 import { Button } from './button';
 import { SeedButton } from '../../seed';
+import LoadingAnimation from '../../animations/LoadingAnimation';
 
 const CheckCircle2 = () => {
   return (
@@ -51,46 +52,54 @@ export default function ProfileCard({
 
         {/* User Information */}
         <div className="profile-info">
-          <div className="profile-info-row">
-            <span className="profile-info-text">Name: {user?.name || 'Not set'}</span>
-          </div>
-
-          <div className="profile-info-row">
-            <span className="profile-info-text">Email: {user?.email || 'Not set'}</span>
-            <CheckCircle2 />
-          </div>
-
-          {user?.dateOfBirth && (
-            <div className="profile-info-row">
-              <span className="profile-info-text">
-                Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
-              </span>
+          {isLoading ? (
+            <div className="w-full flex justify-center items-center py-4">
+              <LoadingAnimation size="small" />
             </div>
+          ) : (
+            <>
+              <div className="profile-info-row">
+                <span className="profile-info-text">Name: {user?.name || 'Not set'}</span>
+              </div>
+
+              <div className="profile-info-row">
+                <span className="profile-info-text">Email: {user?.email || 'Not set'}</span>
+                <CheckCircle2 />
+              </div>
+
+              {user?.dateOfBirth && (
+                <div className="profile-info-row">
+                  <span className="profile-info-text">
+                    Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+
+              <div className="profile-info-row">
+                <span className="profile-info-text">
+                  Last Login Date:{' '}
+                  {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Unknown'}
+                </span>
+              </div>
+
+              <div className="profile-action-row">
+                <Button
+                  className="profile-button profile-edit-button px-4 py-2 rounded-lg ml-3 mr-3"
+                  onClick={onEditProfile}
+                  disabled={isLoading}
+                >
+                  Edit Profile
+                </Button>
+                <Button
+                  className="profile-button px-4 py-2 rounded-lg"
+                  onClick={onChangePassword}
+                  disabled={isLoading}
+                >
+                  Change Password
+                </Button>
+              </div>
+            </>
           )}
-
-          <div className="profile-info-row">
-            <span className="profile-info-text">
-              Last Login Date:{' '}
-              {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Unknown'}
-            </span>
-          </div>
-
-          <div className="profile-action-row">
-            <Button
-              className="profile-button profile-edit-button px-4 py-2 rounded-lg ml-3 mr-3"
-              onClick={onEditProfile}
-              disabled={isLoading}
-            >
-              Edit Profile
-            </Button>
-            <Button
-              className="profile-button px-4 py-2 rounded-lg"
-              onClick={onChangePassword}
-              disabled={isLoading}
-            >
-              Change Password
-            </Button>
-          </div>
         </div>
       </div>
     </div>

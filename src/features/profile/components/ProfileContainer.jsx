@@ -6,6 +6,7 @@ import Modal from '../../../componentShared/Modal';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import EditProfileForm from './EditProfileForm';
 import { SeedButton } from '../../seed';
+import LoadingAnimation from '../../animations/LoadingAnimation';
 
 export default function ProfileContainer() {
   const {
@@ -26,7 +27,11 @@ export default function ProfileContainer() {
 
   // If user is not available and still loading, show a loading state
   if (!user && isLoading) {
-    return <div className="profile-loading">Loading user data...</div>;
+    return (
+      <div className="profile-loading flex justify-center items-center h-96">
+        <LoadingAnimation size="medium" />
+      </div>
+    );
   }
 
   // If user is not available after loading, show an error
