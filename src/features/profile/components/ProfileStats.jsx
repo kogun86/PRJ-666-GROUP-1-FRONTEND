@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useProfile } from '../hooks/useProfile';
 import LoadingAnimation from '../../animations/LoadingAnimation';
+import { motion } from 'framer-motion';
 
-const Card = ({ className, children }) => {
-  return <div className={className}>{children}</div>;
+const Card = ({ className, children, ...props }) => {
+  return (
+    <motion.div className={className} {...props}>
+      {children}
+    </motion.div>
+  );
 };
 
 const CardContent = ({ className, children }) => {
@@ -65,8 +70,13 @@ export default function ProfileStats() {
 
   return (
     <div className="profile-stats">
-      {/* Study Sessions */}
-      <Card className="profile-card">
+      {/* Study Sessions - Slide in from left */}
+      <Card
+        className="profile-card"
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+      >
         <CardContent className="profile-card-content">
           <div className="profile-card-header">Study Sessions</div>
           {isLoading ? (
@@ -90,8 +100,13 @@ export default function ProfileStats() {
         </CardContent>
       </Card>
 
-      {/* Tasks Completed */}
-      <Card className="profile-card">
+      {/* Tasks Completed - Fade in */}
+      <Card
+        className="profile-card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
+      >
         <CardContent className="profile-card-content">
           <div className="profile-card-header">Tasks Completed</div>
           {isLoading ? (
@@ -122,8 +137,13 @@ export default function ProfileStats() {
         </CardContent>
       </Card>
 
-      {/* Goal Progress */}
-      <Card className="profile-card">
+      {/* Goal Progress - Slide in from right */}
+      <Card
+        className="profile-card"
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.4 }}
+      >
         <CardContent className="profile-card-content">
           <div className="profile-card-header">Goal Progress</div>
           {isLoading ? (
