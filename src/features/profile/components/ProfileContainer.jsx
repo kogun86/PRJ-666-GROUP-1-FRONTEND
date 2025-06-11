@@ -14,6 +14,7 @@ export default function ProfileContainer() {
     editProfileModalOpen,
     profileData,
     error,
+    isLoading,
     handleOpenPasswordModal,
     handleClosePasswordModal,
     handleOpenEditProfileModal,
@@ -23,9 +24,14 @@ export default function ProfileContainer() {
     getInitials,
   } = useProfile();
 
-  // If user is not available, show a loading state
-  if (!user) {
+  // If user is not available and still loading, show a loading state
+  if (!user && isLoading) {
     return <div className="profile-loading">Loading user data...</div>;
+  }
+
+  // If user is not available after loading, show an error
+  if (!user && !isLoading) {
+    return <div className="profile-error">Unable to load user data. Please try again later.</div>;
   }
 
   return (
@@ -36,6 +42,7 @@ export default function ProfileContainer() {
         getInitials={getInitials}
         onEditProfile={handleOpenEditProfileModal}
         onChangePassword={handleOpenPasswordModal}
+        isLoading={isLoading}
       />
 
       {/* Stats Section */}

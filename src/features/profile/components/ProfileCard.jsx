@@ -23,7 +23,13 @@ const CheckCircle2 = () => {
   );
 };
 
-export default function ProfileCard({ user, getInitials, onEditProfile, onChangePassword }) {
+export default function ProfileCard({
+  user,
+  getInitials,
+  onEditProfile,
+  onChangePassword,
+  isLoading,
+}) {
   return (
     <div className="profile-card profile-user-card">
       <div className="profile-header">
@@ -73,10 +79,15 @@ export default function ProfileCard({ user, getInitials, onEditProfile, onChange
             <Button
               className="profile-button profile-edit-button px-4 py-2 rounded-lg ml-3 mr-3"
               onClick={onEditProfile}
+              disabled={isLoading}
             >
               Edit Profile
             </Button>
-            <Button className="profile-button px-4 py-2 rounded-lg" onClick={onChangePassword}>
+            <Button
+              className="profile-button px-4 py-2 rounded-lg"
+              onClick={onChangePassword}
+              disabled={isLoading}
+            >
               Change Password
             </Button>
           </div>

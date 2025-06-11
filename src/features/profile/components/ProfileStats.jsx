@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useProfile } from '../hooks/useProfile';
 
 const Card = ({ className, children }) => {
   return <div className={className}>{children}</div>;
@@ -10,17 +11,31 @@ const CardContent = ({ className, children }) => {
 };
 
 export default function ProfileStats() {
+  const { isLoading, upcomingEvent, completionPercentage, hasEvents, formatEventDate } =
+    useProfile();
+
   return (
     <div className="profile-stats">
       {/* Study Sessions */}
       <Card className="profile-card">
         <CardContent className="profile-card-content">
           <div className="profile-card-header">Study Sessions</div>
-          <div className="profile-session-content">
-            <div className="profile-session-time">Feb 11 @ 3PM</div>
-            <div className="profile-session-title">Test Study</div>
-            <div className="profile-session-details">90 mins PRJ566</div>
-          </div>
+          {isLoading ? (
+            <div className="profile-session-content">Loading...</div>
+          ) : upcomingEvent ? (
+            <div className="profile-session-content">
+              <div className="profile-session-time">{formatEventDate(upcomingEvent.start)}</div>
+              <div className="profile-session-title">{upcomingEvent.title}</div>
+              <div className="profile-session-details">
+                {upcomingEvent.type === 'assignment' ? 'Assignment' : 'Event'} -{' '}
+                {upcomingEvent.course?.code}
+              </div>
+            </div>
+          ) : (
+            <div className="profile-session-content">
+              <div className="profile-session-title">No upcoming events</div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -39,12 +54,12 @@ export default function ProfileStats() {
                   fill="none"
                   stroke="#52796F"
                   strokeWidth="10"
-                  strokeDasharray="141.5 141.5"
-                  strokeDashoffset="70.75"
+                  strokeDasharray="283"
+                  strokeDashoffset={283 - (283 * completionPercentage) / 100}
                   transform="rotate(-90 50 50)"
                 />
               </svg>
-              <div className="profile-chart-percentage">50%</div>
+              <div className="profile-chart-percentage">{completionPercentage}%</div>
             </div>
           </div>
         </CardContent>
