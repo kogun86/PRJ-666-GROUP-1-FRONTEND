@@ -58,6 +58,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 768px) {
@@ -70,6 +72,8 @@
 .profile-avatar {
   height: 160px;
   width: 160px;
+  position: relative;
+  z-index: 2;
 }
 
 @media (min-width: 768px) {
