@@ -210,7 +210,7 @@ export default function ProfileCard({
   return (
     <div className="profile-card profile-user-card">
       <div className="profile-header">
-        <h1 className="profile-title">User Profile</h1>
+        <h1 className="profile-title">My Profile</h1>
         <SeedButton />
       </div>
 
