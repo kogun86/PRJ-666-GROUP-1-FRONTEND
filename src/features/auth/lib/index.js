@@ -37,6 +37,14 @@ if (!isProduction()) {
       console.log('Mock changePassword called with', { oldPassword, newPassword });
       return Promise.resolve({ success: true });
     },
+    updateUserAttributes: (attributes) => {
+      // Check if parameters are provided
+      if (!attributes || Object.keys(attributes).length === 0) {
+        return Promise.reject(new Error('attributes are required'));
+      }
+      console.log('Mock updateUserAttributes called with', attributes);
+      return Promise.resolve({ success: true });
+    },
   };
 } else {
   // In production, import the real Auth implementation

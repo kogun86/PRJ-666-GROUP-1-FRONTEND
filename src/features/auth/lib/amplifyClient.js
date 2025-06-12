@@ -9,6 +9,7 @@ import {
   fetchAuthSession,
   // Import but don't use directly to avoid bundling issues
   // changePassword,
+  updateUserAttributes as amplifyUpdateUserAttributes,
 } from 'aws-amplify/auth';
 
 // Remove debug logs which could cause issues
@@ -215,6 +216,73 @@ const Auth = {
       throw new Error('Could not find a valid changePassword implementation');
     } catch (error) {
       console.error('changePassword implementation error:', error);
+      throw error;
+    }
+  },
+  // Add updateUserAttributes method
+  updateUserAttributes: async (attributes) => {
+    if (!hasRequiredConfig) {
+      return Promise.reject(
+        new Error('Cognito configuration missing. Set required environment variables.')
+      );
+    }
+
+    console.log('amplifyClient updateUserAttributes called with:', attributes);
+
+    // Format the birthdate correctly if present
+    const formattedAttributes = { ...attributes };
+
+    // Make sure we're sending the correct format to Cognito
+    if (formattedAttributes.birthdate) {
+      console.log('Original birthdate:', formattedAttributes.birthdate);
+
+      // Parse the date and ensure it's in the format YYYY-MM-DD
+      const date = new Date(formattedAttributes.birthdate);
+
+      // Format as YYYY-MM-DD without timezone adjustment
+      // This ensures the date stored in Cognito is the exact date selected
+      formattedAttributes.birthdate = date.toISOString().split('T')[0];
+
+      console.log('Formatted birthdate for Cognito:', formattedAttributes.birthdate);
+    }
+
+    try {
+      // Try to directly use the imported function
+      try {
+        console.log('Using imported updateUserAttributes function with:', formattedAttributes);
+        return await amplifyUpdateUserAttributes({
+          userAttributes: formattedAttributes,
+        });
+      } catch (importError) {
+        console.error('Failed with imported updateUserAttributes:', importError);
+      }
+
+      // Try to access the global Amplify object as fallback
+      if (typeof window !== 'undefined' && window.aws_amplify && window.aws_amplify.Auth) {
+        console.log('Using global aws_amplify.Auth object for updateUserAttributes');
+        return await window.aws_amplify.Auth.updateUserAttributes({
+          userAttributes: formattedAttributes,
+        });
+      }
+
+      // Try dynamic import as another fallback
+      try {
+        const { updateUserAttributes: dynamicUpdateUserAttributes } = await import(
+          'aws-amplify/auth'
+        );
+        if (typeof dynamicUpdateUserAttributes === 'function') {
+          console.log('Using dynamically imported updateUserAttributes function');
+          return await dynamicUpdateUserAttributes({
+            userAttributes: formattedAttributes,
+          });
+        }
+      } catch (importError) {
+        console.error('Failed to dynamically import updateUserAttributes:', importError);
+      }
+
+      throw new Error('Could not find a valid updateUserAttributes implementation');
+    } catch (error) {
+      console.error('updateUserAttributes implementation error:', error);
       throw error;
     }
   },

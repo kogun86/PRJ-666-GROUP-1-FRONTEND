@@ -3,7 +3,7 @@ import { useAuth } from '../../auth';
 import { Auth } from '../../auth/lib/amplifyClient';
 
 export function useProfile() {
-  const { user } = useAuth();
+  const { user, isProduction } = useAuth();
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -16,11 +16,38 @@ export function useProfile() {
   const [upcomingEvent, setUpcomingEvent] = useState(null);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [hasEvents, setHasEvents] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Helper function to adjust date for timezone issues
+  const adjustDateForTimezone = (dateString) => {
+    if (!dateString) return '';
+
+    // Parse the date string
+    const date = new Date(dateString);
+
+    // Add the timezone offset to get the correct date
+    const timezoneOffset = date.getTimezoneOffset() * 60000; // convert to milliseconds
+    const adjustedDate = new Date(date.getTime() + timezoneOffset);
+
+    // Format as YYYY-MM-DD
+    return adjustedDate.toISOString().split('T')[0];
+  };
 
   // Fetch profile data from the API
   useEffect(() => {
     fetchProfileData();
   }, []);
+
+  // Set initial profile data when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        dateOfBirth: adjustDateForTimezone(user.dateOfBirth) || '',
+      });
+    }
+  }, [user]);
 
   const fetchProfileData = async () => {
     try {
@@ -85,7 +112,7 @@ export function useProfile() {
     setProfileData({
       name: user?.name || '',
       email: user?.email || '',
-      dateOfBirth: user?.dateOfBirth || '',
+      dateOfBirth: adjustDateForTimezone(user?.dateOfBirth) || '',
     });
     setError('');
   };
@@ -103,45 +130,93 @@ export function useProfile() {
     });
   };
 
-  const handleProfileUpdate = (e) => {
+  const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsUpdating(true);
 
-    // Form validation
-    if (!profileData.name || !profileData.email) {
-      setError('Name and email are required');
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(profileData.email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    // Here you would typically call an API to update the profile
-    // For this example, we'll just update the local state
-    setTimeout(() => {
-      // Make sure user exists before updating
-      if (user) {
-        // Update local user data
-        localStorage.setItem(
-          'user',
-          JSON.stringify({
-            ...user,
-            name: profileData.name,
-            email: profileData.email,
-            dateOfBirth: profileData.dateOfBirth,
-          })
-        );
+    try {
+      // Form validation
+      if (!profileData.name) {
+        setError('Name is required');
+        setIsUpdating(false);
+        return;
       }
 
-      // In a real application, you would update the context state
-      // but for this demo we'll just reload the page
-      window.location.reload();
+      if (isProduction) {
+        console.log('Updating user attributes in Cognito...');
 
-      handleCloseEditProfileModal();
-    }, 500);
+        try {
+          // Split name into given_name and family_name if it contains a space
+          const nameParts = profileData.name.split(' ');
+          const given_name = nameParts[0] || '';
+          const family_name = nameParts.slice(1).join(' ') || '';
+
+          // Prepare attributes object for Cognito
+          const userAttributes = {
+            name: profileData.name,
+            given_name,
+            family_name,
+            // Email changes require verification, so we don't update it
+            birthdate: profileData.dateOfBirth,
+          };
+
+          console.log('Updating user attributes:', userAttributes);
+
+          // Update user attributes in Cognito
+          await Auth.updateUserAttributes(userAttributes);
+
+          console.log('User attributes updated successfully in Cognito');
+
+          // Update local user data
+          if (user) {
+            const updatedUser = {
+              ...user,
+              name: profileData.name,
+              dateOfBirth: profileData.dateOfBirth,
+            };
+
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+
+          // Close modal and show success
+          handleCloseEditProfileModal();
+
+          // Refresh the page to show updated data
+          window.location.reload();
+        } catch (cognitoError) {
+          console.error('Error updating user attributes in Cognito:', cognitoError);
+          setError(cognitoError.message || 'Failed to update profile. Please try again.');
+        }
+      } else {
+        // In development mode, just update local storage
+        console.log('Development mode: Updating local user data');
+
+        // Make sure user exists before updating
+        if (user) {
+          // Update local user data
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              ...user,
+              name: profileData.name,
+              dateOfBirth: profileData.dateOfBirth,
+            })
+          );
+        }
+
+        // Close modal
+        handleCloseEditProfileModal();
+
+        // Refresh the page to show updated data
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      setError(error.message || 'An error occurred while updating your profile');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Get initials for the avatar
@@ -172,6 +247,7 @@ export function useProfile() {
     profileData,
     error,
     isLoading,
+    isUpdating,
     upcomingEvent,
     completionPercentage,
     hasEvents,

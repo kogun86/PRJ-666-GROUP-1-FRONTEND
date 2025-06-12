@@ -16,6 +16,7 @@ export default function ProfileContainer() {
     profileData,
     error,
     isLoading,
+    isUpdating,
     handleOpenPasswordModal,
     handleClosePasswordModal,
     handleOpenEditProfileModal,
@@ -73,6 +74,7 @@ export default function ProfileContainer() {
           onInputChange={handleProfileInputChange}
           onSubmit={handleProfileUpdate}
           onCancel={handleCloseEditProfileModal}
+          isUpdating={isUpdating}
         />
       </Modal>
     </div>

@@ -27,6 +27,21 @@ const CheckCircle2 = () => {
   );
 };
 
+// Helper function to format date with timezone adjustment
+const formatDisplayDate = (dateString) => {
+  if (!dateString) return 'Not set';
+
+  // Parse the date string
+  const date = new Date(dateString);
+
+  // Add the timezone offset to get the correct date
+  const timezoneOffset = date.getTimezoneOffset() * 60000; // convert to milliseconds
+  const adjustedDate = new Date(date.getTime() + timezoneOffset);
+
+  // Format for display
+  return adjustedDate.toLocaleDateString();
+};
+
 export default function ProfileCard({
   user,
   getInitials,
@@ -264,7 +279,7 @@ export default function ProfileCard({
               {user?.dateOfBirth && (
                 <div className="profile-info-row">
                   <span className="profile-info-text">
-                    Date of Birth: {new Date(user.dateOfBirth).toLocaleDateString()}
+                    Date of Birth: {formatDisplayDate(user.dateOfBirth)}
                   </span>
                 </div>
               )}
