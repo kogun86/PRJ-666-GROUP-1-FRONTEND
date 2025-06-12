@@ -87,10 +87,6 @@ export default function ProfileStats() {
             <div className="profile-session-content">
               <div className="profile-session-time">{formatEventDate(upcomingEvent.start)}</div>
               <div className="profile-session-title">{upcomingEvent.title}</div>
-              <div className="profile-session-details">
-                {upcomingEvent.type === 'assignment' ? 'Assignment' : 'Event'} -{' '}
-                {upcomingEvent.course?.code}
-              </div>
             </div>
           ) : (
             <div className="profile-session-content">
