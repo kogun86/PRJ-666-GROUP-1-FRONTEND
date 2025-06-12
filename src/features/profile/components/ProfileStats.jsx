@@ -151,19 +151,7 @@ export default function ProfileStats() {
               <div
                 className="profile-goals-image-container"
                 style={{ position: 'relative', width: '100%', height: '200px' }}
-              >
-                <Image
-                  src="/placeholder-image.png"
-                  alt="Goal Progress"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  style={{ objectFit: 'contain' }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    document.getElementById('fallback-text')?.classList.remove('hidden');
-                  }}
-                />
-              </div>
+              ></div>
               <div id="fallback-text" className="profile-goals-fallback hidden">
                 <p className="profile-goals-fallback-text">The image you are</p>
                 <p className="profile-goals-fallback-text">requesting does not exist</p>
