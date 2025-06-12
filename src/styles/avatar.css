@@ -37,6 +37,25 @@
   position: relative;
 }
 
+/* Pulsing border animation */
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(82, 121, 111, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(82, 121, 111, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(82, 121, 111, 0);
+  }
+}
+
+.avatar-root,
+.profile-avatar {
+  animation: pulse-border 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border: 3px solid rgba(82, 121, 111, 0.8);
+}
+
 .profile-avatar-upload-button {
   position: absolute;
   bottom: 10%;
