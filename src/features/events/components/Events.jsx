@@ -23,6 +23,22 @@ const TAB_LABELS = {
   [TABS.COMPLETED]: 'Completed Events',
 };
 
+// Empty state component for events
+const EmptyState = ({ type, onAddEvent }) => (
+  <div className="empty-state">
+    <p className="empty-state-message">
+      {type === TABS.PENDING
+        ? "You don't have any upcoming events scheduled."
+        : "You don't have any completed events yet."}
+    </p>
+    {type === TABS.PENDING && (
+      <button className="button button-primary add-course-button" onClick={onAddEvent}>
+        + Add Your First Event
+      </button>
+    )}
+  </div>
+);
+
 export default function Events() {
   const [activeTab, setActiveTab] = useState(TABS.PENDING);
   const [showForm, setShowForm] = useState(false);
@@ -103,6 +119,10 @@ export default function Events() {
   }
 
   const currentGroups = activeTab === TABS.PENDING ? pendingGroups : completedGroups;
+  const hasEvents =
+    activeTab === TABS.PENDING
+      ? localPendingGroups && localPendingGroups.length > 0
+      : localCompletedGroups && localCompletedGroups.length > 0;
 
   return (
     <>
@@ -118,7 +138,7 @@ export default function Events() {
             className="events-tabs-header"
           />
 
-          {!showForm && (
+          {!showForm && hasEvents && (
             <div className="add-course-row">
               <button
                 className="button button-primary add-course-button"
@@ -135,6 +155,8 @@ export default function Events() {
                 <LoadingAnimation size="large" />
                 <p className="events-refreshing-text">Refreshing events...</p>
               </div>
+            ) : !hasEvents && activeTab === TABS.PENDING ? (
+              <EmptyState type={TABS.PENDING} onAddEvent={() => setShowForm(true)} />
             ) : (
               <EventPending
                 groups={localPendingGroups}
@@ -149,6 +171,8 @@ export default function Events() {
                 <LoadingAnimation size="large" />
                 <p className="events-refreshing-text">Refreshing events...</p>
               </div>
+            ) : !hasEvents && activeTab === TABS.COMPLETED ? (
+              <EmptyState type={TABS.COMPLETED} />
             ) : (
               <EventCompleted
                 groups={localCompletedGroups}
