@@ -4,6 +4,8 @@ import { Button } from './button';
 import { SeedButton } from '../../seed';
 import LoadingAnimation from '../../animations/LoadingAnimation';
 import { useAuth } from '../../auth';
+import { useConfirmation } from '../../../componentShared/useConfirmation';
+import ConfirmationModal from '../../../componentShared/ConfirmationModal';
 
 const CheckCircle2 = () => {
   return (
@@ -35,6 +37,9 @@ export default function ProfileCard({
   const fileInputRef = useRef(null);
   const { isProduction, Auth } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { isConfirmationOpen, confirmationData, openConfirmation, closeConfirmation } =
+    useConfirmation();
 
   // Fetch avatar URL from dedicated endpoint
   useEffect(() => {
@@ -90,30 +95,30 @@ export default function ProfileCard({
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    console.log('Starting avatar upload process for file:', file.name);
-
+    setIsUploading(true);
     try {
       // Step 1: Get signature from backend
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-      // Get authorization headers
       let headers = { 'Content-Type': 'application/json' };
-
       if (isProduction) {
         try {
-          // In production, get the current user for auth headers
           const currentUser = await Auth.getCurrentUser();
           if (currentUser && currentUser.authorizationHeaders) {
             headers = currentUser.authorizationHeaders();
           }
         } catch (error) {
-          console.error('Error getting current user:', error);
-          alert('Authentication error. Please log in again.');
+          setIsUploading(false);
+          openConfirmation({
+            title: 'Authentication Error',
+            message: 'Authentication error. Please log in again.',
+            confirmText: 'OK',
+            cancelText: '',
+            onConfirm: () => {},
+            confirmButtonClass: 'modal-danger-button',
+          });
           return;
         }
       } else {
-        // In development, use mock token
         headers = {
           'Content-Type': 'application/json',
           Authorization: 'Bearer mock-id-token',
@@ -124,14 +129,10 @@ export default function ProfileCard({
         method: 'POST',
         headers,
       });
-
       if (!signatureRes.ok) {
         throw new Error('Failed to get upload signature');
       }
-
       const signatureData = await signatureRes.json();
-      console.log('Signature response:', signatureData);
-
       const { signature, timestamp, apiKey, folder, cloudName } = signatureData;
 
       // Step 2: Upload to Cloudinary
@@ -141,20 +142,16 @@ export default function ProfileCard({
       formData.append('timestamp', timestamp);
       formData.append('api_key', apiKey);
       formData.append('folder', folder);
-      // Add upload preset for face detection and cropping
       formData.append('transformation', 'c_thumb,g_face,h_256,w_256');
 
       const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
         method: 'POST',
         body: formData,
       });
-
       if (!uploadRes.ok) {
         throw new Error('Failed to upload image');
       }
-
       const uploadData = await uploadRes.json();
-      console.log('Cloudinary upload response:', uploadData);
 
       // Step 3: Save avatar URL to user profile
       const saveRes = await fetch(`${API_BASE_URL}/v1/profile/avatar`, {
@@ -167,30 +164,26 @@ export default function ProfileCard({
           height: uploadData.height,
         }),
       });
-
       if (!saveRes.ok) {
         throw new Error('Failed to save avatar');
       }
-
-      // Log the response for debugging
       const saveData = await saveRes.json();
-      console.log('Save avatar response:', saveData);
-
-      // Update avatar URL immediately
       setAvatarUrl(uploadData.secure_url);
-
-      // Show success message
-      alert('Avatar uploaded successfully!');
-
-      // Optionally refetch the avatar URL from the server to ensure consistency
-      // This is not strictly necessary since we already have the URL, but it ensures
-      // we're displaying what's actually stored in the database
+      setIsUploading(false);
+      openConfirmation({
+        title: 'Success',
+        message: 'Avatar uploaded successfully!',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => {},
+        confirmButtonClass: 'modal-success-button',
+      });
+      // Optionally refetch the avatar URL from the server
       try {
         const avatarResponse = await fetch(`${API_BASE_URL}/v1/profile/avatar`, {
           method: 'GET',
           headers,
         });
-
         if (avatarResponse.ok) {
           const avatarData = await avatarResponse.json();
           if (avatarData.avatarURL) {
@@ -198,12 +191,18 @@ export default function ProfileCard({
           }
         }
       } catch (error) {
-        console.error('Error refetching avatar URL:', error);
-        // Continue with the locally set URL even if refetch fails
+        // Ignore refetch error
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      alert('Failed to upload avatar. Please try again.');
+      setIsUploading(false);
+      openConfirmation({
+        title: 'Upload Failed',
+        message: error.message || 'Failed to upload avatar. Please try again.',
+        confirmText: 'OK',
+        cancelText: '',
+        onConfirm: () => {},
+        confirmButtonClass: 'modal-danger-button',
+      });
     }
   };
 
@@ -297,6 +296,35 @@ export default function ProfileCard({
           )}
         </div>
       </div>
+      {isUploading && (
+        <div
+          className="avatar-upload-loading-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(255,255,255,0.7)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <LoadingAnimation size="large" />
+        </div>
+      )}
+      <ConfirmationModal
+        isOpen={isConfirmationOpen}
+        onClose={closeConfirmation}
+        title={confirmationData.title}
+        message={confirmationData.message}
+        confirmText={confirmationData.confirmText}
+        cancelText={confirmationData.cancelText}
+        onConfirm={confirmationData.onConfirm}
+        confirmButtonClass={confirmationData.confirmButtonClass}
+      />
     </div>
   );
 }
