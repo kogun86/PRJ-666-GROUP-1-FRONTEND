@@ -29,7 +29,7 @@ export default function ProfileContainer() {
   if (!user && isLoading) {
     return (
       <div className="profile-loading flex justify-center items-center h-96">
-        <LoadingAnimation size="medium" />
+        <LoadingAnimation size="large" />
       </div>
     );
   }
