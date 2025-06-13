@@ -70,13 +70,48 @@ export default function SmartTodoContent() {
     return 'green';
   };
 
+  // Map priority levels to descriptive text
+  const getPriorityText = (score) => {
+    if (score >= 80) return 'Critical Priority';
+    if (score >= 60) return 'High Priority';
+    if (score >= 40) return 'Medium Priority';
+    return 'Low Priority';
+  };
+
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-8">
+      <div className="page-header">
+        <h1 className="text-3xl font-bold mb-2">Your Academic Schedule</h1>
+        <p className="text-lg text-gray-700">
+          Upcoming assignments, tests, and exams sorted by priority level
+        </p>
+        <div className="priority-legend mt-4">
+          <div className="priority-item">
+            <span className="priority-dot" style={{ backgroundColor: '#ef4444' }}></span>
+            <span>Critical Priority</span>
+          </div>
+          <div className="priority-item">
+            <span className="priority-dot" style={{ backgroundColor: '#f97316' }}></span>
+            <span>High Priority</span>
+          </div>
+          <div className="priority-item">
+            <span className="priority-dot" style={{ backgroundColor: '#eab308' }}></span>
+            <span>Medium Priority</span>
+          </div>
+          <div className="priority-item">
+            <span className="priority-dot" style={{ backgroundColor: '#52796f' }}></span>
+            <span>Low Priority</span>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {events.map((e, index) => {
           const score = (e.importanceScore || 0).toFixed(0);
           const color = pick(e.importanceScore);
           const badgeText = score >= 80 ? 'Crucial' : score >= 60 ? 'Urgent' : `${score}%`;
+          const priorityText = getPriorityText(e.importanceScore);
+          const eventType = e.type || 'Event';
 
           return (
             <div
@@ -88,6 +123,12 @@ export default function SmartTodoContent() {
                 <span className={`badge ${color}`}>{badgeText}</span>
 
                 <h3 className="card-header">{e.title}</h3>
+
+                <p className="card-meta">
+                  <span className="icon">📋</span>
+                  <span className="event-type">{eventType}</span> •{' '}
+                  <span className="priority-text">{priorityText}</span>
+                </p>
 
                 <p className="card-meta">
                   <span className="icon">🎓</span>
