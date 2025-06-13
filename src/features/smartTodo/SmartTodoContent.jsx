@@ -73,13 +73,17 @@ export default function SmartTodoContent() {
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {events.map((e) => {
+        {events.map((e, index) => {
           const score = (e.importanceScore || 0).toFixed(0);
           const color = pick(e.importanceScore);
           const badgeText = score >= 80 ? 'Crucial' : score >= 60 ? 'Urgent' : `${score}%`;
 
           return (
-            <div key={e._id} className={`card ${color}`}>
+            <div
+              key={e._id}
+              className={`card ${color}`}
+              style={{ animationDelay: `${(index + 1) * 0.1}s` }}
+            >
               <div className="card-body">
                 <span className={`badge ${color}`}>{badgeText}</span>
 
