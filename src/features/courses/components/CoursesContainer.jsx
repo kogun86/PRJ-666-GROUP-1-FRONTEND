@@ -7,15 +7,14 @@ import ClassesList from './ClassesList';
 import CoursesList from './CoursesList';
 import { useCourseSubmit, useClassDelete, useCourseDeletion } from '../';
 import { useCourses } from '../hooks/useCourses';
-import { secondsToTime, getWeekday } from '../utils/timeUtils';
+import { secondsToTime, getWeekday, weekdayToIndex, convertToSeconds } from '../utils/timeUtils';
+import { Auth } from '../../../features/auth/lib/amplifyClient';
 
-// Define tab constants for better readability
 const TABS = {
   CLASSES: 'classes',
   COURSES: 'courses',
 };
 
-// Define tab display names
 const TAB_LABELS = {
   [TABS.CLASSES]: 'My Classes',
   [TABS.COURSES]: 'My Courses',
@@ -27,24 +26,21 @@ export default function CoursesContainer() {
   const [editData, setEditData] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
 
-  const { myCourses, schedule, isLoading, error, addCourse, refreshClasses, refreshCourses } =
+  const { myCourses, schedule, isLoading, refreshCourses, refreshClasses, addCourse } =
     useCourses();
-
   const {
     submitCourse,
     isSubmitting,
-    error: submitError,
     success: submitSuccess,
-    resetState,
+    error: submitError,
+    resetState: resetSubmitState,
   } = useCourseSubmit();
-
   const {
     deleteClass,
     isDeleting: isDeletingClass,
     success: deleteClassSuccess,
     resetState: resetClassDeleteState,
   } = useClassDelete();
-
   const {
     deleteCourse,
     isDeleting: isDeletingCourse,
@@ -52,109 +48,60 @@ export default function CoursesContainer() {
     resetState: resetCourseDeletionState,
   } = useCourseDeletion();
 
-  // Reset the submit state when the form is closed
-  useEffect(() => {
-    if (!showForm) {
-      resetState();
-    }
-  }, [showForm, resetState]);
-
-  // If submission was successful, update UI
   useEffect(() => {
     if (submitSuccess) {
       setShowForm(false);
+      setEditData(null);
+      setEditIndex(null);
     }
   }, [submitSuccess]);
 
-  // Refresh class data when a class is deleted successfully
   useEffect(() => {
     if (deleteClassSuccess) {
       refreshClasses();
-      // Reset the success state after refreshing to prevent multiple refreshes
       resetClassDeleteState();
     }
   }, [deleteClassSuccess, refreshClasses, resetClassDeleteState]);
 
-  // Refresh course data when a course is deleted successfully
   useEffect(() => {
     if (deleteCourseSuccess) {
       refreshCourses();
-      // Reset the success state after refreshing to prevent multiple refreshes
       resetCourseDeletionState();
     }
   }, [deleteCourseSuccess, refreshCourses, resetCourseDeletionState]);
 
-  // Refresh data when tab changes to ensure we have the latest data
   useEffect(() => {
     if (activeTab === TABS.CLASSES) {
-      console.log('🔄 Tab changed to Classes, refreshing data');
       refreshClasses();
-    } else if (activeTab === TABS.COURSES) {
-      console.log('🔄 Tab changed to Courses, refreshing data');
+    } else {
       refreshCourses();
     }
-  }, [activeTab]);
+  }, [activeTab, refreshClasses, refreshCourses]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setShowForm(false);
   };
 
-  function handleAdd() {
+  const handleAdd = () => {
     setEditData(null);
     setEditIndex(null);
-
-    // If on Classes tab, switch to Courses tab before showing the form
-    if (activeTab === TABS.CLASSES) {
-      setActiveTab(TABS.COURSES);
-    }
-
     setShowForm(true);
-  }
+  };
 
   const handleDeleteClass = async (classId) => {
-    if (!classId) {
-      console.error('No class ID provided for deletion');
-      return;
-    }
-
     try {
-      const result = await deleteClass(classId);
-
-      if (!result.success && result.error) {
-        // Show error message to user
-        console.error('Error deleting class:', result.error);
-        alert(`Failed to delete class: ${result.error}`);
-      } else if (result.success) {
-        console.log('Class deleted successfully');
-        // The success state is already set in the hook, which will trigger the useEffect to refresh
-      }
+      await deleteClass(classId);
     } catch (err) {
-      console.error('Exception during class deletion:', err);
-      alert(`An error occurred: ${err.message}`);
+      alert(`Error deleting class: ${err.message}`);
     }
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!courseId) {
-      console.error('No course ID provided for deletion');
-      return;
-    }
-
     try {
-      const result = await deleteCourse(courseId);
-
-      if (!result.success && result.error) {
-        // Show error message to user
-        console.error('Error deleting course:', result.error);
-        alert(`Failed to delete course: ${result.error}`);
-      } else if (result.success) {
-        console.log('Course deleted successfully');
-        // The success state is already set in the hook, which will trigger the useEffect to refresh
-      }
+      await deleteCourse(courseId);
     } catch (err) {
-      console.error('Exception during course deletion:', err);
-      alert(`An error occurred: ${err.message}`);
+      alert(`Error deleting course: ${err.message}`);
     }
   };
 
@@ -179,54 +126,80 @@ export default function CoursesContainer() {
       return;
     }
 
-    try {
-      const newCourse = {
-        title: data.title,
-        code: data.code,
-        section: data.section,
-        status: 'active',
-        startDate: data.startDate,
-        endDate: data.endDate,
-        color: data.color,
-        instructor: {
-          name: data.instructor.name,
-          email: data.instructor.email,
-          availableTimeSlots: data.instructor.availableTimeSlots.map((s) => ({
-            weekday: typeof s.weekday === 'number' ? s.weekday : weekdayToIndex(s.weekDay),
-            startTime: s.startTime, // Time conversion will be handled in useCourseSubmit
-            endTime: s.endTime, // Time conversion will be handled in useCourseSubmit
-          })),
-        },
-        schedule: data.schedule.map((s) => ({
-          classType: s.classType || 'lecture',
-          weekday: typeof s.weekday === 'number' ? s.weekday : weekdayToIndex(s.weekDay),
-          startTime: s.startTime, // Time conversion will be handled in useCourseSubmit
-          endTime: s.endTime, // Time conversion will be handled in useCourseSubmit
-          location: s.location || 'TBD',
+    const payload = {
+      title: data.title,
+      code: data.code,
+      section: data.section,
+      status: 'active',
+      startDate: data.startDate,
+      endDate: data.endDate,
+      color: data.color,
+      instructor: {
+        name: data.instructor.name,
+        email: data.instructor.email,
+        availableTimeSlots: data.instructor.availableTimeSlots.map((s) => ({
+          weekday: typeof s.weekday === 'number' ? s.weekday : weekdayToIndex(s.weekday),
+          startTime: typeof s.startTime === 'string' ? convertToSeconds(s.startTime) : s.startTime,
+          endTime: typeof s.endTime === 'string' ? convertToSeconds(s.endTime) : s.endTime,
         })),
-      };
+      },
+      schedule: data.schedule.map((s) => ({
+        classType: s.classType || 'lecture',
+        weekday: typeof s.weekday === 'number' ? s.weekday : weekdayToIndex(s.weekday),
+        startTime: typeof s.startTime === 'string' ? convertToSeconds(s.startTime) : s.startTime,
+        endTime: typeof s.endTime === 'string' ? convertToSeconds(s.endTime) : s.endTime,
+        location: s.location || 'TBD',
+      })),
+    };
 
-      console.log('📤 Submitting course to backend:', JSON.stringify(newCourse, null, 2));
+    try {
+      if (editData) {
+        // —— EDIT MODE ——
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+        let headers;
+        if (process.env.NODE_ENV === 'development') {
+          headers = {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer mock-id-token',
+          };
+        } else {
+          const user = await Auth.getCurrentUser();
+          if (!user?.authorizationHeaders) {
+            throw new Error('Not authenticated');
+          }
+          headers = user.authorizationHeaders();
+        }
 
-      const result = await submitCourse(newCourse);
+        const res = await fetch(`${API_BASE}/v1/courses/${editData._id}`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `Update failed: ${res.status}`);
+        }
 
-      if (result.success) {
-        console.log('✅ Course created:', result);
+        await refreshCourses();
+        await refreshClasses();
         setShowForm(false);
+        setEditData(null);
+        setEditIndex(null);
+        return;
+      }
 
-        // Get the created course from the response
-        const createdCourse = result.course;
-
-        // Add the new course to the UI
+      const result = await submitCourse(payload);
+      if (result.success) {
+        const created = result.course;
         addCourse({
-          _id: result.courseId || (createdCourse && createdCourse._id) || `temp-${Date.now()}`,
-          title: createdCourse?.title || newCourse.title,
-          code: createdCourse?.code || newCourse.code,
-          section: createdCourse?.section || newCourse.section,
-          professor: createdCourse?.instructor?.name || newCourse.instructor.name,
-          color: createdCourse?.color || newCourse.color,
+          _id: result.courseId || created._id,
+          title: created.title,
+          code: created.code,
+          section: created.section,
+          professor: created.instructor.name,
+          color: created.color,
           grade: 0,
-          schedule: (createdCourse?.schedule || newCourse.schedule).map((s) => ({
+          schedule: created.schedule.map((s) => ({
             time:
               typeof s.startTime === 'number'
                 ? `${secondsToTime(s.startTime)}–${secondsToTime(s.endTime)}`
@@ -234,21 +207,14 @@ export default function CoursesContainer() {
             weekDay: getWeekday(s.weekday),
           })),
         });
-
-        // Refresh classes to show the newly created classes
-        console.log('🔄 Refreshing classes after course creation');
         await refreshClasses();
-
-        // Switch to the Classes tab to show the newly created classes
         setActiveTab(TABS.CLASSES);
-        console.log('🔄 Switched to Classes tab to show new classes');
       } else {
-        console.error('❌ Error creating course:', result.errors);
-        alert(`Failed to create course: ${result.errors?.join(', ') || 'Unknown error'}`);
+        throw new Error(result.errors?.join(', ') || 'Unknown error');
       }
-    } catch (error) {
-      console.error('❌ Exception during course submission:', error);
-      alert(`An error occurred: ${error.message}`);
+    } catch (err) {
+      console.error(err);
+      alert(`Failed to save course: ${err.message}`);
     }
   }
 
@@ -264,7 +230,7 @@ export default function CoursesContainer() {
           onTabChange={handleTabChange}
         />
 
-        {!showForm && (
+        {!showForm && activeTab === TABS.COURSES && (
           <div className="add-course-row">
             <button className="button button-primary add-course-button" onClick={handleAdd}>
               + Add Course
