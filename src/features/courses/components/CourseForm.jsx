@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -24,6 +24,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm({
     defaultValues: initialData || {
       title: '',
@@ -42,6 +43,13 @@ export default function CourseForm({ initialData, onSubmit, onCancel, isSubmitti
       ],
     },
   });
+
+  // Whenever we get new initialData (i.e. clicked Edit), reset the form
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    }
+  }, [initialData, reset]);
 
   const {
     fields: scheduleFields,
